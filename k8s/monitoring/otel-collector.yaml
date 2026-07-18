@@ -1,0 +1,198 @@
+# OpenTelemetry Collector Configuration for BuildMyStack
+# Spec Reference: Phase 4.4 - Monitoring & Observability
+# 
+# This configuration receives traces, metrics, and logs from the application
+# and exports them to configured backends.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: monitoring
+  labels:
+    app: otel-collector
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch:
+        timeout: 10s
+        send_batch_size: 1024
+        send_batch_max_size: 2048
+
+      memory_limiter:
+        check_interval: 1s
+        limit_mib: 1000
+        spike_limit_mib: 200
+
+      resource:
+        attributes:
+          - key: service.namespace
+            value: build-my-stack
+            action: upsert
+          - key: deployment.environment
+            from_attribute: OTEL_RESOURCE_ATTRIBUTES
+            action: upsert
+
+    exporters:
+      # Prometheus for metrics
+      prometheus:
+        endpoint: 0.0.0.0:8889
+        namespace: buildmystack
+        resource_to_telemetry_conversion:
+          enabled: true
+
+      # Jaeger for traces (or use Tempo)
+      otlp/jaeger:
+        endpoint: jaeger-collector.monitoring:4317
+        tls:
+          insecure: true
+
+      # Loki for logs
+      loki:
+        endpoint: http://loki.monitoring:3100/loki/api/v1/push
+        labels:
+          resource:
+            service.name: "service_name"
+            service.namespace: "service_namespace"
+
+      # Debug logging (development only)
+      logging:
+        loglevel: debug
+
+    extensions:
+      health_check:
+        endpoint: 0.0.0.0:13133
+      pprof:
+        endpoint: 0.0.0.0:1888
+      zpages:
+        endpoint: 0.0.0.0:55679
+
+    service:
+      extensions: [health_check, pprof, zpages]
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [otlp/jaeger]
+        metrics:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [prometheus]
+        logs:
+          receivers: [otlp]
+          processors: [memory_limiter, batch, resource]
+          exporters: [loki]
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: monitoring
+  labels:
+    app: otel-collector
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+    spec:
+      containers:
+        - name: otel-collector
+          image: otel/opentelemetry-collector-contrib:0.91.0
+          args:
+            - --config=/etc/otel-collector/config.yaml
+          ports:
+            - containerPort: 4317
+              name: otlp-grpc
+              protocol: TCP
+            - containerPort: 4318
+              name: otlp-http
+              protocol: TCP
+            - containerPort: 8889
+              name: prometheus
+              protocol: TCP
+            - containerPort: 13133
+              name: health
+              protocol: TCP
+          resources:
+            limits:
+              cpu: 500m
+              memory: 1Gi
+            requests:
+              cpu: 100m
+              memory: 256Mi
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 13133
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - name: config
+              mountPath: /etc/otel-collector
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: monitoring
+  labels:
+    app: otel-collector
+spec:
+  type: ClusterIP
+  ports:
+    - name: otlp-grpc
+      port: 4317
+      targetPort: 4317
+      protocol: TCP
+    - name: otlp-http
+      port: 4318
+      targetPort: 4318
+      protocol: TCP
+    - name: prometheus
+      port: 8889
+      targetPort: 8889
+      protocol: TCP
+  selector:
+    app: otel-collector
+
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: otel-collector
+  namespace: monitoring
+  labels:
+    app: otel-collector
+spec:
+  selector:
+    matchLabels:
+      app: otel-collector
+  endpoints:
+    - port: prometheus
+      interval: 30s
+      path: /metrics

@@ -1,0 +1,349 @@
+name: Performance Monitoring
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Run performance tests daily at 6 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'URL to test (optional, defaults to production)'
+        required: false
+        type: string
+
+jobs:
+  lighthouse-ci:
+    name: Lighthouse CI Performance Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Install Lighthouse CI
+        run: npm install -g @lhci/cli@0.12.x
+
+      - name: Build application for testing
+        if: github.event_name == 'pull_request'
+        run: npm run build
+
+      - name: Start local server for PR testing
+        if: github.event_name == 'pull_request'
+        run: |
+          npm run start &
+          sleep 30
+        env:
+          NODE_ENV: production
+
+      - name: Run Lighthouse CI (Local)
+        if: github.event_name == 'pull_request'
+        run: lhci autorun
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          LHCI_TOKEN: ${{ secrets.LHCI_TOKEN }}
+
+      - name: Run Lighthouse CI (Production)
+        if: github.event_name != 'pull_request'
+        run: |
+          TARGET_URL="${{ github.event.inputs.target_url || 'https://build-my-stack.vercel.app' }}"
+          echo "Testing performance for: $TARGET_URL"
+          
+          lhci collect \
+            --url="$TARGET_URL" \
+            --url="$TARGET_URL/api/health" \
+            --numberOfRuns=3 \
+            --settings.chromeFlags="--no-sandbox --headless"
+          
+          lhci assert \
+            --preset="lighthouse:recommended" \
+            --assertions.categories:performance=0.8 \
+            --assertions.categories:accessibility=0.9 \
+            --assertions.categories:best-practices=0.8 \
+            --assertions.categories:seo=0.8
+          
+          lhci upload
+        env:
+          LHCI_GITHUB_APP_TOKEN: ${{ secrets.LHCI_GITHUB_APP_TOKEN }}
+          LHCI_TOKEN: ${{ secrets.LHCI_TOKEN }}
+
+      - name: Upload Lighthouse reports
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: lighthouse-reports
+          path: .lighthouseci/
+          retention-days: 7
+
+      - name: Comment PR with Lighthouse results
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const path = require('path');
+            
+            try {
+              const reportDir = '.lighthouseci';
+              const manifestPath = path.join(reportDir, 'manifest.json');
+              
+              if (!fs.existsSync(manifestPath)) {
+                console.log('No Lighthouse manifest found');
+                return;
+              }
+              
+              const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+              const reports = manifest.map(report => {
+                const reportPath = path.join(reportDir, report.jsonPath);
+                return JSON.parse(fs.readFileSync(reportPath, 'utf8'));
+              });
+              
+              let comment = '## 🚨 Lighthouse Performance Report\n\n';
+              
+              reports.forEach((report, index) => {
+                const url = report.finalUrl || report.requestedUrl;
+                const scores = report.categories;
+                
+                comment += `### 📊 Results for ${url}\n`;
+                comment += '| Category | Score | Status |\n';
+                comment += '|----------|-------|--------|\n';
+                
+                Object.entries(scores).forEach(([key, category]) => {
+                  const score = Math.round(category.score * 100);
+                  const status = score >= 90 ? '✅' : score >= 70 ? '⚠️' : '❌';
+                  comment += `| ${category.title} | ${score} | ${status} |\n`;
+                });
+                
+                comment += '\n';
+              });
+              
+              // Add performance recommendations
+              const mainReport = reports[0];
+              const opportunities = mainReport.audits;
+              const significantOpportunities = Object.values(opportunities)
+                .filter(audit => audit.details && audit.details.type === 'opportunity' && audit.numericValue > 100)
+                .slice(0, 3);
+              
+              if (significantOpportunities.length > 0) {
+                comment += '### 💡 Top Performance Opportunities\n\n';
+                significantOpportunities.forEach(audit => {
+                  const savings = Math.round(audit.numericValue);
+                  comment += `- **${audit.title}**: Could save ~${savings}ms\n`;
+                });
+              }
+              
+              github.rest.issues.createComment({
+                issue_number: context.issue.number,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                body: comment
+              });
+              
+            } catch (error) {
+              console.error('Error generating Lighthouse comment:', error);
+            }
+
+  bundle-analysis:
+    name: Bundle Size Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Build and analyze bundle
+        run: |
+          npm run build
+          
+          # Generate bundle analysis
+          if command -v npx &> /dev/null && npm list @next/bundle-analyzer &> /dev/null; then
+            ANALYZE=true npm run build
+          else
+            echo "Bundle analyzer not configured, skipping detailed analysis"
+          fi
+
+      - name: Check bundle sizes
+        run: |
+          echo "## Bundle Size Analysis" > bundle-report.md
+          echo "" >> bundle-report.md
+          
+          # Check .next directory sizes
+          if [ -d ".next" ]; then
+            echo "### Next.js Build Output" >> bundle-report.md
+            echo '```' >> bundle-report.md
+            du -sh .next/* | sort -hr >> bundle-report.md 2>/dev/null || true
+            echo '```' >> bundle-report.md
+            echo "" >> bundle-report.md
+            
+            # Check for large files
+            echo "### Large Files (>1MB)" >> bundle-report.md
+            echo '```' >> bundle-report.md
+            find .next -size +1M -type f -exec ls -lh {} \; | awk '{print $5, $9}' >> bundle-report.md 2>/dev/null || true
+            echo '```' >> bundle-report.md
+          fi
+
+      - name: Upload bundle analysis
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: bundle-analysis
+          path: |
+            bundle-report.md
+            .next/analyze/
+          retention-days: 7
+
+  load-testing:
+    name: Load Testing
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install k6
+        run: |
+          sudo gpg -k
+          sudo gpg --no-default-keyring --keyring /usr/share/keyrings/k6-archive-keyring.gpg --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys C5AD17C747E3415A3642D57D77C6C491D6AC1D69
+          echo "deb [signed-by=/usr/share/keyrings/k6-archive-keyring.gpg] https://dl.k6.io/deb stable main" | sudo tee /etc/apt/sources.list.d/k6.list
+          sudo apt-get update
+          sudo apt-get install k6
+
+      - name: Create load test script
+        run: |
+          cat > load-test.js << 'EOF'
+          import http from 'k6/http';
+          import { check, sleep } from 'k6';
+          
+          export const options = {
+            stages: [
+              { duration: '2m', target: 20 }, // Ramp up
+              { duration: '5m', target: 20 }, // Sustained load
+              { duration: '2m', target: 0 },  // Ramp down
+            ],
+            thresholds: {
+              http_req_duration: ['p(95)<2000'], // 95% of requests under 2s
+              http_req_failed: ['rate<0.1'],     // Error rate under 10%
+            },
+          };
+          
+          const BASE_URL = __ENV.TARGET_URL || 'https://build-my-stack.vercel.app';
+          
+          export default function() {
+            // Test home page
+            const homeResponse = http.get(BASE_URL);
+            check(homeResponse, {
+              'home page status is 200': (r) => r.status === 200,
+              'home page loads in reasonable time': (r) => r.timings.duration < 3000,
+            });
+            
+            // Test health endpoint
+            const healthResponse = http.get(`${BASE_URL}/api/health`);
+            check(healthResponse, {
+              'health endpoint status is 200': (r) => r.status === 200,
+              'health endpoint responds quickly': (r) => r.timings.duration < 1000,
+            });
+            
+            sleep(1);
+          }
+          EOF
+
+      - name: Run load test
+        env:
+          TARGET_URL: ${{ github.event.inputs.target_url || 'https://build-my-stack.vercel.app' }}
+        run: |
+          echo "Running load test against: $TARGET_URL"
+          k6 run --out json=load-test-results.json load-test.js
+
+      - name: Process load test results
+        if: always()
+        run: |
+          echo "## Load Test Results" > load-test-report.md
+          echo "" >> load-test-report.md
+          
+          if [ -f "load-test-results.json" ]; then
+            echo "### Key Metrics" >> load-test-report.md
+            echo '```' >> load-test-report.md
+            
+            # Extract key metrics from JSON output
+            grep '"metric":"http_req_duration"' load-test-results.json | tail -1 | jq -r '"Average Response Time: " + (.data.value | tostring) + "ms"' >> load-test-report.md 2>/dev/null || echo "Response time data not available" >> load-test-report.md
+            grep '"metric":"http_reqs"' load-test-results.json | tail -1 | jq -r '"Total Requests: " + (.data.value | tostring)' >> load-test-report.md 2>/dev/null || echo "Request count data not available" >> load-test-report.md
+            grep '"metric":"http_req_failed"' load-test-results.json | tail -1 | jq -r '"Error Rate: " + ((.data.value * 100) | tostring) + "%"' >> load-test-report.md 2>/dev/null || echo "Error rate data not available" >> load-test-report.md
+            
+            echo '```' >> load-test-report.md
+          else
+            echo "Load test results not found" >> load-test-report.md
+          fi
+
+      - name: Upload load test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: load-test-results
+          path: |
+            load-test-results.json
+            load-test-report.md
+          retention-days: 7
+
+  # Performance summary
+  performance-summary:
+    name: Performance Summary
+    runs-on: ubuntu-latest
+    needs: [lighthouse-ci, bundle-analysis]
+    if: always()
+
+    steps:
+      - name: Generate performance summary
+        run: |
+          echo "## Performance Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.lighthouse-ci.result }}" == "success" ]]; then
+            echo "✅ **Lighthouse CI:** Performance audit completed" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Lighthouse CI:** Performance audit failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.bundle-analysis.result }}" == "success" ]]; then
+            echo "✅ **Bundle Analysis:** Completed successfully" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Bundle Analysis:** Analysis failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "📊 Check the artifacts for detailed performance reports" >> $GITHUB_STEP_SUMMARY

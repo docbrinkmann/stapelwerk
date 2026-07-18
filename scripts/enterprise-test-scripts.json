@@ -1,0 +1,72 @@
+{
+  "scripts": {
+    "test:enterprise": "tsx scripts/test-enterprise-integration.ts",
+    "test:enterprise:integration": "tsx scripts/test-enterprise-integration.ts",
+    "test:enterprise:quick": "npm run test:db && npm run test:rbac && npm run test:organizations",
+    "test:enterprise:critical": "npm run test:db && npm run test:rbac && npm run test:organizations && npm run test:collaboration && npm run test:workflows",
+    "test:enterprise:full": "npm run test:enterprise:integration",
+    
+    "test:db": "jest --testPathPattern=database --testTimeout=30000 --verbose",
+    "test:rbac": "jest --testPathPattern=rbac --testTimeout=45000 --verbose",
+    "test:organizations": "jest --testPathPattern=organization --testTimeout=60000 --verbose",
+    "test:collaboration": "jest --testPathPattern=collaboration --testTimeout=90000 --verbose",
+    "test:workflows": "jest --testPathPattern=workflow --testTimeout=60000 --verbose",
+    "test:templates": "jest --testPathPattern=template --testTimeout=45000 --verbose",
+    "test:audit": "jest --testPathPattern=audit --testTimeout=60000 --verbose",
+    "test:ai": "jest --testPathPattern=ai --testTimeout=60000 --verbose",
+    "test:users": "jest --testPathPattern=user --testTimeout=45000 --verbose",
+    "test:monitoring": "jest --testPathPattern=monitoring --testTimeout=45000 --verbose",
+    "test:feature-flags": "jest --testPathPattern=feature-flag --testTimeout=30000 --verbose",
+    
+    "test:integration:enterprise": "jest --testPathPattern=integration/enterprise --testTimeout=180000 --verbose --detectOpenHandles",
+    "test:e2e:enterprise": "jest --testPathPattern=e2e/enterprise --testTimeout=300000 --verbose --detectOpenHandles",
+    "test:performance:enterprise": "jest --testPathPattern=performance/enterprise --testTimeout=300000 --verbose --detectOpenHandles",
+    "test:security:enterprise": "jest --testPathPattern=security/enterprise --testTimeout=180000 --verbose",
+    
+    "test:enterprise:watch": "jest --watch --testPathPattern=enterprise",
+    "test:enterprise:coverage": "jest --testPathPattern=enterprise --coverage --collectCoverageFrom='src/**/*.{ts,tsx}' --coverageReporters=text-lcov --coverageReporters=html",
+    "test:enterprise:ci": "jest --testPathPattern=enterprise --ci --coverage --watchAll=false --passWithNoTests --verbose",
+    
+    "benchmark:enterprise": "tsx scripts/benchmark-enterprise.ts",
+    "monitor:enterprise": "tsx scripts/monitor-enterprise.ts",
+    "validate:enterprise": "npm run test:enterprise:critical && npm run benchmark:enterprise"
+  },
+  
+  "jest": {
+    "testEnvironment": "node",
+    "setupFilesAfterEnv": ["<rootDir>/tests/setup.ts"],
+    "testMatch": [
+      "**/__tests__/**/*.test.{ts,tsx}",
+      "**/tests/**/*.test.{ts,tsx}"
+    ],
+    "collectCoverageFrom": [
+      "src/**/*.{ts,tsx}",
+      "lib/**/*.{ts,tsx}",
+      "!**/*.d.ts",
+      "!**/node_modules/**"
+    ],
+    "coverageThreshold": {
+      "global": {
+        "branches": 95,
+        "functions": 95,
+        "lines": 95,
+        "statements": 95
+      }
+    },
+    "moduleNameMapping": {
+      "^@/(.*)$": "<rootDir>/src/$1",
+      "^~/(.*)$": "<rootDir>/$1"
+    },
+    "transform": {
+      "^.+\\.tsx?$": ["ts-jest", {
+        "useESM": true
+      }]
+    },
+    "extensionsToTreatAsEsm": [".ts", ".tsx"],
+    "globals": {
+      "ts-jest": {
+        "useESM": true
+      }
+    }
+  }
+}

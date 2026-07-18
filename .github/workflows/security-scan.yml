@@ -1,0 +1,282 @@
+name: Security Scan
+
+on:
+  pull_request:
+    branches: [main, develop]
+  push:
+    branches: [main]
+  schedule:
+    # Run weekly security scans on Mondays at 2 AM UTC
+    - cron: '0 2 * * 1'
+  workflow_dispatch: # Allow manual trigger
+
+permissions:
+  contents: read
+  security-events: write
+
+jobs:
+  zap-baseline-scan:
+    name: OWASP ZAP Baseline Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Start application services
+        run: |
+          docker compose up -d postgres redis
+          sleep 10
+
+      - name: Wait for database
+        run: |
+          docker compose exec -T postgres pg_isready -U postgres || sleep 5
+          docker compose exec -T postgres pg_isready -U postgres
+
+      - name: Run database migrations
+        run: |
+          npm run db:generate
+          npm run db:push
+        env:
+          DATABASE_URL: postgresql://postgres:postgres_dev_password@localhost:5432/build_my_stack_dev
+
+      - name: Start web application
+        run: |
+          docker compose up -d app
+          sleep 30
+
+      - name: Wait for application
+        run: |
+          echo "Waiting for application to be ready..."
+          for i in {1..30}; do
+            if curl -f http://localhost:3000/api/health; then
+              echo "Application is ready!"
+              break
+            fi
+            echo "Attempt $i/30 failed, retrying..."
+            sleep 2
+          done
+
+      - name: Run OWASP ZAP Baseline Scan
+        run: |
+          mkdir -p security/reports
+          docker run --rm \
+            --network host \
+            -v $(pwd):/zap/wrk/:rw \
+            -t owasp/zap2docker-stable \
+            zap-baseline.py \
+            -t http://localhost:3000 \
+            -c /zap/wrk/security/zap-baseline.conf \
+            -r zap-baseline-report-${{ github.run_number }}.html \
+            -J zap-baseline-report-${{ github.run_number }}.json \
+            -I \
+            || true
+
+      - name: Upload ZAP Scan Reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: zap-scan-reports-${{ github.run_number }}
+          path: |
+            security/reports/*.html
+            security/reports/*.json
+          retention-days: 30
+
+      - name: Check for high severity findings
+        if: always()
+        run: |
+          if [ -f "security/reports/zap-baseline-report-${{ github.run_number }}.json" ]; then
+            HIGH_COUNT=$(jq '[.site[].alerts[] | select(.riskcode == "3")] | length' security/reports/zap-baseline-report-${{ github.run_number }}.json)
+            echo "High severity findings: $HIGH_COUNT"
+
+            if [ "$HIGH_COUNT" -gt "0" ]; then
+              echo "::error::Found $HIGH_COUNT high severity security findings"
+              echo "Review the ZAP report artifact for details"
+              exit 1
+            fi
+          fi
+
+      - name: Display scan summary
+        if: always()
+        run: |
+          echo "### Security Scan Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan Date:** $(date -u)" >> $GITHUB_STEP_SUMMARY
+          echo "**Target:** http://localhost:3000" >> $GITHUB_STEP_SUMMARY
+          echo "**Scan Type:** Baseline (Passive)" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f "security/reports/zap-baseline-report-${{ github.run_number }}.json" ]; then
+            HIGH=$(jq '[.site[].alerts[] | select(.riskcode == "3")] | length' security/reports/zap-baseline-report-${{ github.run_number }}.json)
+            MEDIUM=$(jq '[.site[].alerts[] | select(.riskcode == "2")] | length' security/reports/zap-baseline-report-${{ github.run_number }}.json)
+            LOW=$(jq '[.site[].alerts[] | select(.riskcode == "1")] | length' security/reports/zap-baseline-report-${{ github.run_number }}.json)
+            INFO=$(jq '[.site[].alerts[] | select(.riskcode == "0")] | length' security/reports/zap-baseline-report-${{ github.run_number }}.json)
+
+            echo "| Risk Level | Count |" >> $GITHUB_STEP_SUMMARY
+            echo "|------------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔴 High | $HIGH |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟡 Medium | $MEDIUM |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🟢 Low | $LOW |" >> $GITHUB_STEP_SUMMARY
+            echo "| ℹ️ Info | $INFO |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "📄 Download the full report from the workflow artifacts." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Shutdown services
+        if: always()
+        run: docker compose down -v
+
+  security-unit-tests:
+    name: Security Unit Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run security tests
+        run: npm run test:security
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: security-test-results
+          path: coverage/
+          retention-days: 7
+
+  dependency-scan:
+    name: Dependency Vulnerability Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Run npm audit
+        run: |
+          npm audit --production --audit-level=moderate || true
+          npm audit --production --audit-level=high || {
+            echo "::error::High or critical vulnerabilities found in dependencies"
+            exit 1
+          }
+
+      - name: Check for outdated packages
+        run: npm outdated || true
+
+  security-headers-check:
+    name: Security Headers Verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Start application
+        run: |
+          docker compose up -d
+          sleep 30
+
+      - name: Verify security headers
+        run: |
+          echo "Checking security headers..."
+
+          # Function to check header
+          check_header() {
+            HEADER=$1
+            EXPECTED=$2
+            ACTUAL=$(curl -s -I http://localhost:3000 | grep -i "^${HEADER}:" | sed "s/${HEADER}: //i")
+
+            if [ -z "$ACTUAL" ]; then
+              echo "::error::Missing required header: $HEADER"
+              return 1
+            fi
+
+            if [ -n "$EXPECTED" ] && [[ ! "$ACTUAL" =~ $EXPECTED ]]; then
+              echo "::error::Header $HEADER has unexpected value: $ACTUAL (expected pattern: $EXPECTED)"
+              return 1
+            fi
+
+            echo "✓ $HEADER: $ACTUAL"
+            return 0
+          }
+
+          # Check required security headers
+          ALL_PASSED=true
+
+          check_header "X-Content-Type-Options" "nosniff" || ALL_PASSED=false
+          check_header "X-Frame-Options" "DENY" || ALL_PASSED=false
+          check_header "X-XSS-Protection" "1" || ALL_PASSED=false
+          check_header "Strict-Transport-Security" "max-age=" || ALL_PASSED=false
+          check_header "Content-Security-Policy" "" || ALL_PASSED=false
+          check_header "Referrer-Policy" "" || ALL_PASSED=false
+          check_header "Permissions-Policy" "" || ALL_PASSED=false
+
+          if [ "$ALL_PASSED" = false ]; then
+            echo "::error::One or more required security headers are missing or incorrect"
+            exit 1
+          fi
+
+          echo "All security headers are properly configured!"
+
+      - name: Shutdown services
+        if: always()
+        run: docker compose down
+
+  security-report:
+    name: Generate Security Report
+    runs-on: ubuntu-latest
+    needs: [zap-baseline-scan, security-unit-tests, dependency-scan, security-headers-check]
+    if: always()
+
+    steps:
+      - name: Security scan completed
+        run: |
+          echo "### 🔒 Security Scan Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "All security checks have been completed." >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Jobs Status:**" >> $GITHUB_STEP_SUMMARY
+          echo "- OWASP ZAP Baseline: ${{ needs.zap-baseline-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security Unit Tests: ${{ needs.security-unit-tests.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Dependency Scan: ${{ needs.dependency-scan.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "- Security Headers: ${{ needs.security-headers-check.result }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ "${{ needs.zap-baseline-scan.result }}" = "failure" ] || \
+             [ "${{ needs.security-unit-tests.result }}" = "failure" ] || \
+             [ "${{ needs.dependency-scan.result }}" = "failure" ] || \
+             [ "${{ needs.security-headers-check.result }}" = "failure" ]; then
+            echo "⚠️ **One or more security checks failed. Review the logs above for details.**" >> $GITHUB_STEP_SUMMARY
+            exit 1
+          else
+            echo "✅ **All security checks passed!**" >> $GITHUB_STEP_SUMMARY
+          fi

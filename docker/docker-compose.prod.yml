@@ -1,0 +1,233 @@
+# Production-like Docker Compose for BuildMyStack AI Recommendations
+# Used for local testing of production configuration
+
+version: '3.8'
+
+services:
+  # Main application
+  buildmystack-ai:
+    build:
+      context: ..
+      dockerfile: docker/production.Dockerfile
+    image: buildmystack-ai:latest
+    container_name: buildmystack-ai-prod
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    environment:
+      - NODE_ENV=production
+      - DB_HOST=postgres
+      - DB_NAME=buildmystack_prod
+      - DB_USER=buildmystack_user
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - SENTRY_DSN=${SENTRY_DSN:-}
+      - LOG_LEVEL=info
+      - LOG_FORMAT=json
+      - PROMETHEUS_ENABLED=true
+      - HEALTH_CHECK_ENABLED=true
+      - FEATURE_FLAGS_PROVIDER=internal
+      - AI_CACHE_ENABLED=true
+      - AI_CACHE_TTL=1h
+      - RATE_LIMITING_ENABLED=true
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://localhost:8080
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    secrets:
+      - db_password
+      - redis_password
+      - jwt_secret
+    networks:
+      - buildmystack-network
+    volumes:
+      - app-logs:/usr/src/app/logs
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # PostgreSQL Database
+  postgres:
+    image: postgres:18-alpine
+    container_name: buildmystack-postgres-prod
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=buildmystack_prod
+      - POSTGRES_USER=buildmystack_user
+      - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
+      - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --auth-local=scram-sha-256
+    secrets:
+      - db_password
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ../database/migrations:/docker-entrypoint-initdb.d:ro
+    networks:
+      - buildmystack-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U buildmystack_user -d buildmystack_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    command: >
+      postgres 
+      -c log_statement=all
+      -c log_destination=stderr
+      -c log_min_duration_statement=1000
+      -c shared_preload_libraries=pg_stat_statements
+      -c max_connections=100
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: buildmystack-redis-prod
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    secrets:
+      - redis_password
+    command: >
+      sh -c '
+      REDIS_PASSWORD=$$(cat /run/secrets/redis_password);
+      redis-server
+      --requirepass "$$REDIS_PASSWORD"
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 512mb
+      --maxmemory-policy allkeys-lru
+      --save 60 1
+      '
+    volumes:
+      - redis-data:/data
+    networks:
+      - buildmystack-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "redis-cli -a $$(cat /run/secrets/redis_password) ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: buildmystack-prometheus-prod
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=15d'
+      - '--web.enable-lifecycle'
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - prometheus-data:/prometheus
+    networks:
+      - buildmystack-network
+    depends_on:
+      - buildmystack-ai
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/-/healthy"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # Grafana for metrics visualization
+  grafana:
+    image: grafana/grafana:latest
+    container_name: buildmystack-grafana-prod
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+      - GF_INSTALL_PLUGINS=grafana-piechart-panel
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+    networks:
+      - buildmystack-network
+    depends_on:
+      - prometheus
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+
+  # Nginx for load balancing and SSL termination
+  nginx:
+    image: nginx:alpine
+    container_name: buildmystack-nginx-prod
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - nginx-logs:/var/log/nginx
+      - ./certs:/etc/nginx/certs:ro
+    networks:
+      - buildmystack-network
+    depends_on:
+      - buildmystack-ai
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  prometheus-data:
+    driver: local
+  grafana-data:
+    driver: local
+  app-logs:
+    driver: local
+  nginx-logs:
+    driver: local
+
+networks:
+  buildmystack-network:
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.20.0.0/16
+
+secrets:
+  db_password:
+    file: ../secrets/db_password.txt
+  redis_password:
+    file: ../secrets/redis_password.txt
+  jwt_secret:
+    file: ../secrets/jwt_secret.txt

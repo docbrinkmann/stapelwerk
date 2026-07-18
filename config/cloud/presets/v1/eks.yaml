@@ -1,0 +1,38 @@
+# EKS Preset v1 (2025 best practices)
+ingress:
+  className: "alb"
+  annotations:
+    kubernetes.io/ingress.class: "alb"
+    alb.ingress.kubernetes.io/scheme: "internet-facing"
+    alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/load-balancer-name: "${CI_PROJECT_NAME}-${CI_ENVIRONMENT_NAME}"
+storageClass:
+  name: "gp3"
+  parameters:
+    type: "gp3"
+loadBalancer:
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-type: "nlb"
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+certManager:
+  clusterIssuer: "letsencrypt-prod"
+  email: "devops@example.com"
+externalSecrets:
+  provider: "aws"
+  secretStore: "secrets-manager"
+registry:
+  useIRSA: true
+  oidcProvider: "${EKS_OIDC_PROVIDER:-}"
+
+guidance:
+  hpa:
+    enabled: true
+    minReplicas: 2
+    targetCPUUtilizationPercentage: 70
+  dr:
+    strategy: "Active-Passive"
+    rpoMinutes: 15
+    rtoMinutes: 30
+  cost:
+    spotRecommended: true
+    notes: "Use spot for non-critical workloads with PDBs and HPA"

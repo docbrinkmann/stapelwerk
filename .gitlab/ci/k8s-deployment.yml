@@ -1,0 +1,383 @@
+# GitLab CI Template for Kubernetes Deployment
+# This template provides jobs for provisioning K3s clusters and deploying applications
+
+variables:
+  # K3s Configuration
+  K3S_VERSION: "v1.28.4+k3s2"
+  K3S_CLUSTER_NAME: "${CI_PROJECT_NAME}-${CI_ENVIRONMENT_NAME}"
+  K3S_NODE_TYPE: "server"
+  
+  # Deployment Configuration
+  DEPLOYMENT_NAMESPACE: "${CI_PROJECT_NAME}"
+  DEPLOYMENT_FORMAT: "helm" # yaml, helm, or kustomize
+  
+  # Script Locations
+  PROVISION_SCRIPT: "scripts/k8s/provision.sh"
+  DESTROY_SCRIPT: "scripts/k8s/destroy.sh"
+  
+  # Security
+  KUBECONFIG_TTL: "1h" # Ephemeral kubeconfig lifetime
+  
+  # Feature Flags
+  INSTALL_INGRESS_NGINX: "true"
+  INSTALL_CERT_MANAGER: "false"
+  INSTALL_METRICS_SERVER: "false"
+  DRY_RUN: "false"
+
+# Stages for deployment workflow
+stages:
+  - validate
+  - provision
+  - deploy
+  - test
+  - cleanup
+
+# Templates for reusable job configurations
+.k8s_job_template:
+  image: alpine/k8s:1.28.4
+  before_script:
+    - apk add --no-cache bash curl git openssh-client
+    - |
+      if [ -n "$KUBECONFIG_BASE64" ]; then
+        echo "$KUBECONFIG_BASE64" | base64 -d > /tmp/kubeconfig
+        export KUBECONFIG=/tmp/kubeconfig
+      fi
+  after_script:
+    - rm -f /tmp/kubeconfig
+  tags:
+    - kubernetes
+    - docker
+
+.provision_template:
+  extends: .k8s_job_template
+  stage: provision
+  script:
+    - |
+      echo "Provisioning K3s cluster..."
+      if [ ! -f "$PROVISION_SCRIPT" ]; then
+        echo "Provision script not found at $PROVISION_SCRIPT"
+        exit 1
+      fi
+      
+      # Set environment variables
+      export K3S_VERSION
+      export CLUSTER_NAME="$K3S_CLUSTER_NAME"
+      export NODE_TYPE="$K3S_NODE_TYPE"
+      export INSTALL_INGRESS_NGINX
+      export INSTALL_CERT_MANAGER
+      export INSTALL_METRICS_SERVER
+      export DRY_RUN
+      
+      # Run provisioning
+      bash "$PROVISION_SCRIPT" ${PROVISION_OPTIONS}
+      
+      # Export kubeconfig for next jobs
+      if [ -f /etc/rancher/k3s/k3s.yaml ]; then
+        cat /etc/rancher/k3s/k3s.yaml | base64 -w0 > kubeconfig.b64
+        echo "KUBECONFIG_BASE64=$(cat kubeconfig.b64)" >> provision.env
+      fi
+  artifacts:
+    reports:
+      dotenv: provision.env
+    paths:
+      - kubeconfig.b64
+    expire_in: "$KUBECONFIG_TTL"
+  when: manual
+  allow_failure: false
+
+# Job: Validate deployment artifacts
+validate:artifacts:
+  stage: validate
+  image: alpine:latest
+  script:
+    - apk add --no-cache bash curl
+    - |
+      echo "Validating deployment artifacts..."
+      
+      # Check for required files based on format
+      case "$DEPLOYMENT_FORMAT" in
+        yaml)
+          if [ ! -f "k8s/*.yaml" ] && [ ! -d "k8s" ]; then
+            echo "No YAML files found in k8s/ directory"
+            exit 1
+          fi
+          ;;
+        helm)
+          if [ ! -f "chart/Chart.yaml" ]; then
+            echo "No Helm chart found at chart/Chart.yaml"
+            exit 1
+          fi
+          ;;
+        kustomize)
+          if [ ! -f "kustomize/base/kustomization.yaml" ]; then
+            echo "No Kustomize base found"
+            exit 1
+          fi
+          ;;
+      esac
+      
+      # Validate with kubeconform if available
+      if command -v kubeconform &> /dev/null; then
+        echo "Running kubeconform validation..."
+        find . -name "*.yaml" -o -name "*.yml" | xargs kubeconform -summary
+      fi
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# Job: Provision K3s cluster (development)
+provision:dev:
+  extends: .provision_template
+  variables:
+    K3S_NODE_TYPE: "server"
+    PROVISION_OPTIONS: "--profile development"
+  environment:
+    name: development
+    on_stop: destroy:dev
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+      when: manual
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+
+# Job: Provision K3s cluster (staging)
+provision:staging:
+  extends: .provision_template
+  variables:
+    K3S_NODE_TYPE: "server"
+    PROVISION_OPTIONS: "--profile staging"
+    INSTALL_CERT_MANAGER: "true"
+  environment:
+    name: staging
+    url: https://staging.example.com
+    on_stop: destroy:staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+      when: manual
+
+# Job: Provision K3s cluster (production)
+provision:production:
+  extends: .provision_template
+  variables:
+    K3S_NODE_TYPE: "server"
+    PROVISION_OPTIONS: "--profile production --ha"
+    INSTALL_CERT_MANAGER: "true"
+    INSTALL_METRICS_SERVER: "true"
+  environment:
+    name: production
+    url: https://example.com
+    on_stop: destroy:production
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: manual
+
+# Job: Deploy using GitLab Agent (preferred)
+deploy:agent:
+  stage: deploy
+  image: bitnami/kubectl:latest
+  script:
+    - |
+      echo "Deploying via GitLab Agent..."
+      
+      # Check if GitLab Agent is configured
+      if [ -z "$KUBE_CONTEXT" ]; then
+        echo "GitLab Agent not configured, skipping..."
+        exit 0
+      fi
+      
+      kubectl config use-context "$KUBE_CONTEXT"
+      
+      # Create namespace
+      kubectl create namespace "$DEPLOYMENT_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+      
+      # Deploy based on format
+      case "$DEPLOYMENT_FORMAT" in
+        yaml)
+          kubectl apply -f k8s/ -n "$DEPLOYMENT_NAMESPACE"
+          ;;
+        helm)
+          helm upgrade --install "${CI_PROJECT_NAME}" chart/ \
+            --namespace "$DEPLOYMENT_NAMESPACE" \
+            --values chart/values.yaml \
+            --values chart/values.${CI_ENVIRONMENT_NAME}.yaml \
+            --wait --timeout 10m
+          ;;
+        kustomize)
+          kubectl apply -k "kustomize/overlays/${CI_ENVIRONMENT_NAME}/" \
+            -n "$DEPLOYMENT_NAMESPACE"
+          ;;
+      esac
+      
+      # Wait for rollout
+      kubectl rollout status deployment -n "$DEPLOYMENT_NAMESPACE" --timeout=5m
+  environment:
+    name: $CI_ENVIRONMENT_NAME
+    action: start
+  rules:
+    - if: '$KUBE_CONTEXT'
+      when: on_success
+  dependencies:
+    - validate:artifacts
+
+# Job: Deploy using server-side apply (fallback)
+deploy:server:
+  extends: .k8s_job_template
+  stage: deploy
+  script:
+    - |
+      echo "Deploying via server-side apply..."
+      
+      # Check if kubeconfig is available
+      if [ ! -f /tmp/kubeconfig ]; then
+        echo "No kubeconfig available, skipping..."
+        exit 0
+      fi
+      
+      # Create namespace
+      kubectl create namespace "$DEPLOYMENT_NAMESPACE" --dry-run=client -o yaml | kubectl apply -f -
+      
+      # Apply configurations
+      case "$DEPLOYMENT_FORMAT" in
+        yaml)
+          kubectl apply -f k8s/ -n "$DEPLOYMENT_NAMESPACE" --server-side
+          ;;
+        helm)
+          helm upgrade --install "${CI_PROJECT_NAME}" chart/ \
+            --namespace "$DEPLOYMENT_NAMESPACE" \
+            --wait --timeout 10m
+          ;;
+        kustomize)
+          kubectl apply -k "kustomize/overlays/${CI_ENVIRONMENT_NAME}/" \
+            -n "$DEPLOYMENT_NAMESPACE" --server-side
+          ;;
+      esac
+      
+      # Verify deployment
+      kubectl get all -n "$DEPLOYMENT_NAMESPACE"
+  environment:
+    name: $CI_ENVIRONMENT_NAME
+    action: start
+  rules:
+    - if: '!$KUBE_CONTEXT && $KUBECONFIG_BASE64'
+      when: on_success
+  dependencies:
+    - provision:$CI_ENVIRONMENT_NAME
+
+# Job: Smoke tests
+test:smoke:
+  extends: .k8s_job_template
+  stage: test
+  script:
+    - |
+      echo "Running smoke tests..."
+      
+      # Check deployments are ready
+      kubectl get deployments -n "$DEPLOYMENT_NAMESPACE" -o json | \
+        jq -e '.items[].status.conditions[] | select(.type=="Available") | .status=="True"'
+      
+      # Check pods are running
+      kubectl get pods -n "$DEPLOYMENT_NAMESPACE" --field-selector=status.phase!=Running -o name | \
+        grep -q . && echo "Some pods are not running" && exit 1 || true
+      
+      # Check services have endpoints
+      for svc in $(kubectl get svc -n "$DEPLOYMENT_NAMESPACE" -o name); do
+        endpoints=$(kubectl get endpoints ${svc#*/} -n "$DEPLOYMENT_NAMESPACE" -o json | \
+          jq -r '.subsets[].addresses[]?.ip' | wc -l)
+        if [ "$endpoints" -eq 0 ]; then
+          echo "Service ${svc#*/} has no endpoints"
+          exit 1
+        fi
+      done
+      
+      # Test ingress if configured
+      if [ "$INSTALL_INGRESS_NGINX" == "true" ]; then
+        kubectl get ingress -n "$DEPLOYMENT_NAMESPACE" -o json | \
+          jq -e '.items[].status.loadBalancer.ingress[]'
+      fi
+  environment:
+    name: $CI_ENVIRONMENT_NAME
+  dependencies:
+    - deploy:agent
+    - deploy:server
+  allow_failure: true
+
+# Job: Performance tests
+test:performance:
+  extends: .k8s_job_template
+  stage: test
+  image: grafana/k6:latest
+  script:
+    - |
+      echo "Running performance tests..."
+      
+      # Get service endpoints
+      ENDPOINTS=$(kubectl get svc -n "$DEPLOYMENT_NAMESPACE" -o json | \
+        jq -r '.items[] | select(.spec.type=="LoadBalancer" or .spec.type=="NodePort") | .status.loadBalancer.ingress[0].ip')
+      
+      # Run k6 tests if available
+      if [ -f "tests/k6/load-test.js" ]; then
+        k6 run --out json=results.json tests/k6/load-test.js
+      fi
+  artifacts:
+    reports:
+      performance: results.json
+  when: manual
+  allow_failure: true
+
+# Job: Destroy cluster (development)
+destroy:dev:
+  extends: .k8s_job_template
+  stage: cleanup
+  script:
+    - |
+      echo "Destroying development cluster..."
+      export DRY_RUN="false"
+      export FORCE="true"
+      bash "$DESTROY_SCRIPT" --type "$K3S_NODE_TYPE"
+  environment:
+    name: development
+    action: stop
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop" || $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# Job: Destroy cluster (staging)
+destroy:staging:
+  extends: .k8s_job_template
+  stage: cleanup
+  script:
+    - |
+      echo "Destroying staging cluster..."
+      export DRY_RUN="false"
+      export FORCE="false"  # Require confirmation for staging
+      bash "$DESTROY_SCRIPT" --type "$K3S_NODE_TYPE"
+  environment:
+    name: staging
+    action: stop
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+
+# Job: Destroy cluster (production)
+destroy:production:
+  extends: .k8s_job_template
+  stage: cleanup
+  script:
+    - |
+      echo "WARNING: This will destroy the production cluster!"
+      echo "This job requires manual confirmation and approval."
+      # Production teardown should be done manually outside CI
+      exit 1
+  environment:
+    name: production
+    action: stop
+  when: manual
+  rules:
+    - if: '$CI_COMMIT_TAG'
+
+# Include self-hosted runner configuration if available
+include:
+  - local: '.gitlab/ci/runners.yml'
+    rules:
+      - exists:
+          - '.gitlab/ci/runners.yml'

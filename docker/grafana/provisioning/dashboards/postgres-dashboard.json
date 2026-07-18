@@ -1,0 +1,55 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Active Connections",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(pg_stat_database_numbackends)",
+          "legendFormat": "connections",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Cache Hit Ratio",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 7 },
+      "targets": [
+        {
+          "expr": "sum(rate(pg_stat_database_blks_hit[5m])) / (sum(rate(pg_stat_database_blks_hit[5m])) + sum(rate(pg_stat_database_blks_read[5m])))",
+          "legendFormat": "hit ratio",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Transactions Commit Rate",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 14 },
+      "targets": [
+        {
+          "expr": "sum(rate(pg_stat_database_xact_commit[5m]))",
+          "legendFormat": "commits/s",
+          "refId": "C"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["buildmystack", "postgres"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timezone": "",
+  "title": "BuildMyStack - PostgreSQL",
+  "uid": "buildmystack-postgres",
+  "version": 1
+}

@@ -1,0 +1,55 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "Connected Clients",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(redis_connected_clients)",
+          "legendFormat": "clients",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Cache Hit Rate",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 7 },
+      "targets": [
+        {
+          "expr": "sum(rate(redis_keyspace_hits_total[5m])) / (sum(rate(redis_keyspace_hits_total[5m])) + sum(rate(redis_keyspace_misses_total[5m])))",
+          "legendFormat": "hit rate",
+          "refId": "B"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Memory Used",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 14 },
+      "targets": [
+        {
+          "expr": "sum(redis_memory_used_bytes)",
+          "legendFormat": "bytes",
+          "refId": "C"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["buildmystack", "redis"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timezone": "",
+  "title": "BuildMyStack - Redis",
+  "uid": "buildmystack-redis",
+  "version": 1
+}

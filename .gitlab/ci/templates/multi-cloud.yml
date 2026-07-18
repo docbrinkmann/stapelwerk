@@ -1,0 +1,7 @@
+# Multi-Cloud Template
+# Defines reusable variables and anchors for multi-cloud pipelines.
+
+.multi_cloud_defaults:
+  variables:
+    DRY_RUN: "client"
+    MANIFEST_PATH: "out/manifest.yaml"

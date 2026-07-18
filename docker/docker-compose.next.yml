@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  next-web:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: build-my-stack-next:latest
+    container_name: bms-next-web
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "sh", "-c", "wget -qO- http://localhost:3000/api/health || curl -f http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M

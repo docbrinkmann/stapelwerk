@@ -1,0 +1,41 @@
+name: Security Performance
+
+on:
+  pull_request:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  security-perf:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+image: postgres:18-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: buildmystack_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/buildmystack_test
+      NODE_ENV: test
+      SECURITY_CONCURRENCY: 50
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npm run db:generate
+      - run: npm run db:deploy
+      - name: Run Security Perf Checks
+        run: npm run perf:security

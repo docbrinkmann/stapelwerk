@@ -1,0 +1,310 @@
+# AlertManager Deployment for Build My Stack
+# Handles alert routing, deduplication, and notifications
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: alertmanager-config
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+data:
+  alertmanager.yml: |
+    global:
+      # Global SMTP configuration for email alerts
+      smtp_smarthost: 'smtp.example.com:587'
+      smtp_from: 'alertmanager@build-my-stack.dev'
+      smtp_auth_username: 'alertmanager@build-my-stack.dev'
+      smtp_auth_password_file: /etc/alertmanager/secrets/smtp-password
+      smtp_require_tls: true
+
+      # Slack webhook URL (configure via secret)
+      slack_api_url_file: /etc/alertmanager/secrets/slack-webhook
+
+      # PagerDuty routing key (configure via secret)
+      pagerduty_url: https://events.pagerduty.com/v2/enqueue
+
+      # Resolve timeout
+      resolve_timeout: 5m
+
+    # Templates for notification messages
+    templates:
+      - '/etc/alertmanager/templates/*.tmpl'
+
+    # Route tree for alert routing
+    route:
+      # Default receiver
+      receiver: 'default-slack'
+      
+      # Group alerts by these labels
+      group_by: ['alertname', 'severity', 'namespace']
+      
+      # How long to wait before sending a notification for a group
+      group_wait: 30s
+      
+      # How long to wait before sending notification about new alerts in a group
+      group_interval: 5m
+      
+      # How long to wait before re-sending a notification
+      repeat_interval: 4h
+
+      # Child routes for specific alert types
+      routes:
+        # Critical alerts -> PagerDuty + Slack
+        - match:
+            severity: critical
+          receiver: 'pagerduty-critical'
+          continue: true
+          routes:
+            - match:
+                alertname: CriticalVulnerabilitiesDetected
+              receiver: 'security-team'
+              continue: true
+
+        # Critical alerts also go to Slack
+        - match:
+            severity: critical
+          receiver: 'critical-slack'
+          group_wait: 10s
+          repeat_interval: 1h
+
+        # High severity -> Slack with shorter repeat
+        - match:
+            severity: warning
+          receiver: 'warning-slack'
+          repeat_interval: 12h
+
+        # Security-specific alerts
+        - match_re:
+            alertname: 'Security.*|.*Vulnerabilities.*'
+          receiver: 'security-team'
+          repeat_interval: 6h
+
+        # Infrastructure alerts
+        - match_re:
+            alertname: 'Pod.*|Node.*|Deployment.*'
+          receiver: 'infrastructure-slack'
+
+    # Inhibition rules to suppress certain alerts
+    inhibit_rules:
+      # Inhibit warning alerts if critical alert is firing
+      - source_match:
+          severity: 'critical'
+        target_match:
+          severity: 'warning'
+        equal: ['alertname', 'namespace']
+
+      # Inhibit pod alerts if node is down
+      - source_match:
+          alertname: 'NodeDown'
+        target_match_re:
+          alertname: 'Pod.*'
+        equal: ['node']
+
+    # Receiver definitions
+    receivers:
+      # Default Slack channel
+      - name: 'default-slack'
+        slack_configs:
+          - channel: '#alerts'
+            send_resolved: true
+            title: '{{ template "slack.default.title" . }}'
+            text: '{{ template "slack.default.text" . }}'
+            actions:
+              - type: button
+                text: 'Runbook :book:'
+                url: '{{ (index .Alerts 0).Annotations.runbook_url }}'
+              - type: button
+                text: 'Dashboard :chart_with_upwards_trend:'
+                url: 'https://grafana.build-my-stack.dev'
+
+      # Critical alerts Slack channel
+      - name: 'critical-slack'
+        slack_configs:
+          - channel: '#alerts-critical'
+            send_resolved: true
+            color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+            title: ':rotating_light: {{ .Status | toUpper }} - {{ .CommonLabels.alertname }}'
+            text: |
+              *Severity:* {{ .CommonLabels.severity }}
+              *Namespace:* {{ .CommonLabels.namespace }}
+              *Summary:* {{ .CommonAnnotations.summary }}
+              *Description:* {{ .CommonAnnotations.description }}
+              *Alerts:* {{ len .Alerts }}
+
+      # Warning alerts Slack channel
+      - name: 'warning-slack'
+        slack_configs:
+          - channel: '#alerts'
+            send_resolved: true
+            color: 'warning'
+            title: ':warning: {{ .CommonLabels.alertname }}'
+            text: |
+              *Severity:* {{ .CommonLabels.severity }}
+              *Summary:* {{ .CommonAnnotations.summary }}
+
+      # Infrastructure Slack channel
+      - name: 'infrastructure-slack'
+        slack_configs:
+          - channel: '#infrastructure'
+            send_resolved: true
+            title: ':gear: {{ .CommonLabels.alertname }}'
+            text: |
+              *Namespace:* {{ .CommonLabels.namespace }}
+              *Pod:* {{ .CommonLabels.pod }}
+              *Summary:* {{ .CommonAnnotations.summary }}
+
+      # Security team alerts
+      - name: 'security-team'
+        slack_configs:
+          - channel: '#security-alerts'
+            send_resolved: true
+            color: '{{ if eq .Status "firing" }}danger{{ else }}good{{ end }}'
+            title: ':shield: Security Alert - {{ .CommonLabels.alertname }}'
+            text: |
+              *Severity:* {{ .CommonLabels.severity }}
+              *Summary:* {{ .CommonAnnotations.summary }}
+              *Description:* {{ .CommonAnnotations.description }}
+        email_configs:
+          - to: 'security@build-my-stack.dev'
+            send_resolved: true
+            headers:
+              Subject: '[{{ .Status | toUpper }}] Security Alert: {{ .CommonLabels.alertname }}'
+
+      # PagerDuty for critical incidents
+      - name: 'pagerduty-critical'
+        pagerduty_configs:
+          - routing_key_file: /etc/alertmanager/secrets/pagerduty-routing-key
+            severity: '{{ .CommonLabels.severity }}'
+            description: '{{ .CommonAnnotations.summary }}'
+            details:
+              alertname: '{{ .CommonLabels.alertname }}'
+              namespace: '{{ .CommonLabels.namespace }}'
+              severity: '{{ .CommonLabels.severity }}'
+
+  # Notification templates
+  notification.tmpl: |
+    {{ define "slack.default.title" }}
+    [{{ .Status | toUpper }}{{ if eq .Status "firing" }}:{{ .Alerts.Firing | len }}{{ end }}] {{ .CommonLabels.alertname }}
+    {{ end }}
+
+    {{ define "slack.default.text" }}
+    {{ range .Alerts }}
+    *Alert:* {{ .Labels.alertname }}
+    *Severity:* {{ .Labels.severity }}
+    *Summary:* {{ .Annotations.summary }}
+    *Description:* {{ .Annotations.description }}
+    {{ end }}
+    {{ end }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: alertmanager-secrets
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+type: Opaque
+stringData:
+  # Replace these with actual values in production
+  smtp-password: "CHANGE_ME"
+  slack-webhook: "https://hooks.slack.com/services/CHANGE/ME/PLEASE"
+  pagerduty-routing-key: "CHANGE_ME_PAGERDUTY_KEY"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: alertmanager
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: alertmanager
+    spec:
+      securityContext:
+        fsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      containers:
+        - name: alertmanager
+          image: prom/alertmanager:v0.26.0
+          args:
+            - '--config.file=/etc/alertmanager/alertmanager.yml'
+            - '--storage.path=/alertmanager'
+            - '--web.external-url=https://alertmanager.build-my-stack.dev'
+            - '--cluster.listen-address='
+          ports:
+            - name: http
+              containerPort: 9093
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /-/healthy
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /-/ready
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+          volumeMounts:
+            - name: config
+              mountPath: /etc/alertmanager
+            - name: templates
+              mountPath: /etc/alertmanager/templates
+            - name: secrets
+              mountPath: /etc/alertmanager/secrets
+              readOnly: true
+            - name: storage
+              mountPath: /alertmanager
+      volumes:
+        - name: config
+          configMap:
+            name: alertmanager-config
+            items:
+              - key: alertmanager.yml
+                path: alertmanager.yml
+        - name: templates
+          configMap:
+            name: alertmanager-config
+            items:
+              - key: notification.tmpl
+                path: notification.tmpl
+        - name: secrets
+          secret:
+            secretName: alertmanager-secrets
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: alertmanager
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: alertmanager
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 9093
+      targetPort: http
+      protocol: TCP
+  selector:
+    app.kubernetes.io/name: alertmanager

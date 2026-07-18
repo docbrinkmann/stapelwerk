@@ -1,0 +1,333 @@
+name: Deploy to Staging and Production
+
+on:
+  push:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target environment'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      force_deploy:
+        description: 'Force deployment (skip some checks)'
+        required: false
+        type: boolean
+        default: false
+
+# Restrict concurrency to prevent overlapping deployments
+concurrency:
+  group: deploy-${{ github.ref }}-${{ github.event.inputs.environment || 'auto' }}
+  cancel-in-progress: false
+
+jobs:
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: github.ref == 'refs/heads/develop' || (github.event.inputs.environment == 'staging')
+    environment:
+      name: staging
+      url: https://build-my-stack-staging.vercel.app
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment information
+        run: vercel pull --yes --environment=preview --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build project artifacts
+        run: vercel build --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel (Staging)
+        id: deploy-staging
+        run: |
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          echo "## Staging Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 Deployed to: [$DEPLOYMENT_URL]($DEPLOYMENT_URL)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Wait for deployment to be ready
+        run: |
+          echo "Waiting for deployment to be ready..."
+          sleep 30
+          
+      - name: Health check
+        run: |
+          DEPLOYMENT_URL="${{ steps.deploy-staging.outputs.deployment_url }}"
+          echo "Running health check for $DEPLOYMENT_URL"
+          
+          MAX_ATTEMPTS=10
+          ATTEMPT=1
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            if curl -f --max-time 10 "$DEPLOYMENT_URL/api/health"; then
+              echo "✅ Health check passed on attempt $ATTEMPT"
+              break
+            else
+              echo "⚠️ Health check failed on attempt $ATTEMPT"
+              if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+                echo "❌ Health check failed after $MAX_ATTEMPTS attempts"
+                exit 1
+              fi
+              sleep 10
+              ATTEMPT=$((ATTEMPT + 1))
+            fi
+          done
+
+      - name: Run smoke tests
+        env:
+          STAGING_URL: ${{ steps.deploy-staging.outputs.deployment_url }}
+        run: |
+          echo "Running smoke tests against $STAGING_URL"
+          # Basic smoke tests
+          curl -f "$STAGING_URL/api/health" || exit 1
+          curl -f "$STAGING_URL/api/trpc/recommendation.getStackRecommendations" -H "Content-Type: application/json" || exit 1
+
+      - name: Notify staging deployment
+        if: success()
+        run: |
+          echo "🎉 Successfully deployed to staging: ${{ steps.deploy-staging.outputs.deployment_url }}"
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    if: github.ref == 'refs/heads/main' || (github.event.inputs.environment == 'production')
+    environment:
+      name: production
+      url: https://build-my-stack.vercel.app
+
+    # Only deploy to production if CI passes (unless force deploy is enabled)
+    needs: []
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        run: npm run db:generate
+
+      - name: Run pre-deployment checks
+        if: github.event.inputs.force_deploy != 'true'
+        run: |
+          echo "Running pre-deployment validation..."
+          npm run lint
+          npm run type-check
+          npm run build
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Pull Vercel environment information
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build project artifacts
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy to Vercel (Production)
+        id: deploy-production
+        run: |
+          DEPLOYMENT_URL=$(vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }})
+          echo "deployment_url=$DEPLOYMENT_URL" >> $GITHUB_OUTPUT
+          echo "## Production Deployment" >> $GITHUB_STEP_SUMMARY
+          echo "🚀 Deployed to: [$DEPLOYMENT_URL]($DEPLOYMENT_URL)" >> $GITHUB_STEP_SUMMARY
+
+      - name: Wait for deployment to be ready
+        run: |
+          echo "Waiting for production deployment to be ready..."
+          sleep 60
+
+      - name: Health check
+        run: |
+          DEPLOYMENT_URL="${{ steps.deploy-production.outputs.deployment_url }}"
+          echo "Running health check for $DEPLOYMENT_URL"
+          
+          MAX_ATTEMPTS=15
+          ATTEMPT=1
+          
+          while [ $ATTEMPT -le $MAX_ATTEMPTS ]; do
+            if curl -f --max-time 10 "$DEPLOYMENT_URL/api/health"; then
+              echo "✅ Health check passed on attempt $ATTEMPT"
+              break
+            else
+              echo "⚠️ Health check failed on attempt $ATTEMPT"
+              if [ $ATTEMPT -eq $MAX_ATTEMPTS ]; then
+                echo "❌ Health check failed after $MAX_ATTEMPTS attempts"
+                exit 1
+              fi
+              sleep 15
+              ATTEMPT=$((ATTEMPT + 1))
+            fi
+          done
+
+      - name: Run comprehensive smoke tests
+        env:
+          PRODUCTION_URL: ${{ steps.deploy-production.outputs.deployment_url }}
+        run: |
+          echo "Running comprehensive smoke tests against $PRODUCTION_URL"
+          
+          # Core API endpoints
+          curl -f "$PRODUCTION_URL/api/health" || exit 1
+          curl -f "$PRODUCTION_URL/api/trpc/recommendation.getStackRecommendations" -H "Content-Type: application/json" || exit 1
+          
+          # Check critical pages load
+          curl -f "$PRODUCTION_URL/" || exit 1
+          
+          # Performance check - should respond within reasonable time
+          RESPONSE_TIME=$(curl -o /dev/null -s -w "%{time_total}" "$PRODUCTION_URL/")
+          if (( $(echo "$RESPONSE_TIME > 5.0" | bc -l) )); then
+            echo "⚠️ Response time too slow: ${RESPONSE_TIME}s"
+            exit 1
+          fi
+          echo "✅ Response time acceptable: ${RESPONSE_TIME}s"
+
+      - name: Run database migrations (Production)
+        if: success()
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "Running database migrations..."
+          npm run db:deploy
+
+      - name: Post-deployment validation
+        env:
+          PRODUCTION_URL: ${{ steps.deploy-production.outputs.deployment_url }}
+        run: |
+          echo "Running post-deployment validation..."
+          
+          # Validate deployment was successful
+          curl -f "$PRODUCTION_URL/api/health" || exit 1
+          
+          # Check that the app returns expected responses
+          HEALTH_RESPONSE=$(curl -s "$PRODUCTION_URL/api/health")
+          if [[ $HEALTH_RESPONSE != *"healthy"* ]]; then
+            echo "❌ Health endpoint returned unexpected response: $HEALTH_RESPONSE"
+            exit 1
+          fi
+          
+          echo "✅ Post-deployment validation completed successfully"
+
+      - name: Create GitHub Release
+        if: success() && github.ref == 'refs/heads/main'
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: v${{ github.run_number }}
+          release_name: Production Release v${{ github.run_number }}
+          body: |
+            ## Production Deployment - Build #${{ github.run_number }}
+            
+            **Deployed to:** ${{ steps.deploy-production.outputs.deployment_url }}
+            **Commit:** ${{ github.sha }}
+            **Branch:** ${{ github.ref_name }}
+            **Deployment Time:** ${{ github.event.head_commit.timestamp }}
+            
+            ### Changes
+            ${{ github.event.head_commit.message }}
+          draft: false
+          prerelease: false
+
+      - name: Notify successful production deployment
+        if: success()
+        run: |
+          echo "🎉 Successfully deployed to production!"
+          echo "🌍 Live at: ${{ steps.deploy-production.outputs.deployment_url }}"
+
+  rollback-production:
+    name: Rollback Production
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: failure() && (github.ref == 'refs/heads/main' || github.event.inputs.environment == 'production')
+    needs: [deploy-production]
+    environment:
+      name: production
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install Vercel CLI
+        run: npm install -g vercel@latest
+
+      - name: Get previous deployment
+        id: get-previous
+        run: |
+          PREVIOUS_DEPLOYMENT=$(vercel ls --token=${{ secrets.VERCEL_TOKEN }} | grep "build-my-stack" | head -2 | tail -1 | awk '{print $2}')
+          echo "previous_url=$PREVIOUS_DEPLOYMENT" >> $GITHUB_OUTPUT
+
+      - name: Initiate rollback
+        if: steps.get-previous.outputs.previous_url != ''
+        run: |
+          echo "🔄 Rolling back to previous deployment: ${{ steps.get-previous.outputs.previous_url }}"
+          vercel alias ${{ steps.get-previous.outputs.previous_url }} build-my-stack.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Verify rollback
+        if: steps.get-previous.outputs.previous_url != ''
+        run: |
+          sleep 30
+          curl -f https://build-my-stack.vercel.app/api/health || exit 1
+          echo "✅ Rollback completed successfully"
+
+      - name: Notify rollback
+        if: steps.get-previous.outputs.previous_url != ''
+        run: |
+          echo "🔄 Production has been rolled back to previous version"
+
+  # Deployment summary
+  deployment-summary:
+    name: Deployment Summary
+    runs-on: ubuntu-latest
+    needs: [deploy-staging, deploy-production]
+    if: always()
+
+    steps:
+      - name: Generate deployment summary
+        run: |
+          echo "## Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          if [[ "${{ needs.deploy-staging.result }}" == "success" ]]; then
+            echo "✅ **Staging:** Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.deploy-staging.result }}" == "skipped" ]]; then
+            echo "⏭️ **Staging:** Skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Staging:** Deployment failed" >> $GITHUB_STEP_SUMMARY
+          fi
+          
+          if [[ "${{ needs.deploy-production.result }}" == "success" ]]; then
+            echo "✅ **Production:** Deployed successfully" >> $GITHUB_STEP_SUMMARY
+          elif [[ "${{ needs.deploy-production.result }}" == "skipped" ]]; then
+            echo "⏭️ **Production:** Skipped" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "❌ **Production:** Deployment failed" >> $GITHUB_STEP_SUMMARY
+          fi

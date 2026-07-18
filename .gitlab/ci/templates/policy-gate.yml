@@ -1,0 +1,14 @@
+# Policy Gate Template
+# Provides a base job to evaluate OPA policies and gate the pipeline.
+
+.policy_gate_base:
+  image: node:18-alpine
+  before_script:
+    - corepack enable
+    - npm ci --prefer-offline --no-audit --no-fund
+  script:
+    - npm run ci:policy-check
+  artifacts:
+    when: always
+    paths:
+      - policy-report.json

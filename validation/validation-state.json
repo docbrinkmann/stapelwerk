@@ -1,0 +1,26 @@
+{
+  "validationId": "rollout-20250922-093052",
+  "environment": "production",
+  "startTime": "2025-09-22T09:30:52+02:00",
+  "status": "FAILED",
+  "validations": {
+    "feature_flags": "pending",
+    "ai_recommendations": "pending",
+    "template_system": "pending",
+    "system_health": "pending",
+    "performance": "pending",
+    "integration": "pending",
+    "monitoring": "pending"
+  },
+  "results": {
+    "total": 32,
+    "passed": 4,
+    "failed": 7,
+    "warnings": 21
+  },
+  "errors": [],
+  "warnings": [],
+  "lastUpdated": 1758526254.008917,
+  "endTime": "2025-09-22T09:30:54+02:00",
+  "successRate": 12.50
+}

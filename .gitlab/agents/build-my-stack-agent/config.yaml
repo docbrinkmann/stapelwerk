@@ -1,0 +1,14 @@
+# GitLab Kubernetes Agent config (skeleton)
+# See https://docs.gitlab.com/ee/user/clusters/agent/ for setup details.
+# 1) Install the agent on your cluster
+# 2) Register the agent with your project or group
+# 3) Optionally, restrict access to namespaces/resources below
+
+ci_access:
+  # allow this project to use the agent in CI
+  projects:
+    - id: $CI_PROJECT_PATH # replace or set in CI if using include:project
+
+# Namespace restrictions
+#namespace:
+#  include: ["buildmystack"]

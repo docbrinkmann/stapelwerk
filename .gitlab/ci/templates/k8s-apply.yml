@@ -1,0 +1,36 @@
+# Kubernetes Apply Template
+# Provides a base job to apply manifests using either a base64 kubeconfig or a GitLab Agent context.
+
+.k8s_apply_base:
+  image: bitnami/kubectl:latest
+  variables:
+    MANIFEST_PATH: "manifest.yaml"
+    DRY_RUN: "client" # set to 'none' to actually apply
+  script:
+    - |
+      set -euo pipefail
+      if [ -n "${KUBECONFIG_B64:-}" ]; then
+        echo "$KUBECONFIG_B64" | base64 -d > kubeconfig.yaml
+        export KUBECONFIG="$PWD/kubeconfig.yaml"
+        echo "Using kubeconfig from CI variable"
+      elif [ -n "${KUBE_CONTEXT:-}" ]; then
+        # Assumes runner has access to the GitLab Agent context
+        kubectl config use-context "$KUBE_CONTEXT"
+        echo "Using agent context: $KUBE_CONTEXT"
+      else
+        echo "ERROR: Provide either KUBECONFIG_B64 or KUBE_CONTEXT" >&2
+        exit 1
+      fi
+      test -f "$MANIFEST_PATH" || { echo "Manifest not found: $MANIFEST_PATH" >&2; exit 1; }
+      if [ "$DRY_RUN" != "none" ]; then
+        echo "Dry-run apply of $MANIFEST_PATH"
+        kubectl apply --dry-run=$DRY_RUN -f "$MANIFEST_PATH"
+      else
+        echo "Applying $MANIFEST_PATH"
+        kubectl apply -f "$MANIFEST_PATH"
+        kubectl rollout status deploy -A || true
+      fi
+  artifacts:
+    when: always
+    reports:
+      dotenv: []

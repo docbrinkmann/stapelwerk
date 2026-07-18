@@ -1,0 +1,101 @@
+config:
+  target: "http://localhost:3000"
+  phases:
+    # Warm-up phase
+    - duration: 30
+      arrivalRate: 10
+      name: "Warm-up"
+    # Ramp-up to moderate load
+    - duration: 60
+      arrivalRate: 50
+      name: "Moderate load"
+    # Peak load test
+    - duration: 60
+      arrivalRate: 100
+      name: "Peak load"
+    # Stress test
+    - duration: 60
+      arrivalRate: 200
+      name: "Stress test"
+    # Cool down
+    - duration: 30
+      arrivalRate: 10
+      name: "Cool down"
+
+  # Performance budgets
+  ensure:
+    maxErrorRate: 1  # Max 1% error rate
+    p95: 500  # 95th percentile < 500ms
+    p99: 1000 # 99th percentile < 1000ms
+
+  # Plugin configurations
+  plugins:
+    metrics-by-endpoint:
+      stripQueryString: true
+      ignoreUnknownEndpoints: false
+
+scenarios:
+  # Scenario 1: Home page browsing
+  - name: "Browse home page"
+    weight: 30
+    flow:
+      - get:
+          url: "/"
+          capture:
+            - json: "$"
+              as: "homepage"
+
+  # Scenario 2: Service browsing with filtering
+  - name: "Browse and filter services"
+    weight: 40
+    flow:
+      - get:
+          url: "/"
+      - think: 2
+      - get:
+          url: "/api/services"
+          qs:
+            category: "databases"
+            limit: 20
+      - think: 1
+      - get:
+          url: "/api/services"
+          qs:
+            search: "postgres"
+            limit: 20
+
+  # Scenario 3: Infinite scroll simulation
+  - name: "Infinite scroll through services"
+    weight: 20
+    flow:
+      - get:
+          url: "/"
+      - loop:
+          - get:
+              url: "/api/services"
+              qs:
+                limit: 20
+                cursor: "{{ cursor }}"
+          - think: 1
+        count: 5
+
+  # Scenario 4: Health and metrics endpoints
+  - name: "Monitor health and metrics"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/health"
+      - get:
+          url: "/api/metrics"
+
+  # Scenario 5: Search functionality
+  - name: "Search services"
+    weight: 5
+    flow:
+      - get:
+          url: "/api/services"
+          qs:
+            search: "{{ $randomString() }}"
+            limit: 10
+
+# Environment variables can override these

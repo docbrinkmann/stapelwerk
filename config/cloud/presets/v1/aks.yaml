@@ -1,0 +1,35 @@
+# AKS Preset v1 (2025 best practices)
+ingress:
+  className: "nginx"
+  annotations:
+    kubernetes.io/ingress.class: "nginx"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+storageClass:
+  name: "managed-csi"
+  parameters:
+    skuName: "Premium_LRS"
+loadBalancer:
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path: "/healthz"
+certManager:
+  clusterIssuer: "letsencrypt-prod"
+  email: "devops@example.com"
+externalSecrets:
+  provider: "azure"
+  secretStore: "key-vault"
+registry:
+  useWorkloadIdentity: true
+  federatedIdentity: "${AKS_FEDERATED_IDENTITY:-}"
+
+guidance:
+  hpa:
+    enabled: true
+    minReplicas: 2
+    targetCPUUtilizationPercentage: 70
+  dr:
+    strategy: "Active-Passive"
+    rpoMinutes: 15
+    rtoMinutes: 30
+  cost:
+    spotRecommended: true
+    notes: "Use Azure Spot VMs for batch/stateless"

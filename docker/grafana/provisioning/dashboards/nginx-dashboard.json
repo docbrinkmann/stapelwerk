@@ -1,0 +1,43 @@
+{
+  "annotations": {"list": []},
+  "editable": false,
+  "gnetId": null,
+  "graphTooltip": 0,
+  "id": null,
+  "panels": [
+    {
+      "type": "timeseries",
+      "title": "HTTP Requests (rate)",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 0 },
+      "targets": [
+        {
+          "expr": "sum(rate(nginx_http_requests_total[5m]))",
+          "legendFormat": "requests/s",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "type": "timeseries",
+      "title": "Active Connections",
+      "gridPos": { "h": 7, "w": 24, "x": 0, "y": 7 },
+      "targets": [
+        {
+          "expr": "sum(nginx_http_connections)",
+          "legendFormat": "connections",
+          "refId": "B"
+        }
+      ]
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 36,
+  "style": "dark",
+  "tags": ["buildmystack", "nginx"],
+  "templating": {"list": []},
+  "time": {"from": "now-6h", "to": "now"},
+  "timezone": "",
+  "title": "BuildMyStack - Nginx",
+  "uid": "buildmystack-nginx",
+  "version": 1
+}

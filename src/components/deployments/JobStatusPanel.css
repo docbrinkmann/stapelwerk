@@ -1,0 +1,19 @@
+/* Minimal styles for JobStatusPanel (scoped classnames) */
+.job-status-panel { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: var(--card); }
+.job-status-panel__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.job-status-panel__title { margin: 0; font-size: 1rem; font-weight: 600; }
+.job-status-panel__meta { display: flex; gap: 8px; align-items: center; }
+.job-status-badge { padding: 2px 8px; border-radius: 12px; background: var(--muted); font-size: 0.8rem; }
+.job-status-badge--queued { background: var(--muted); }
+.job-status-badge--running { background: color-mix(in oklab, var(--info) 15%, transparent); color: var(--info-foreground); }
+.job-status-badge--succeeded { background: color-mix(in oklab, var(--success) 15%, transparent); color: var(--success-foreground); }
+.job-status-badge--failed { background: color-mix(in oklab, var(--destructive) 12%, transparent); color: var(--destructive); }
+.job-status-panel__controls { display: flex; gap: 8px; margin-bottom: 8px; }
+.job-status-btn { border: 1px solid var(--border); background: var(--muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+.job-status-panel__progress { height: 4px; margin: 6px 0 10px; background: var(--muted); border-radius: 4px; overflow: hidden; }
+.job-progress-bar { width: 50%; height: 100%; background: var(--primary); animation: job-progress 1.5s infinite linear; }
+@keyframes job-progress { from { transform: translateX(-100%); } to { transform: translateX(200%); } }
+.job-status-panel__logs { max-height: 220px; overflow-y: auto; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace; font-size: 12px; }
+.job-log-entry { display: flex; gap: 6px; padding: 2px 0; }
+.job-log-time { color: var(--muted-foreground); }
+.job-log-empty { color: var(--muted-foreground); }
