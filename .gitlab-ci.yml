@@ -301,7 +301,7 @@ mirror-public-main:
   before_script: []
   cache: []
   script:
-    - git push "$GITHUB_MIRROR_URL" HEAD:main
+    - git push "$GITHUB_MIRROR_URL" HEAD:refs/heads/main
   rules:
     - if: '$CI_COMMIT_BRANCH == "public-main" && $GITHUB_MIRROR_URL'
 
