@@ -298,6 +298,10 @@ pipeline-summary:
 mirror-public-main:
   stage: post-deployment
   image: node:22
+  # A mirror pushes a git ref, not build artifacts — it needs nothing from
+  # earlier stages. needs:[] starts it immediately at pipeline start (public-main
+  # snapshots are only ever cut after the local gates are green).
+  needs: []
   before_script: []
   cache: []
   script:
