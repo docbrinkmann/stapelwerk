@@ -1,0 +1,91 @@
+{
+  "examples": [
+    {
+      "id": 1,
+      "name": "Alpha Product",
+      "createdAt": "2024-01-01T00:00:00.000Z",
+      "updatedAt": "2024-01-01T00:00:00.000Z"
+    },
+    {
+      "id": 2,
+      "name": "Beta Service",
+      "createdAt": "2024-01-02T00:00:00.000Z",
+      "updatedAt": "2024-01-02T00:00:00.000Z"
+    },
+    {
+      "id": 3,
+      "name": "Gamma Solution",
+      "createdAt": "2024-01-03T00:00:00.000Z",
+      "updatedAt": "2024-01-03T00:00:00.000Z"
+    }
+  ],
+  
+  "searchExamples": [
+    {
+      "id": 10,
+      "name": "Search Alpha",
+      "createdAt": "2024-01-10T00:00:00.000Z",
+      "updatedAt": "2024-01-10T00:00:00.000Z"
+    },
+    {
+      "id": 11,
+      "name": "Search Beta",
+      "createdAt": "2024-01-11T00:00:00.000Z",
+      "updatedAt": "2024-01-11T00:00:00.000Z"
+    },
+    {
+      "id": 12,
+      "name": "Different Item",
+      "createdAt": "2024-01-12T00:00:00.000Z",
+      "updatedAt": "2024-01-12T00:00:00.000Z"
+    }
+  ],
+
+  "paginationExamples": [
+    {
+      "id": 20,
+      "name": "Page Item 1",
+      "createdAt": "2024-02-01T00:00:00.000Z",
+      "updatedAt": "2024-02-01T00:00:00.000Z"
+    },
+    {
+      "id": 21,
+      "name": "Page Item 2",
+      "createdAt": "2024-02-02T00:00:00.000Z",
+      "updatedAt": "2024-02-02T00:00:00.000Z"
+    },
+    {
+      "id": 22,
+      "name": "Page Item 3",
+      "createdAt": "2024-02-03T00:00:00.000Z",
+      "updatedAt": "2024-02-03T00:00:00.000Z"
+    },
+    {
+      "id": 23,
+      "name": "Page Item 4",
+      "createdAt": "2024-02-04T00:00:00.000Z",
+      "updatedAt": "2024-02-04T00:00:00.000Z"
+    },
+    {
+      "id": 24,
+      "name": "Page Item 5",
+      "createdAt": "2024-02-05T00:00:00.000Z",
+      "updatedAt": "2024-02-05T00:00:00.000Z"
+    }
+  ],
+
+  "invalidExamples": [
+    {
+      "id": null,
+      "name": "",
+      "createdAt": null,
+      "updatedAt": null
+    },
+    {
+      "id": -1,
+      "name": null,
+      "createdAt": "invalid-date",
+      "updatedAt": "invalid-date"
+    }
+  ]
+}

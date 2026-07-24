@@ -1,0 +1,580 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+  // Connection pooling configuration for production load handling
+  // Based on Prisma best practices: num_physical_cpus * 2 + 1
+  // Docker container typically has 4 vCPUs → pool_size = 9
+  // Increased to 20 to handle Artillery load test requirements (100-200 req/sec)
+  // With connection_limit in URL: postgresql://user:pass@host:5432/db?connection_limit=20&pool_timeout=20
+}
+
+model alerts {
+  id                  String    @id
+  ruleId              String
+  stackId             String
+  serviceId           Int?
+  status              String
+  severity            String
+  message             String
+  details             String
+  value               Decimal?
+  threshold           Decimal?
+  triggeredAt         DateTime  @default(now())
+  acknowledgedAt      DateTime?
+  acknowledgedBy      String?
+  acknowledgmentNotes String?
+  resolvedAt          DateTime?
+  resolutionNotes     String?
+  escalationLevel     Int?      @default(0)
+  notificationsSent   String?
+  users               users?    @relation(fields: [acknowledgedBy], references: [id])
+  services            services? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  stacks              stacks    @relation(fields: [stackId], references: [id], onDelete: Cascade)
+
+  @@index([ruleId])
+  @@index([stackId])
+  @@index([status])
+  @@index([triggeredAt(sort: Desc)])
+}
+
+model categories {
+  id          Int        @id @default(autoincrement())
+  name        String     @unique
+  slug        String     @unique
+  description String?
+  icon        String?
+  sortOrder   Int        @default(0)
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime
+  services    services[]
+
+  @@index([slug])
+  @@index([sortOrder])
+  // Composite index for category listing optimization
+  @@index([sortOrder, name]) // Category listing with name
+}
+
+model deployment_artifacts {
+  id                 String              @id
+  type               String
+  checksum           String
+  location           String?
+  metadata           String              @default("{}")
+  stackId            String
+  targetId           String?
+  createdAt          DateTime            @default(now())
+  stacks             stacks              @relation(fields: [stackId], references: [id], onDelete: Cascade)
+  deployment_targets deployment_targets? @relation(fields: [targetId], references: [id])
+  deployment_jobs    deployment_jobs[]
+
+  @@index([checksum])
+  @@index([stackId])
+  @@index([targetId])
+  @@index([type])
+}
+
+model deployment_jobs {
+  id                   String                @id
+  mode                 String
+  status               String                @default("queued")
+  logs                 String                @default("[]")
+  stackId              String?
+  targetId             String?
+  artifactId           String?
+  createdBy            String?
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime
+  deployment_artifacts deployment_artifacts? @relation(fields: [artifactId], references: [id])
+  stacks               stacks?               @relation(fields: [stackId], references: [id])
+  deployment_targets   deployment_targets?   @relation(fields: [targetId], references: [id])
+
+  @@index([artifactId])
+  @@index([createdAt])
+  @@index([mode])
+  @@index([stackId])
+  @@index([status])
+  @@index([targetId])
+}
+
+model deployment_target_overrides {
+  id                 String             @id
+  targetId           String
+  serviceId          Int
+  stackId            String?
+  overrides          String             @default("{}")
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime
+  services           services           @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  deployment_targets deployment_targets @relation(fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@unique([targetId, serviceId, stackId])
+  @@index([serviceId])
+  @@index([stackId])
+  @@index([targetId])
+}
+
+model deployment_targets {
+  id                          String                        @id
+  name                        String
+  type                        String
+  provider                    String
+  config                      String                        @default("{}")
+  // Direct-deploy location: null/"local" = the Docker host Stapelwerk runs on
+  // (mounted socket); "remote" = a Docker host reached over SSH (key auth only).
+  location                    String?                       @default("local")
+  host                        String? // remote: hostname / IP
+  sshUser                     String? // remote: SSH login user
+  sshPort                     Int? // remote: SSH port (default 22)
+  // remote: timestamp the operator acknowledged the SSH-key liability disclaimer
+  // (Stapelwerk holds a key that can run docker on their host). Required to
+  // register a remote target; null for local targets.
+  riskAcknowledgedAt          DateTime?
+  userId                      String?
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime
+  deployment_artifacts        deployment_artifacts[]
+  deployment_jobs             deployment_jobs[]
+  deployment_target_overrides deployment_target_overrides[]
+
+  @@index([provider])
+  @@index([type])
+  @@index([userId])
+}
+
+model monitoring_alerts {
+  id         String    @id
+  severity   String
+  service    String
+  message    String
+  details    String    @default("{}")
+  resolved   Boolean   @default(false)
+  resolvedBy String?
+  resolvedAt DateTime?
+  timestamp  DateTime  @default(now())
+
+  @@index([resolved])
+  @@index([service])
+  @@index([severity])
+  @@index([timestamp(sort: Desc)])
+}
+
+model performance_metrics {
+  id                String    @id
+  stackId           String
+  serviceId         Int?
+  metricType        String
+  metricName        String
+  value             Decimal
+  unit              String
+  timestamp         DateTime
+  aggregationPeriod String?   @default("1m")
+  tags              String    @default("{}")
+  createdAt         DateTime  @default(now())
+  services          services? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  stacks            stacks    @relation(fields: [stackId], references: [id], onDelete: Cascade)
+
+  @@index([metricType, timestamp(sort: Desc)])
+  @@index([serviceId, timestamp(sort: Desc)])
+  @@index([stackId, timestamp(sort: Desc)])
+  @@index([timestamp(sort: Desc)])
+}
+
+model policy_templates {
+  id                String   @id
+  key               String   @unique
+  name              String
+  description       String?
+  version           String   @default("1.0.0")
+  definition        String
+  defaultParameters String   @default("{}")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime
+
+  @@index([key])
+}
+
+model recommendation_feedback {
+  id               String          @id
+  recommendationId String
+  userId           String?
+  sessionId        String?
+  rating           Int?
+  action           String
+  comment          String?
+  contextData      String?         @default("{}")
+  createdAt        DateTime        @default(now())
+  recommendations  recommendations @relation(fields: [recommendationId], references: [id], onDelete: Cascade)
+
+  @@index([action])
+  @@index([createdAt])
+  @@index([rating])
+  @@index([recommendationId])
+  @@index([sessionId])
+  @@index([userId])
+}
+
+model recommendation_patterns {
+  id           String   @id
+  serviceIds   String
+  frequency    Int
+  successRate  Float
+  category     String
+  minStackSize Int      @default(1)
+  maxStackSize Int      @default(10)
+  metadata     String?  @default("{}")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime
+
+  @@index([category])
+  @@index([frequency])
+  @@index([minStackSize, maxStackSize])
+  @@index([successRate])
+}
+
+model recommendations {
+  id                      String                    @id
+  serviceId               Int
+  targetStackId           String?
+  userId                  String?
+  score                   Float
+  rationale               String
+  category                String
+  algorithmVersion        String                    @default("1.0")
+  metadata                String?                   @default("{}")
+  viewCount               Int                       @default(0)
+  adoptionCount           Int                       @default(0)
+  createdAt               DateTime                  @default(now())
+  updatedAt               DateTime
+  expiresAt               DateTime?
+  recommendation_feedback recommendation_feedback[]
+  services                services                  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([category])
+  @@index([createdAt])
+  @@index([score])
+  @@index([serviceId])
+  @@index([targetStackId])
+  @@index([userId])
+}
+
+model service_imports {
+  id                Int       @id @default(autoincrement())
+  sourceUrl         String
+  sourceType        String
+  status            String    @default("pending")
+  extractedMetadata String    @default("{}")
+  submittedBy       String?
+  reviewedBy        String?
+  reviewNotes       String?
+  serviceId         Int?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime
+  services          services? @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+
+  @@index([serviceId])
+  @@index([sourceType])
+  @@index([status])
+}
+
+model services {
+  id                          Int                           @id @default(autoincrement())
+  name                        String
+  slug                        String                        @unique
+  description                 String
+  dockerImage                 String
+  version                     String                        @default("latest")
+  categoryId                  Int
+  ports                       String                        @default("[]")
+  environmentVariables        String                        @default("[]")
+  volumes                     String                        @default("[]")
+  resourceRequirements        String                        @default("{}")
+  compatibilityInfo           String                        @default("{}")
+  documentationUrl            String?
+  featured                    Boolean                       @default(false)
+  status                      String                        @default("pending_review")
+  createdAt                   DateTime                      @default(now())
+  updatedAt                   DateTime
+  expectedResourceUsage       String                        @default("{}")
+  performanceTier             String?                       @default("standard")
+  slaRequirements             String                        @default("{}")
+  alerts                      alerts[]
+  deployment_target_overrides deployment_target_overrides[]
+  performance_metrics         performance_metrics[]
+  recommendations             recommendations[]
+  service_imports             service_imports[]
+  categories                  categories                    @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  stack_services              stack_services[]
+  use_case_templates          use_case_templates[]          @relation("TemplateServices")
+
+  @@index([categoryId])
+  @@index([dockerImage])
+  @@index([featured])
+  @@index([slug])
+  @@index([status])
+  // Composite indexes for performance optimization
+  @@index([status, featured]) // Featured services query optimization
+  @@index([categoryId, status]) // Services by category with status filter
+  @@index([status, createdAt(sort: Desc)]) // Recent approved services
+  @@index([featured, status, createdAt(sort: Desc)]) // Featured services ordered by date
+}
+
+model stack_service_configurations {
+  id                   String         @id
+  stackServiceId       String         @unique
+  environmentVariables String         @default("{}")
+  portMappings         String         @default("{}")
+  volumeMounts         String         @default("{}")
+  dependsOn            String         @default("[]")
+  // Optional docker `network_mode` — e.g. "service:gluetun" to route a download
+  // client's traffic through a VPN container (leak-proof kill-switch). Null =
+  // the default app-network. Additive column.
+  networkMode          String?
+  createdAt            DateTime       @default(now())
+  updatedAt            DateTime
+  stack_services       stack_services @relation(fields: [stackServiceId], references: [id], onDelete: Cascade)
+
+  @@index([stackServiceId])
+}
+
+model stack_services {
+  id                           String                        @id
+  stackId                      String
+  serviceId                    Int
+  order                        Int
+  createdAt                    DateTime                      @default(now())
+  stack_service_configurations stack_service_configurations?
+  services                     services                      @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  stacks                       stacks                        @relation(fields: [stackId], references: [id], onDelete: Cascade)
+
+  @@unique([stackId, serviceId])
+  @@index([serviceId])
+  @@index([stackId])
+  @@index([stackId, order])
+}
+
+model stacks {
+  id                           String                 @id
+  name                         String
+  description                  String?
+  slug                         String                 @unique
+  userId                       String?
+  isPublic                     Boolean                @default(false)
+  isTemplate                   Boolean                @default(false)
+  status                       String                 @default("draft")
+  performanceMonitoringEnabled Boolean                @default(false)
+  metricsRetentionDays         Int                    @default(30)
+  costTrackingEnabled          Boolean                @default(false)
+  performanceConfig            String                 @default("{}")
+  envVars                      String                 @default("[]")
+  importCount                  Int                    @default(0)
+  organizationId               String?
+  visibility                   String                 @default("private")
+  requiresApproval             Boolean                @default(false)
+  createdAt                    DateTime               @default(now())
+  updatedAt                    DateTime
+  alerts                       alerts[]
+  deployment_artifacts         deployment_artifacts[]
+  deployment_jobs              deployment_jobs[]
+  performance_metrics          performance_metrics[]
+  stack_services               stack_services[]
+  deployment_logs              deployment_logs[]
+  terminal_sessions            terminal_sessions[]
+
+  @@index([isPublic])
+  @@index([organizationId])
+  @@index([performanceMonitoringEnabled])
+  @@index([slug])
+  @@index([status])
+  @@index([userId])
+  @@index([visibility])
+}
+
+model template_ratings {
+  id                 String             @id
+  templateId         String
+  userId             String
+  rating             Int
+  comment            String?
+  helpful            Int                @default(0)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime
+  use_case_templates use_case_templates @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@unique([templateId, userId])
+  @@index([createdAt])
+  @@index([rating])
+  @@index([templateId])
+  @@index([userId])
+}
+
+model template_usage {
+  id                 String             @id
+  templateId         String
+  stackId            String
+  userId             String?
+  servicesAdded      Int                @default(0)
+  successful         Boolean?
+  feedback           String?
+  createdAt          DateTime           @default(now())
+  use_case_templates use_case_templates @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([stackId])
+  @@index([templateId])
+  @@index([userId])
+}
+
+model template_versions {
+  id                 String             @id
+  templateId         String
+  version            String
+  changes            String
+  serviceIds         String
+  metadata           String?            @default("{}")
+  createdAt          DateTime           @default(now())
+  createdBy          String?
+  use_case_templates use_case_templates @relation(fields: [templateId], references: [id], onDelete: Cascade)
+
+  @@index([createdAt])
+  @@index([templateId])
+  @@index([version])
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by Prisma Client.
+model use_case_templates {
+  id                 String              @id
+  name               String
+  description        String
+  category           String
+  difficulty         String
+  estimatedSetupTime String
+  serviceIds         String
+  version            String              @default("1.0.0")
+  isActive           Boolean             @default(true)
+  featured           Boolean             @default(false)
+  usageCount         Int                 @default(0)
+  metadata           String?             @default("{}")
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime
+  createdBy          String?
+  template_ratings   template_ratings[]
+  template_usage     template_usage[]
+  template_versions  template_versions[]
+  services           services[]          @relation("TemplateServices")
+
+  @@index([category])
+  @@index([createdAt])
+  @@index([difficulty])
+  @@index([featured])
+  @@index([isActive])
+  @@index([usageCount])
+}
+
+model users {
+  id                String              @id
+  email             String              @unique
+  name              String?
+  passwordHash      String?
+  role              String              @default("user")
+  // Billing plan (hosted instance only; gating is inert unless BILLING_ENABLED).
+  // Additive columns — existing rows default to the free plan.
+  plan              String              @default("free")
+  planValidUntil    DateTime?
+  preferences       String              @default("{}")
+  lastActivity      DateTime            @default(now())
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime
+  alerts            alerts[]
+  terminal_sessions terminal_sessions[]
+
+  @@index([lastActivity])
+}
+
+// Provider webhook ledger — idempotency + audit for billing events. Keyed on
+// the provider's event id so a replayed webhook is a no-op (see the webhook
+// route). Raw payload kept for debugging/audit.
+model billing_events {
+  id          String   @id @default(cuid())
+  provider    String   @default("lemonsqueezy")
+  eventId     String   @unique
+  type        String
+  userId      String?
+  payload     String
+  processedAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// The one-time "verified deploy" purchase + its signed report artifact. A row is
+// created as a paid credit by the Lemon Squeezy order webhook (or free, on
+// self-host), then filled in when the user generates the signed leak-proof report
+// for a specific stack. Composing/checking/exporting stay free; this is the trust
+// artifact. See src/lib/deploy/verified-deploy-report.ts.
+model verified_deploy_reports {
+  id                  String    @id @default(cuid())
+  userId              String
+  // Set when paid via a Lemon Squeezy one-time order; null for self-host (billing
+  // off) free reports. Unique so the order webhook is idempotent.
+  lemonsqueezyOrderId String?   @unique
+  // Set when the report is generated for a specific stack.
+  stackId             String?
+  // "paid" (credit, not yet generated) | "leak-proof" | "leak" | "no-download-client"
+  status              String    @default("paid")
+  // The exact canonical JSON of the signed VerifiedDeployReport — the bytes the
+  // signature covers, so a report stays verifiable regardless of later renames.
+  reportJson          String?
+  signature           String? // ed25519 signature (base64) over reportJson
+  signedAt            DateTime?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime
+
+  @@index([userId])
+  @@index([stackId])
+}
+
+model deployment_logs {
+  id           String   @id @default(cuid())
+  stackId      String
+  deploymentId String?
+  level        String   @default("info") // info, warn, error, debug
+  source       String? // service name or component
+  message      String
+  metadata     String   @default("{}")
+  timestamp    DateTime @default(now())
+
+  stacks stacks @relation(fields: [stackId], references: [id], onDelete: Cascade)
+
+  @@index([stackId])
+  @@index([deploymentId])
+  @@index([level])
+  @@index([source])
+  @@index([timestamp(sort: Desc)])
+}
+
+// Terminal sessions for web terminal access
+model terminal_sessions {
+  id           String    @id @default(cuid())
+  stackId      String
+  userId       String
+  containerId  String? // Docker container ID
+  status       String    @default("active") // active, closed, error
+  command      String? // Initial command (e.g., /bin/bash)
+  exitCode     Int?
+  startedAt    DateTime  @default(now())
+  endedAt      DateTime?
+  lastActivity DateTime  @default(now())
+  metadata     String    @default("{}")
+
+  stacks stacks @relation(fields: [stackId], references: [id], onDelete: Cascade)
+  users  users  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([stackId])
+  @@index([userId])
+  @@index([status])
+  @@index([startedAt(sort: Desc)])
+  @@index([lastActivity(sort: Desc)])
+}

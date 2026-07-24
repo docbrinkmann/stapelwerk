@@ -1,0 +1,35 @@
+# GKE Preset v1 (2025 best practices)
+ingress:
+  className: "gce"
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.allow-http: "false"
+storageClass:
+  name: "standard-rwo"
+  parameters:
+    type: "pd-balanced"
+loadBalancer:
+  annotations:
+    cloud.google.com/load-balancer-type: "External"
+certManager:
+  clusterIssuer: "letsencrypt-prod"
+  email: "devops@example.com"
+externalSecrets:
+  provider: "gcp"
+  secretStore: "secret-manager"
+registry:
+  workloadIdentity: true
+  serviceAccount: "${GKE_SA:-}"
+
+guidance:
+  hpa:
+    enabled: true
+    minReplicas: 2
+    targetCPUUtilizationPercentage: 70
+  dr:
+    strategy: "Active-Passive"
+    rpoMinutes: 15
+    rtoMinutes: 30
+  cost:
+    spotRecommended: true
+    notes: "Use preemptible nodes for stateless workloads"

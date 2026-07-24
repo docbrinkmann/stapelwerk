@@ -1,0 +1,198 @@
+services:
+  # Next.js Application Service
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        - NODE_VERSION=22
+    container_name: stapelwerk-app
+    ports:
+      - "3999:3000"
+    environment:
+      - NODE_ENV=development
+      - NEXT_TELEMETRY_DISABLED=1
+      - WATCHPACK_POLLING=true
+      - CHOKIDAR_USEPOLLING=true
+      - HOST=0.0.0.0
+      - PORT=3000
+      # TypeScript strict mode settings
+      - TS_NODE_PROJECT=./tsconfig.json
+      # Direct-deploy bridge: the app has no Docker socket, so it delegates
+      # `docker compose` to the websocket service (shared token, same network).
+      # Operator sets DEPLOY_BRIDGE_TOKEN in their shell/.env (strong random value).
+      - DEPLOY_BRIDGE_URL=http://websocket:3001
+      - DEPLOY_BRIDGE_TOKEN=${DEPLOY_BRIDGE_TOKEN:-}
+    env_file:
+      - .env.docker
+    volumes:
+      # Source code volume mounts for hot reloading
+      - ./src:/app/src:cached
+      - ./public:/app/public:cached
+      - ./prisma:/app/prisma:cached
+      - ./.env.docker:/app/.env.local:cached
+      - ./package.json:/app/package.json:cached
+      - ./package-lock.json:/app/package-lock.json:cached
+      - ./tsconfig.json:/app/tsconfig.json:cached
+      - ./next.config.js:/app/next.config.js:cached
+      - ./vitest.config.ts:/app/vitest.config.ts:cached
+      - ./tailwind.config.ts:/app/tailwind.config.ts:cached
+      - ./postcss.config.cjs:/app/postcss.config.cjs:cached
+      # Preserve node_modules as named volume for performance
+      - node_modules:/app/node_modules
+      # Anonymous volume: the container must NOT share .next with the host,
+      # or host-side dev/test servers corrupt the container's webpack chunks
+      - /app/.next
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    command: sh -c "npm run db:generate && npm run dev"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 120s
+
+  # PostgreSQL Database Service
+  postgres:
+    image: postgres:18-alpine
+    container_name: stapelwerk-postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres_dev_password
+      POSTGRES_DB: build_my_stack_dev
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+      # Performance tuning for development
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:cached
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d build_my_stack_dev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    command:
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+
+  # Redis Service for Caching (optional but useful for future scaling)
+  redis:
+    image: redis:7-alpine
+    container_name: stapelwerk-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: redis-server --appendonly yes
+
+  # WebSocket Server for real-time features
+  websocket:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      args:
+        - NODE_VERSION=22
+    container_name: stapelwerk-websocket
+    # root so the startup command can `apk add` the docker CLI (image USER is nextjs)
+    user: root
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=development
+      - WS_PORT=3001
+      - WS_HOST=0.0.0.0
+      # Direct-deploy executor + terminal talk to the host Docker daemon here
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      # Shared token for the /deploy bridge (must match the app's value).
+      - DEPLOY_BRIDGE_TOKEN=${DEPLOY_BRIDGE_TOKEN:-}
+      # Remote SSH deploy targets: path to the operator-provided PRIVATE key
+      # (key auth only — never a password). Add the matching PUBLIC key to each
+      # target's ~/.ssh/authorized_keys. Unset => only "this server" (socket).
+      - DEPLOY_SSH_KEY_FILE=${DEPLOY_SSH_KEY_FILE:-}
+    env_file:
+      - .env.docker
+    volumes:
+      - ./src:/app/src:cached
+      - ./server:/app/server:cached
+      - ./tsconfig.json:/app/tsconfig.json:cached
+      - node_modules:/app/node_modules
+      # Mounted socket = the "this server" deploy target (local Docker host)
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Remote SSH targets: mount the operator's PRIVATE deploy key read-only and
+      # point DEPLOY_SSH_KEY_FILE at it. Do NOT commit a real key.
+      # - ${DEPLOY_SSH_KEY_HOST_PATH:-./secrets/deploy_ssh_key}:/run/secrets/deploy_ssh_key:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    # Install the docker CLI + compose plugin at startup (talks to the mounted
+    # socket), then run the WS server. Package.json is baked into the image, so
+    # running tsx directly avoids a rebuild on script changes.
+    command: sh -c "apk add --no-cache docker-cli docker-cli-compose && npx tsx server/ws-server.ts"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  # Development Tools Container (optional for development utilities)
+  devtools:
+    image: node:22-alpine
+    container_name: stapelwerk-devtools
+    working_dir: /app
+    volumes:
+      - .:/app:cached
+      - node_modules:/app/node_modules
+    networks:
+      - app-network
+    environment:
+      - NODE_ENV=development
+    profiles:
+      - tools
+    command: sleep infinity
+
+# Named Volumes
+volumes:
+  postgres_data:
+    name: stapelwerk-postgres-data
+  redis_data:
+    name: stapelwerk-redis-data
+  node_modules:
+    name: stapelwerk-node-modules
+
+# Networks
+networks:
+  app-network:
+    driver: bridge
+    name: stapelwerk-network

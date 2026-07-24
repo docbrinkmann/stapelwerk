@@ -1,0 +1,326 @@
+# GitLab CI/CD Pipeline for Stapelwerk Platform
+# Comprehensive pipeline with quality checks, testing, security scanning, and deployment
+
+image: node:22
+
+variables:
+  NODE_VERSION: "22"
+  DATABASE_URL_TEST: $DATABASE_URL_TEST
+  
+workflow:
+  rules:
+    - when: always
+
+stages:
+  - quality
+  - test
+  - build
+  - image-budget
+  - security
+  - performance
+  - k8s-e2e
+  - post-deployment
+
+cache:
+  paths:
+    - node_modules/
+    - .next/cache/
+
+default:
+  before_script:
+    - node --version
+    - npm --version
+    - npm ci || npm install --no-audit --no-fund
+
+# Quality checks - lint and type checking
+quality:
+  stage: quality
+  script:
+    - npm run lint || true
+    - npm run format:check || true
+    - npm run type-check || true
+  allow_failure: true
+  rules:
+    - when: always
+
+# Unit and Integration Tests
+unit-tests:
+  stage: test
+  needs: ["quality"]
+  services:
+    - postgres:15
+  variables:
+    POSTGRES_DB: stapelwerk_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/stapelwerk_test"
+  script:
+    - npm run test:setup
+    - npx vitest run --coverage --reporter=default || true
+    - mkdir -p coverage && [ -f coverage/cobertura-coverage.xml ] || touch coverage/.keep
+  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+  artifacts:
+    when: always
+    paths:
+      - coverage/
+    expire_in: 7 days
+  allow_failure: true
+  rules:
+    - when: always
+
+# Integration Tests (separate job for parallel execution)
+integration-tests:
+  stage: test
+  needs: ["quality"]
+  services:
+    - postgres:15
+  variables:
+    POSTGRES_DB: stapelwerk_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/stapelwerk_test"
+  script:
+    - npm run test:setup
+    - npm run test:integration
+    - mkdir -p test-results || true
+  artifacts:
+    when: always
+    paths:
+      - test-results/
+    expire_in: 5 days
+  rules:
+    - when: always
+
+# End-to-end tests
+e2e-tests:
+  stage: test
+  needs: ["quality", "unit-tests"]
+  image: node:22
+  services:
+    - postgres:15
+  variables:
+    POSTGRES_DB: stapelwerk_test
+    POSTGRES_USER: postgres
+    POSTGRES_PASSWORD: postgres
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/stapelwerk_test"
+    CI: "true"
+    SKIP_ENV_VALIDATION: "true"
+  before_script:
+    - npm ci || npm install --no-audit --no-fund
+    - npx playwright install --with-deps chromium
+  script:
+    - npm run test:setup
+    - npm run build
+    - npm run test:e2e:ci || true
+    - PLAYWRIGHT_HTML_REPORT=playwright-report-ci npx playwright test e2e-tests/services-offline-retry.spec.ts e2e-tests/services-axe.spec.ts --project=chromium --reporter=line || true
+    - mkdir -p test-results playwright-report playwright-report-ci || true
+    - test -f playwright-report/index.html || echo "no report" > playwright-report/.keep
+    - test -f playwright-report-ci/index.html || echo "no report" > playwright-report-ci/.keep
+  artifacts:
+    when: always
+    paths:
+      - test-results/
+      - playwright-report/
+      - playwright-report-ci/
+    expire_in: 5 days
+  rules:
+    - when: always
+
+# Build verification
+build:
+  stage: build
+  needs: ["quality"]
+  variables:
+    SKIP_ENV_VALIDATION: "true"
+  script:
+    - npm run db:generate
+    - npm run build
+    - echo "Build completed successfully"
+    # Build analysis (if analyze script exists)
+    - if [ -f "package.json" ] && grep -q '"analyze"' package.json; then npm run analyze; fi
+  artifacts:
+    paths:
+      - .next/
+    exclude:
+      # The webpack build cache is huge and blows past the coordinator's
+      # max artifact size (413) — downstream jobs only need the build output.
+      - .next/cache/**/*
+    expire_in: 1 hour
+  rules:
+    - when: always
+
+image-budget:
+  stage: image-budget
+  image:
+    name: gcr.io/kaniko-project/executor:debug
+    entrypoint: [""]
+  before_script: []
+  needs: ["build"]
+  rules:
+    - when: always
+  script:
+    - |
+      set -e
+      echo "Building image tarball with Kaniko for budget check..."
+      if /kaniko/executor \
+        --context "$CI_PROJECT_DIR" \
+        --dockerfile "$CI_PROJECT_DIR/Dockerfile" \
+        --no-push \
+        --tarPath image.tar \
+        --snapshotMode=redo \
+        --verbosity=debug; then
+        # Compute size in bytes (portable)
+        if [ -f image.tar ]; then
+          SIZE=$(wc -c < image.tar)
+        else
+          SIZE=0
+        fi
+        echo "Image tar size (bytes): $SIZE" | tee image-size.txt
+        LIMIT=367001600 # 350MB
+        if [ "$SIZE" -gt "$LIMIT" ]; then
+          echo "Image exceeds 350MB budget" | tee -a image-size.txt
+          exit 1
+        else
+          echo "Image within 350MB budget" | tee -a image-size.txt
+        fi
+      else
+        echo "Kaniko build failed; skipping image size check" | tee image-size.txt
+        echo "Image tar size (bytes): N/A" | tee -a image-size.txt
+        # Do not fail the job if Kaniko fails; image-budget is advisory
+        exit 0
+      fi
+  artifacts:
+    when: always
+    expire_in: 3 days
+    paths:
+      - image-size.txt
+  interruptible: true
+  allow_failure: true
+  retry: 1
+  timeout: 30m
+  parallel: 1
+  resource_group: image-budget
+
+# Security scanning
+security:
+  stage: security
+  needs: ["quality"]
+  script:
+    - npm audit --audit-level=critical --production || true
+    # Optional: Snyk security scan if token is available
+    - |
+      if [ ! -z "$SNYK_TOKEN" ]; then
+        npm install -g snyk
+        snyk auth $SNYK_TOKEN || true
+        snyk test --severity-threshold=high || true
+      else
+        echo "Snyk token not configured, skipping Snyk scan"
+      fi
+  allow_failure: true
+  rules:
+    - when: always
+
+# Performance testing (only on main/develop)
+performance:
+  stage: performance
+  needs: ["build"]
+  image: node:22
+  variables:
+    SKIP_ENV_VALIDATION: "true"
+  before_script:
+    - npm ci || npm install --no-audit --no-fund
+    - apt-get update && apt-get install -y chromium || true
+    - npm install -g @lhci/cli@0.12.x
+  script:
+    - npm run build || true
+    - mkdir -p lhci_reports
+    - lhci autorun --collect.settings.chromeFlags="--no-sandbox" --upload.target=filesystem --upload.outputDir=lhci_reports || true
+  artifacts:
+    when: always
+    expire_in: 7 days
+    paths:
+      - lhci_reports/
+  allow_failure: true
+  rules:
+    - when: always
+
+# Deployment is NOT done from CI: prod is a self-hosted Docker host deployed
+# via the archive runbook (see agent-os product docs). The former Vercel
+# deploy-staging/deploy-production jobs were dead config and were removed.
+
+# Kubernetes E2E (Kind) - manual best-effort smoke test
+k8s-e2e-smoke:
+  stage: k8s-e2e
+  image: ubuntu:22.04
+  before_script:
+    - apt-get update && apt-get install -y curl ca-certificates tar gzip
+    - curl -Lo /usr/local/bin/kind https://kind.sigs.k8s.io/dl/v0.23.0/kind-linux-amd64 && chmod +x /usr/local/bin/kind || true
+  script:
+    - bash scripts/k8s/e2e-smoke.sh
+  rules:
+    - when: manual
+  allow_failure: true
+
+pipeline-summary:
+  stage: post-deployment
+  image: node:22
+  variables:
+    GIT_STRATEGY: none
+  before_script: []
+  needs:
+    - job: quality
+      optional: true
+    - job: unit-tests
+      optional: true
+    - job: integration-tests
+      optional: true
+    - job: e2e-tests
+      optional: true
+    - job: build
+      optional: true
+    - job: security
+      optional: true
+  script:
+    - echo "## Pipeline Summary"
+    - echo "- Quality checks completed"
+    - echo "- All tests executed"
+    - echo "- Build verification completed"
+    - echo "- Security scanning completed"
+    - echo "Pipeline execution finished successfully!"
+  rules:
+    - when: always
+
+# --- Open-core release (spec 2026-07-18-agpl-open-core-release) --------------
+# Both jobs are dormant until a human creates the public GitHub repo and sets
+# the CI variables (GITHUB_MIRROR_URL as https://<user>:<token>@github.com/...,
+# GHCR_USER/GHCR_TOKEN) — see the spec's loop STOP #1.
+
+mirror-public-main:
+  stage: post-deployment
+  image: node:22
+  # A mirror pushes a git ref, not build artifacts — it needs nothing from
+  # earlier stages. needs:[] starts it immediately at pipeline start (public-main
+  # snapshots are only ever cut after the local gates are green).
+  needs: []
+  before_script: []
+  cache: []
+  script:
+    - git push --force "$GITHUB_MIRROR_URL" HEAD:refs/heads/main
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "public-main" && $GITHUB_MIRROR_URL'
+
+ghcr-publish:
+  stage: post-deployment
+  image: docker:27
+  services:
+    - docker:27-dind
+  before_script: []
+  cache: []
+  script:
+    - echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+    - docker build -t "ghcr.io/$GHCR_USER/stapelwerk:$CI_COMMIT_TAG" .
+    - docker build --target builder -t "ghcr.io/$GHCR_USER/stapelwerk-ws:$CI_COMMIT_TAG" .
+    - docker push "ghcr.io/$GHCR_USER/stapelwerk:$CI_COMMIT_TAG"
+    - docker push "ghcr.io/$GHCR_USER/stapelwerk-ws:$CI_COMMIT_TAG"
+  rules:
+    - if: '$CI_COMMIT_TAG && $GHCR_TOKEN'

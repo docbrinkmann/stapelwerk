@@ -1,0 +1,262 @@
+# OWASP ZAP Automation Framework Configuration
+# Reference: https://www.zaproxy.org/docs/desktop/addons/automation-framework/
+#
+# This configuration provides automated security scanning for the Build My Stack application
+# using OWASP ZAP's Automation Framework (AF) with Docker integration.
+#
+# Usage:
+#   docker run -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable \
+#     zap.sh -cmd -autorun /zap/wrk/security/zap-automation.yaml
+
+env:
+  contexts:
+    - name: "Build My Stack - Development"
+      urls:
+        - "http://host.docker.internal:3000"
+      includePaths:
+        - "http://host.docker.internal:3000/.*"
+      excludePaths:
+        - "http://host.docker.internal:3000/_next/.*"
+        - "http://host.docker.internal:3000/static/.*"
+        - "http://host.docker.internal:3000/favicon.ico"
+  parameters:
+    failOnError: true
+    failOnWarning: false
+    progressToStdout: true
+  vars:
+    target: "http://host.docker.internal:3000"
+    scanPolicy: "API-Minimal"
+
+jobs:
+  # Job 1: Spider (Discovery)
+  - type: spider
+    parameters:
+      context: "Build My Stack - Development"
+      user: ""
+      url: "${target}"
+      maxDuration: 5
+      maxDepth: 5
+      maxChildren: 10
+      acceptCookies: true
+      handleODataParametersVisited: false
+      handleParameters: "USE_ALL"
+      parseComments: true
+      parseGit: false
+      parseRobotsTxt: true
+      parseSitemapXml: true
+      parseSVNEntries: false
+      postForm: true
+      processForm: true
+      requestWaitTime: 200
+      sendRefererHeader: true
+      threadCount: 2
+
+  # Job 2: Passive Scan (Safe Analysis)
+  - type: passiveScan-config
+    parameters:
+      maxAlertsPerRule: 10
+      scanOnlyInScope: true
+      maxBodySizeInBytesToScan: 10000
+      enableTags: false
+    rules:
+      # Enable all passive scan rules
+      - id: 10003  # Vulnerable JS Library
+        threshold: "medium"
+      - id: 10010  # Cookie No HttpOnly Flag
+        threshold: "low"
+      - id: 10011  # Cookie Without Secure Flag
+        threshold: "low"
+      - id: 10015  # Re-examine Cache-control Directives
+        threshold: "low"
+      - id: 10017  # Cross-Domain JavaScript Source File Inclusion
+        threshold: "low"
+      - id: 10019  # Content-Type Header Missing
+        threshold: "low"
+      - id: 10020  # X-Frame-Options Header Not Set
+        threshold: "medium"
+      - id: 10021  # X-Content-Type-Options Header Missing
+        threshold: "low"
+      - id: 10023  # Information Disclosure - Debug Error Messages
+        threshold: "medium"
+      - id: 10024  # Information Disclosure - Sensitive Information in URL
+        threshold: "medium"
+      - id: 10025  # Information Disclosure - Sensitive Information in HTTP Referrer Header
+        threshold: "medium"
+      - id: 10026  # HTTP Parameter Override
+        threshold: "medium"
+      - id: 10027  # Information Disclosure - Suspicious Comments
+        threshold: "low"
+      - id: 10032  # Viewstate without MAC Signature
+        threshold: "medium"
+      - id: 10033  # Directory Browsing
+        threshold: "medium"
+      - id: 10035  # Strict-Transport-Security Header Not Set
+        threshold: "low"
+      - id: 10036  # Server Leaks Version Information via "Server" HTTP Response Header Field
+        threshold: "low"
+      - id: 10037  # Server Leaks Information via "X-Powered-By" HTTP Response Header Field(s)
+        threshold: "low"
+      - id: 10038  # Content Security Policy (CSP) Header Not Set
+        threshold: "medium"
+      - id: 10040  # Secure Pages Include Mixed Content
+        threshold: "medium"
+      - id: 10041  # HTTP to HTTPS Insecure Transition in Form Post
+        threshold: "medium"
+      - id: 10042  # HTTPS to HTTP Insecure Transition in Form Post
+        threshold: "medium"
+      - id: 10043  # User Controllable JavaScript Event (XSS)
+        threshold: "low"
+      - id: 10044  # Big Redirect Detected (Potential Sensitive Information Leak)
+        threshold: "low"
+      - id: 10045  # Source Code Disclosure
+        threshold: "medium"
+      - id: 10047  # HTTPS Content Available via HTTP
+        threshold: "high"
+      - id: 10049  # Content Cacheability
+        threshold: "low"
+      - id: 10050  # Retrieved from Cache
+        threshold: "low"
+      - id: 10052  # X-ChromeLogger-Data Header Detected
+        threshold: "medium"
+      - id: 10054  # Cookie Without SameSite Attribute
+        threshold: "low"
+      - id: 10055  # CSP Header Not Set
+        threshold: "medium"
+      - id: 10056  # X-Debug-Token Information Leak
+        threshold: "low"
+      - id: 10061  # X-AspNet-Version Response Header
+        threshold: "low"
+      - id: 10062  # PII Disclosure
+        threshold: "high"
+      - id: 10063  # Feature Policy Header Not Set
+        threshold: "low"
+      - id: 10094  # Base64 Disclosure
+        threshold: "low"
+      - id: 10095  # Backup File Disclosure
+        threshold: "medium"
+      - id: 10096  # Timestamp Disclosure
+        threshold: "low"
+      - id: 10097  # Hash Disclosure
+        threshold: "low"
+      - id: 10098  # Cross-Domain Misconfiguration
+        threshold: "medium"
+      - id: 10099  # Source Code Disclosure - Git
+        threshold: "high"
+      - id: 10105  # Weak Authentication Method
+        threshold: "medium"
+      - id: 10109  # Modern Web Application
+        threshold: "low"
+      - id: 10110  # Dangerous JS Functions
+        threshold: "low"
+      - id: 90001  # Insecure JSF ViewState
+        threshold: "medium"
+      - id: 90002  # Java Serialization Object
+        threshold: "medium"
+      - id: 90003  # Sub Resource Integrity Attribute Missing
+        threshold: "low"
+      - id: 90004  # Insufficient Site Isolation Against Spectre Vulnerability
+        threshold: "low"
+      - id: 90005  # Sec-Fetch-Dest Header is Missing
+        threshold: "low"
+      - id: 90006  # Sec-Fetch-Mode Header is Missing
+        threshold: "low"
+      - id: 90011  # Charset Mismatch
+        threshold: "low"
+      - id: 90017  # XSLT Injection
+        threshold: "medium"
+      - id: 90018  # SQL Injection - SQLite
+        threshold: "high"
+      - id: 90019  # Server Side Code Injection
+        threshold: "high"
+      - id: 90020  # Remote OS Command Injection
+        threshold: "high"
+      - id: 90021  # XPath Injection
+        threshold: "high"
+      - id: 90022  # Application Error Disclosure
+        threshold: "medium"
+      - id: 90023  # XML External Entity Attack
+        threshold: "high"
+      - id: 90024  # Generic Padding Oracle
+        threshold: "high"
+      - id: 90025  # Expression Language Injection
+        threshold: "high"
+      - id: 90026  # SOAP Action Spoofing
+        threshold: "medium"
+      - id: 90028  # Insecure HTTP Method
+        threshold: "medium"
+      - id: 90029  # SOAP XML Injection
+        threshold: "high"
+      - id: 90030  # WSDL File Detection
+        threshold: "low"
+      - id: 90033  # Loosely Scoped Cookie
+        threshold: "low"
+
+  # Job 3: Passive Scan Wait
+  - type: passiveScan-wait
+    parameters:
+      maxDuration: 10
+
+  # Job 4: Active Scan (DISABLED by default for safety)
+  # Uncomment and configure for comprehensive security testing in non-production environments
+  # - type: activeScan
+  #   parameters:
+  #     context: "Build My Stack - Development"
+  #     user: ""
+  #     policy: "${scanPolicy}"
+  #     maxRuleDurationInMins: 5
+  #     maxScanDurationInMins: 10
+  #     addQueryParam: false
+  #     defaultPolicy: ""
+  #     delayInMs: 0
+  #     handleAntiCSRFTokens: true
+  #     injectPluginIdInHeader: false
+  #     scanHeadersAllRequests: true
+  #     threadPerHost: 2
+
+  # Job 5: Report Generation
+  - type: report
+    parameters:
+      template: "traditional-html"
+      reportDir: "/zap/wrk/security/reports"
+      reportFile: "zap-scan-report-${REPORT_TIMESTAMP}.html"
+      reportTitle: "OWASP ZAP Security Scan - Build My Stack"
+      reportDescription: "Automated security scan report generated by OWASP ZAP"
+      displayReport: false
+    risks:
+      - "high"
+      - "medium"
+      - "low"
+      - "info"
+
+  # Job 6: JSON Report
+  - type: report
+    parameters:
+      template: "traditional-json"
+      reportDir: "/zap/wrk/security/reports"
+      reportFile: "zap-scan-report-${REPORT_TIMESTAMP}.json"
+      reportTitle: "OWASP ZAP Security Scan - Build My Stack (JSON)"
+      reportDescription: "JSON format report for CI/CD integration"
+      displayReport: false
+    risks:
+      - "high"
+      - "medium"
+      - "low"
+
+  # Job 7: Alert Summary
+  - type: alertFilter
+    alertFilters:
+      # Ignore specific false positives (customize based on your application)
+      - ruleId: 10021  # X-Content-Type-Options Header Missing
+        newLevel: "False Positive"
+        url: "http://host.docker.internal:3000/_next/.*"
+        urlRegex: true
+      - ruleId: 10038  # CSP Header Not Set
+        newLevel: "False Positive"
+        url: "http://host.docker.internal:3000/_next/.*"
+        urlRegex: true
+
+  # Job 8: Stats Summary
+  - type: stats
+    parameters:
+      allSites: true
+      outputFile: "/zap/wrk/security/reports/zap-stats-${REPORT_TIMESTAMP}.txt"

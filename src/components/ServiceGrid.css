@@ -1,0 +1,357 @@
+/* ServiceGrid Component Styles */
+
+.service-grid {
+  width: 100%;
+  padding: 1rem;
+}
+
+/* Grid Layout Modes */
+/* Fluid grid: fit columns to the ACTUAL container width, not window.innerWidth.
+   The JS column counter (useResponsiveColumns) and its Tailwind grid-cols-N
+   classes over-pack the grid — at 1536px+ they force 6 columns even though the
+   filters sidebar leaves the grid only ~860px wide, crushing cards to ~130px
+   and truncating names. auto-fill sizes to the container, so it always fits. */
+.service-grid.service-grid--grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.service-grid--list {
+  /* List layout - single column with horizontal cards */
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.service-grid--list-layout {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.service-grid--compact {
+  /* Uses utility classes for responsive grid */
+}
+
+/* Column-specific adjustments */
+.service-grid--1-columns {
+  --grid-min-width: 280px;
+}
+
+.service-grid--2-columns {
+  --grid-min-width: 300px;
+}
+
+.service-grid--3-columns {
+  --grid-min-width: 280px;
+}
+
+.service-grid--4-columns {
+  --grid-min-width: 250px;
+}
+
+.service-grid--5-columns {
+  --grid-min-width: 220px;
+}
+
+.service-grid--6-columns {
+  --grid-min-width: 200px;
+}
+
+/* Custom grid fallback for older browsers */
+@supports not (display: grid) {
+  .service-grid--grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+  
+  .service-grid--grid .service-card {
+    flex: 1 1 calc(33.333% - 1rem);
+    min-width: 280px;
+  }
+}
+
+/* Empty State Styles */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  min-height: 400px;
+}
+
+.empty-state__icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  opacity: 0.6;
+}
+
+.empty-state__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+}
+
+.empty-state__description {
+  font-size: 1rem;
+  color: var(--muted-foreground);
+  margin-bottom: 2rem;
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+.empty-state__action {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary);
+  color: var(--primary-foreground);
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.empty-state__action:hover {
+  background: color-mix(in oklab, var(--primary) 88%, var(--primary-foreground));
+}
+
+.empty-state__action:focus {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* Error State Styles */
+.error-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 4rem 2rem;
+  text-align: center;
+  min-height: 400px;
+}
+
+.error-state__icon {
+  font-size: 4rem;
+  margin-bottom: 1.5rem;
+  color: var(--destructive);
+}
+
+.error-state__title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--destructive);
+  margin-bottom: 1rem;
+}
+
+.error-state__description {
+  font-size: 1rem;
+  color: var(--muted-foreground);
+  margin-bottom: 2rem;
+  max-width: 500px;
+  line-height: 1.6;
+}
+
+.error-state__retry {
+  padding: 0.75rem 1.5rem;
+  background: var(--destructive);
+  color: var(--destructive-foreground);
+  border: none;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease-in-out;
+}
+
+.error-state__retry:hover {
+  background: color-mix(in oklab, var(--destructive) 85%, var(--foreground));
+}
+
+.error-state__retry:focus {
+  outline: 2px solid var(--destructive);
+  outline-offset: 2px;
+}
+
+/* Load More Trigger */
+.load-more-trigger {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+  min-height: 100px;
+}
+
+.load-more-spinner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--muted-foreground);
+  font-size: 0.875rem;
+}
+
+.load-more-spinner::before {
+  content: '';
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid var(--border);
+  border-top: 2px solid var(--primary);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 640px) {
+  .service-grid {
+    padding: 0.5rem;
+  }
+  
+  .empty-state,
+  .error-state {
+    padding: 2rem 1rem;
+    min-height: 300px;
+  }
+  
+  .empty-state__title,
+  .error-state__title {
+    font-size: 1.25rem;
+  }
+  
+  .empty-state__icon,
+  .error-state__icon {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+  }
+  
+  .load-more-trigger {
+    padding: 1rem;
+  }
+}
+
+/* List View Specific Styles */
+.service-grid--list .service-card {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 1.5rem;
+  min-height: auto;
+  max-width: none;
+}
+
+.service-grid--list .service-card__header {
+  flex-direction: column;
+  align-items: flex-start;
+  width: 200px;
+  flex-shrink: 0;
+  margin-right: 2rem;
+  margin-bottom: 0;
+}
+
+.service-grid--list .service-card__content {
+  flex: 1;
+  margin-bottom: 0;
+  margin-right: 2rem;
+}
+
+.service-grid--list .service-card__footer {
+  width: 200px;
+  flex-shrink: 0;
+  flex-direction: column;
+  align-items: flex-end;
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+@media (max-width: 768px) {
+  .service-grid--list .service-card {
+    flex-direction: column;
+  }
+  
+  .service-grid--list .service-card__header {
+    width: 100%;
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .service-grid--list .service-card__content {
+    margin-right: 0;
+    margin-bottom: 1rem;
+  }
+  
+  .service-grid--list .service-card__footer {
+    width: 100%;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding-top: 0.5rem;
+    border-top: 1px solid var(--border);
+  }
+}
+
+/* Performance optimizations */
+.service-grid {
+  contain: layout style;
+}
+
+.service-card {
+  contain: layout style;
+}
+
+/* Print styles */
+@media print {
+  .service-grid {
+    display: block !important;
+    padding: 0;
+  }
+  
+  .service-card {
+    break-inside: avoid;
+    margin-bottom: 1rem;
+    box-shadow: none;
+    border: 1px solid #000;
+  }
+  
+  .empty-state,
+  .error-state,
+  .load-more-trigger {
+    display: none;
+  }
+}
+
+/* High contrast mode */
+@media (prefers-contrast: high) {
+  .empty-state__action,
+  .error-state__retry {
+    border: 2px solid currentColor;
+  }
+  
+  .load-more-spinner::before {
+    border-width: 3px;
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .load-more-spinner::before {
+    animation: none;
+  }
+  
+  .empty-state__action,
+  .error-state__retry {
+    transition: none;
+  }
+}

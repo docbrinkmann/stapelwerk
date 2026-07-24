@@ -1,0 +1,8 @@
+/* Minimal styles for ApplyPanel */
+.apply-panel { border: 1px solid var(--border); border-radius: 8px; padding: 12px; background: var(--card); }
+.apply-panel__header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.apply-panel__title { margin: 0; font-size: 1rem; font-weight: 600; }
+.apply-panel__actions { display: flex; gap: 8px; }
+.apply-btn { border: 1px solid var(--border); background: var(--muted); padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+.apply-panel__error { color: var(--destructive); margin: 8px 0; }
+.apply-panel__status { margin-top: 10px; }

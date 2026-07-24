@@ -1,0 +1,698 @@
+openapi: 3.0.3
+info:
+  title: Build My Stack API
+  description: |
+    Build My Stack API provides programmatic access to infrastructure provisioning,
+    GitOps deployments, security scanning, and stack management capabilities.
+
+    ## Authentication
+
+    Most endpoints require authentication via NextAuth session cookies.
+    Protected endpoints require a valid user session.
+
+    ## Rate Limiting
+
+    API requests are rate limited to prevent abuse:
+    - Public endpoints: 100 requests/minute
+    - Protected endpoints: 500 requests/minute
+    - Admin endpoints: 1000 requests/minute
+
+    ## Error Handling
+
+    Errors follow the tRPC error format with standard HTTP status codes.
+
+  version: 1.0.0
+  contact:
+    name: Build My Stack Team
+    email: support@stapelwerk.dev
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/trpc
+    description: Local development
+  - url: https://staging.stapelwerk.dev/api/trpc
+    description: Staging environment
+  - url: https://stapelwerk.dev/api/trpc
+    description: Production environment
+
+tags:
+  - name: GitOps
+    description: ArgoCD GitOps deployment operations
+  - name: Infrastructure
+    description: Pulumi infrastructure provisioning
+  - name: Stacks
+    description: Technology stack management
+  - name: Services
+    description: Service catalog and management
+  - name: Health
+    description: Health check endpoints
+  - name: Security
+    description: Security scanning and vulnerability management
+
+paths:
+  # ====================
+  # GitOps Endpoints
+  # ====================
+  /gitops.listApplications:
+    get:
+      tags: [GitOps]
+      summary: List ArgoCD applications
+      description: Returns all ArgoCD applications, optionally filtered by project or selector.
+      operationId: gitopsListApplications
+      parameters:
+        - name: input
+          in: query
+          required: false
+          schema:
+            type: object
+            properties:
+              project:
+                type: string
+                description: Filter by ArgoCD project name
+              selector:
+                type: string
+                description: Label selector for filtering applications
+      responses:
+        '200':
+          description: List of applications
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListApplicationsResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /gitops.getApplication:
+    get:
+      tags: [GitOps]
+      summary: Get application details
+      description: Returns detailed information about a specific ArgoCD application.
+      operationId: gitopsGetApplication
+      parameters:
+        - name: input
+          in: query
+          required: true
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+                description: Application name
+      responses:
+        '200':
+          description: Application details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GetApplicationResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /gitops.getSyncStatus:
+    get:
+      tags: [GitOps]
+      summary: Get sync status
+      description: Returns the sync status of an ArgoCD application.
+      operationId: gitopsGetSyncStatus
+      parameters:
+        - name: input
+          in: query
+          required: true
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+      responses:
+        '200':
+          description: Sync status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncStatusResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /gitops.getHealthStatus:
+    get:
+      tags: [GitOps]
+      summary: Get health status
+      description: Returns the health status of an ArgoCD application.
+      operationId: gitopsGetHealthStatus
+      parameters:
+        - name: input
+          in: query
+          required: true
+          schema:
+            type: object
+            required: [name]
+            properties:
+              name:
+                type: string
+      responses:
+        '200':
+          description: Health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthStatusResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /gitops.deployStack:
+    post:
+      tags: [GitOps]
+      summary: Deploy stack to ArgoCD
+      description: Creates and deploys an ArgoCD application for a technology stack.
+      operationId: gitopsDeployStack
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeployStackInput'
+      responses:
+        '200':
+          description: Deployment initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeployStackResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /gitops.syncApplication:
+    post:
+      tags: [GitOps]
+      summary: Sync application
+      description: Triggers a sync operation for an ArgoCD application.
+      operationId: gitopsSyncApplication
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SyncApplicationInput'
+      responses:
+        '200':
+          description: Sync initiated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SyncApplicationResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ====================
+  # Infrastructure Endpoints
+  # ====================
+  /infrastructure.listStacks:
+    get:
+      tags: [Infrastructure]
+      summary: List Pulumi stacks
+      description: Returns all Pulumi stacks for a project.
+      operationId: infrastructureListStacks
+      parameters:
+        - name: input
+          in: query
+          required: true
+          schema:
+            type: object
+            required: [projectName]
+            properties:
+              projectName:
+                type: string
+                description: Pulumi project name
+      responses:
+        '200':
+          description: List of stacks
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ListStacksResponse'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /infrastructure.previewInfrastructure:
+    get:
+      tags: [Infrastructure]
+      summary: Preview infrastructure changes
+      description: Previews infrastructure changes without applying them.
+      operationId: infrastructurePreview
+      security:
+        - sessionAuth: []
+      parameters:
+        - name: input
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/PreviewInfrastructureInput'
+      responses:
+        '200':
+          description: Preview results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PreviewResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /infrastructure.deployInfrastructure:
+    post:
+      tags: [Infrastructure]
+      summary: Deploy infrastructure
+      description: Deploys infrastructure using Pulumi templates.
+      operationId: infrastructureDeploy
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeployInfrastructureInput'
+      responses:
+        '200':
+          description: Deployment results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeployResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /infrastructure.destroyInfrastructure:
+    post:
+      tags: [Infrastructure]
+      summary: Destroy infrastructure
+      description: Destroys previously deployed infrastructure.
+      operationId: infrastructureDestroy
+      security:
+        - sessionAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DestroyInfrastructureInput'
+      responses:
+        '200':
+          description: Destroy results
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DestroyResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  # ====================
+  # Health Endpoints
+  # ====================
+  /health.check:
+    get:
+      tags: [Health]
+      summary: Health check
+      description: Returns application health status.
+      operationId: healthCheck
+      responses:
+        '200':
+          description: Application is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum: [healthy, degraded, unhealthy]
+                  timestamp:
+                    type: string
+                    format: date-time
+
+components:
+  securitySchemes:
+    sessionAuth:
+      type: apiKey
+      in: cookie
+      name: next-auth.session-token
+      description: NextAuth session cookie
+
+  schemas:
+    # GitOps Schemas
+    ListApplicationsResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        applications:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArgoCDApplication'
+        count:
+          type: integer
+
+    GetApplicationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        application:
+          $ref: '#/components/schemas/ArgoCDApplication'
+
+    ArgoCDApplication:
+      type: object
+      properties:
+        name:
+          type: string
+        namespace:
+          type: string
+        project:
+          type: string
+        status:
+          type: string
+          enum: [Healthy, Progressing, Degraded, Suspended, Missing, Unknown]
+        syncStatus:
+          type: string
+          enum: [Synced, OutOfSync, Unknown]
+        healthStatus:
+          type: string
+        repoURL:
+          type: string
+        path:
+          type: string
+        revision:
+          type: string
+
+    SyncStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        status:
+          type: string
+        revision:
+          type: string
+        comparedTo:
+          type: object
+          properties:
+            source:
+              type: object
+            destination:
+              type: object
+
+    HealthStatusResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        status:
+          type: string
+        message:
+          type: string
+
+    DeployStackInput:
+      type: object
+      required:
+        - stackId
+        - stackName
+        - environment
+        - gitRepoURL
+        - gitPath
+        - namespace
+        - deploymentType
+      properties:
+        stackId:
+          type: string
+        stackName:
+          type: string
+        environment:
+          type: string
+          enum: [development, staging, production]
+        gitRepoURL:
+          type: string
+          format: uri
+        gitPath:
+          type: string
+        gitRevision:
+          type: string
+        namespace:
+          type: string
+        clusterServer:
+          type: string
+          format: uri
+        deploymentType:
+          type: string
+          enum: [helm, kustomize, yaml]
+        autoSync:
+          type: boolean
+          default: true
+        autoPrune:
+          type: boolean
+          default: true
+        selfHeal:
+          type: boolean
+          default: true
+
+    DeployStackResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        applicationName:
+          type: string
+        manifestPath:
+          type: string
+        message:
+          type: string
+
+    SyncApplicationInput:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        prune:
+          type: boolean
+        dryRun:
+          type: boolean
+        force:
+          type: boolean
+        revision:
+          type: string
+
+    SyncApplicationResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        result:
+          type: string
+        message:
+          type: string
+
+    # Infrastructure Schemas
+    ListStacksResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        stacks:
+          type: array
+          items:
+            $ref: '#/components/schemas/PulumiStack'
+        count:
+          type: integer
+
+    PulumiStack:
+      type: object
+      properties:
+        name:
+          type: string
+        current:
+          type: boolean
+        lastUpdate:
+          type: string
+          format: date-time
+        resourceCount:
+          type: integer
+        url:
+          type: string
+
+    PreviewInfrastructureInput:
+      type: object
+      required: [stackName, projectName, template, templateConfig]
+      properties:
+        stackName:
+          type: string
+        projectName:
+          type: string
+        organization:
+          type: string
+        template:
+          type: string
+          enum: [aws-vpc, database, static-site, container-app]
+        templateConfig:
+          type: object
+          additionalProperties: true
+
+    PreviewResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        changeSummary:
+          type: object
+          properties:
+            create:
+              type: integer
+            update:
+              type: integer
+            delete:
+              type: integer
+            same:
+              type: integer
+        steps:
+          type: array
+          items:
+            type: object
+            properties:
+              op:
+                type: string
+              urn:
+                type: string
+              type:
+                type: string
+
+    DeployInfrastructureInput:
+      type: object
+      required: [stackName, projectName, environment, template, templateConfig]
+      properties:
+        stackName:
+          type: string
+        projectName:
+          type: string
+        organization:
+          type: string
+        region:
+          type: string
+        environment:
+          type: string
+          enum: [development, staging, production]
+        template:
+          type: string
+          enum: [aws-vpc, database, static-site, container-app, custom]
+        config:
+          type: object
+          additionalProperties: true
+        templateConfig:
+          type: object
+          additionalProperties: true
+
+    DeployResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        outputs:
+          type: object
+          additionalProperties: true
+        summary:
+          type: object
+          properties:
+            create:
+              type: integer
+            update:
+              type: integer
+            delete:
+              type: integer
+        message:
+          type: string
+
+    DestroyInfrastructureInput:
+      type: object
+      required: [stackName, projectName, template, templateConfig]
+      properties:
+        stackName:
+          type: string
+        projectName:
+          type: string
+        organization:
+          type: string
+        template:
+          type: string
+          enum: [aws-vpc, database, static-site, container-app]
+        templateConfig:
+          type: object
+          additionalProperties: true
+
+    DestroyResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        summary:
+          type: object
+          properties:
+            delete:
+              type: integer
+        message:
+          type: string
+
+    # Error Schemas
+    TRPCError:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+          enum:
+            - BAD_REQUEST
+            - UNAUTHORIZED
+            - FORBIDDEN
+            - NOT_FOUND
+            - INTERNAL_SERVER_ERROR
+        data:
+          type: object
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TRPCError'
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TRPCError'
+
+    InternalError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TRPCError'

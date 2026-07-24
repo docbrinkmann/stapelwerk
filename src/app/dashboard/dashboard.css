@@ -1,0 +1,43 @@
+/* Dashboard page styles.
+ * Trimmed to the classes actually referenced by page.tsx / DashboardClient.tsx;
+ * colors come from the design tokens in globals.css so dark mode works. */
+
+.dashboard-content {
+  padding: 2rem 0;
+}
+
+.dashboard-content__container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 2rem;
+}
+
+.dashboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--muted);
+}
+
+.dashboard-actions__search {
+  flex: 1;
+  max-width: 400px;
+}
+
+.dashboard-actions__buttons {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.dashboard-tabs {
+  padding: 2rem;
+}
+
+.dashboard-loading {
+  min-height: 400px;
+}

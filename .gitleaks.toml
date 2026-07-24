@@ -1,0 +1,34 @@
+# gitleaks config for Stapelwerk.
+#
+# Every finding in the current history has been reviewed and classified as a
+# false positive: throwaway test fixtures, example values in docs, placeholder
+# deployment templates, and policy-key STRING COMPARISONS (not secrets). There
+# are NO real credentials in history. This allowlist lets the public CI run
+# clean while keeping the default rule set for anything NEW.
+#
+# If you add a genuinely secret-bearing file, do NOT widen this list — fix the
+# leak. Live app secrets (the ones the running instance uses) are rotated
+# separately at launch (LAUNCH-RUNBOOK Gate C), independent of these fixtures.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Reviewed false positives — test fixtures, doc examples, placeholder templates, policy-key literals."
+paths = [
+  # Test suites carry throwaway fixture keys / a disposable SSH test key.
+  '''.*\.test\.[jt]sx?$''',
+  '''src/__tests__/.*''',
+  '''src/tests/.*''',
+  # Coverage/test output artifact (contains the 32-char test NEXTAUTH secret).
+  '''test-results\.json''',
+  # Seed + policy evaluator: `key: '...'` / `key === '...'` are policy IDENTIFIERS,
+  # not credentials.
+  '''scripts/seed-security-core\.ts''',
+  '''src/lib/security/policy/evaluator\.ts''',
+  # Security-testing guide: an example `curl -H "Authorization: ..."` line.
+  '''agent-os/specs/.*security-testing-guide\.md''',
+  # Kubernetes secrets TEMPLATE with base64 placeholders ("your-openai-api-key",
+  # "secure-postgres-password", ...) — from the removed K8s facade, not real.
+  '''deployment/production/secrets\.yaml''',
+]

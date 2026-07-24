@@ -1,0 +1,369 @@
+npm warn Unknown project config "auto-install-peers". This will stop working in the next major version of npm.
+npm warn Unknown project config "strict-peer-dependencies". This will stop working in the next major version of npm.
+npm warn Unknown project config "shamefully-hoist". This will stop working in the next major version of npm.
+{
+  "auditReportVersion": 2,
+  "vulnerabilities": {
+    "@lhci/cli": {
+      "name": "@lhci/cli",
+      "severity": "low",
+      "isDirect": true,
+      "via": [
+        "inquirer",
+        "tmp"
+      ],
+      "effects": [],
+      "range": "*",
+      "nodes": [
+        "node_modules/@lhci/cli"
+      ],
+      "fixAvailable": {
+        "name": "@lhci/cli",
+        "version": "0.1.0",
+        "isSemVerMajor": true
+      }
+    },
+    "@playwright/test": {
+      "name": "@playwright/test",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        "playwright"
+      ],
+      "effects": [
+        "artillery-engine-playwright"
+      ],
+      "range": "0.9.7 - 0.1112.0-alpha2 || 1.38.0-alpha-1692262648000 - 1.55.1-beta-1758616458000",
+      "nodes": [
+        "node_modules/@playwright/test"
+      ],
+      "fixAvailable": {
+        "name": "artillery",
+        "version": "1.7.9",
+        "isSemVerMajor": true
+      }
+    },
+    "artillery": {
+      "name": "artillery",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        "artillery-engine-playwright"
+      ],
+      "effects": [],
+      "range": ">=2.0.0-0",
+      "nodes": [
+        "node_modules/artillery"
+      ],
+      "fixAvailable": {
+        "name": "artillery",
+        "version": "1.7.9",
+        "isSemVerMajor": true
+      }
+    },
+    "artillery-engine-playwright": {
+      "name": "artillery-engine-playwright",
+      "severity": "high",
+      "isDirect": false,
+      "via": [
+        "@playwright/test",
+        "playwright"
+      ],
+      "effects": [
+        "artillery"
+      ],
+      "range": "0.0.5 - 0.0.6 || 0.3.1-1859275 - 1.18.0-e39393c || >=1.19.0-9942076",
+      "nodes": [
+        "node_modules/artillery-engine-playwright"
+      ],
+      "fixAvailable": {
+        "name": "artillery",
+        "version": "1.7.9",
+        "isSemVerMajor": true
+      }
+    },
+    "external-editor": {
+      "name": "external-editor",
+      "severity": "low",
+      "isDirect": false,
+      "via": [
+        "tmp"
+      ],
+      "effects": [
+        "inquirer"
+      ],
+      "range": ">=1.1.1",
+      "nodes": [
+        "node_modules/external-editor"
+      ],
+      "fixAvailable": {
+        "name": "@lhci/cli",
+        "version": "0.1.0",
+        "isSemVerMajor": true
+      }
+    },
+    "happy-dom": {
+      "name": "happy-dom",
+      "severity": "critical",
+      "isDirect": true,
+      "via": [
+        {
+          "source": 1108946,
+          "name": "happy-dom",
+          "dependency": "happy-dom",
+          "title": "Happy DOM: VM Context Escape can lead to Remote Code Execution",
+          "url": "https://github.com/advisories/GHSA-37j7-fg3j-429f",
+          "severity": "critical",
+          "cwe": [
+            "CWE-94"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": "<20.0.0"
+        },
+        {
+          "source": 1109004,
+          "name": "happy-dom",
+          "dependency": "happy-dom",
+          "title": "happy-dom's `--disallow-code-generation-from-strings` is not sufficient for isolating untrusted JavaScript",
+          "url": "https://github.com/advisories/GHSA-qpm2-6cq5-7pq5",
+          "severity": "critical",
+          "cwe": [
+            "CWE-1321"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": "<20.0.2"
+        }
+      ],
+      "effects": [],
+      "range": "<=20.0.1",
+      "nodes": [
+        "node_modules/happy-dom"
+      ],
+      "fixAvailable": {
+        "name": "happy-dom",
+        "version": "20.0.8",
+        "isSemVerMajor": true
+      }
+    },
+    "inquirer": {
+      "name": "inquirer",
+      "severity": "low",
+      "isDirect": false,
+      "via": [
+        "external-editor"
+      ],
+      "effects": [
+        "@lhci/cli"
+      ],
+      "range": "3.0.0 - 8.2.6 || 9.0.0 - 9.3.7",
+      "nodes": [
+        "node_modules/inquirer"
+      ],
+      "fixAvailable": {
+        "name": "@lhci/cli",
+        "version": "0.1.0",
+        "isSemVerMajor": true
+      }
+    },
+    "playwright": {
+      "name": "playwright",
+      "severity": "high",
+      "isDirect": true,
+      "via": [
+        {
+          "source": 1109208,
+          "name": "playwright",
+          "dependency": "playwright",
+          "title": "Playwright downloads and installs browsers without verifying the authenticity of the SSL certificate",
+          "url": "https://github.com/advisories/GHSA-7mvr-c777-76hp",
+          "severity": "high",
+          "cwe": [
+            "CWE-347"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": "<1.55.1"
+        }
+      ],
+      "effects": [
+        "@playwright/test",
+        "artillery-engine-playwright"
+      ],
+      "range": "<1.55.1",
+      "nodes": [
+        "node_modules/playwright"
+      ],
+      "fixAvailable": {
+        "name": "artillery",
+        "version": "1.7.9",
+        "isSemVerMajor": true
+      }
+    },
+    "prismjs": {
+      "name": "prismjs",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1105770,
+          "name": "prismjs",
+          "dependency": "prismjs",
+          "title": "PrismJS DOM Clobbering vulnerability",
+          "url": "https://github.com/advisories/GHSA-x7hr-w5r2-h6wg",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-79",
+            "CWE-94"
+          ],
+          "cvss": {
+            "score": 4.9,
+            "vectorString": "CVSS:3.1/AV:N/AC:H/PR:L/UI:N/S:C/C:L/I:L/A:N"
+          },
+          "range": "<1.30.0"
+        }
+      ],
+      "effects": [
+        "refractor"
+      ],
+      "range": "<1.30.0",
+      "nodes": [
+        "node_modules/refractor/node_modules/prismjs"
+      ],
+      "fixAvailable": {
+        "name": "react-syntax-highlighter",
+        "version": "16.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "react-syntax-highlighter": {
+      "name": "react-syntax-highlighter",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        "refractor"
+      ],
+      "effects": [],
+      "range": "6.0.0 - 15.6.6",
+      "nodes": [
+        "node_modules/react-syntax-highlighter"
+      ],
+      "fixAvailable": {
+        "name": "react-syntax-highlighter",
+        "version": "16.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "refractor": {
+      "name": "refractor",
+      "severity": "moderate",
+      "isDirect": false,
+      "via": [
+        "prismjs"
+      ],
+      "effects": [
+        "react-syntax-highlighter"
+      ],
+      "range": "<=4.6.0",
+      "nodes": [
+        "node_modules/refractor"
+      ],
+      "fixAvailable": {
+        "name": "react-syntax-highlighter",
+        "version": "16.0.0",
+        "isSemVerMajor": true
+      }
+    },
+    "tmp": {
+      "name": "tmp",
+      "severity": "low",
+      "isDirect": false,
+      "via": [
+        {
+          "source": 1106849,
+          "name": "tmp",
+          "dependency": "tmp",
+          "title": "tmp allows arbitrary temporary file / directory write via symbolic link `dir` parameter",
+          "url": "https://github.com/advisories/GHSA-52f5-9888-hmc6",
+          "severity": "low",
+          "cwe": [
+            "CWE-59"
+          ],
+          "cvss": {
+            "score": 2.5,
+            "vectorString": "CVSS:3.1/AV:L/AC:H/PR:L/UI:N/S:U/C:N/I:L/A:N"
+          },
+          "range": "<=0.2.3"
+        }
+      ],
+      "effects": [
+        "@lhci/cli",
+        "external-editor"
+      ],
+      "range": "<=0.2.3",
+      "nodes": [
+        "node_modules/external-editor/node_modules/tmp",
+        "node_modules/tmp"
+      ],
+      "fixAvailable": {
+        "name": "@lhci/cli",
+        "version": "0.1.0",
+        "isSemVerMajor": true
+      }
+    },
+    "vite": {
+      "name": "vite",
+      "severity": "moderate",
+      "isDirect": true,
+      "via": [
+        {
+          "source": 1109137,
+          "name": "vite",
+          "dependency": "vite",
+          "title": "vite allows server.fs.deny bypass via backslash on Windows",
+          "url": "https://github.com/advisories/GHSA-93m4-6634-74q7",
+          "severity": "moderate",
+          "cwe": [
+            "CWE-22"
+          ],
+          "cvss": {
+            "score": 0,
+            "vectorString": null
+          },
+          "range": ">=7.1.0 <=7.1.10"
+        }
+      ],
+      "effects": [],
+      "range": "7.1.0 - 7.1.10",
+      "nodes": [
+        "node_modules/vite"
+      ],
+      "fixAvailable": true
+    }
+  },
+  "metadata": {
+    "vulnerabilities": {
+      "info": 0,
+      "low": 4,
+      "moderate": 4,
+      "high": 4,
+      "critical": 1,
+      "total": 13
+    },
+    "dependencies": {
+      "prod": 504,
+      "dev": 1398,
+      "optional": 76,
+      "peer": 49,
+      "peerOptional": 0,
+      "total": 1988
+    }
+  }
+}

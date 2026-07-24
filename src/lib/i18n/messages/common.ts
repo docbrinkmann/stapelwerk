@@ -1,0 +1,76 @@
+/**
+ * Shared UI strings used across many screens (buttons, generic states).
+ * Convention: flat keys prefixed with their namespace (`common.save`), values
+ * are plain strings with optional `{var}` placeholders (see makeT).
+ * German uses the informal "Du" consistently.
+ *
+ * The De record is typed against the En keys — a missing translation is a
+ * type error, so `npm run type-check` is the completeness gate.
+ */
+export const commonEn = {
+  'common.save': 'Save',
+  'common.cancel': 'Cancel',
+  'common.close': 'Close',
+  'common.copy': 'Copy',
+  'common.copied': 'Copied',
+  'common.download': 'Download',
+  'common.delete': 'Delete',
+  'common.edit': 'Edit',
+  'common.search': 'Search',
+  'common.loading': 'Loading…',
+  'common.error': 'Error',
+  'common.retry': 'Retry',
+  'common.back': 'Back',
+  'common.next': 'Next',
+  'common.add': 'Add',
+  'common.remove': 'Remove',
+  'common.confirm': 'Confirm',
+  'common.name': 'Name',
+  'common.description': 'Description',
+  'common.settings': 'Settings',
+  'common.none': 'None',
+  'common.open': 'Open',
+  'common.view': 'View',
+  'common.share': 'Share',
+  'common.export': 'Export',
+  'common.import': 'Import',
+  'common.deploy': 'Deploy',
+  'common.running': 'Running',
+  'common.stopped': 'Stopped',
+  'common.draft': 'Draft',
+  'common.unknown': 'Unknown',
+} as const
+
+export const commonDe: Record<keyof typeof commonEn, string> = {
+  'common.save': 'Speichern',
+  'common.cancel': 'Abbrechen',
+  'common.close': 'Schließen',
+  'common.copy': 'Kopieren',
+  'common.copied': 'Kopiert',
+  'common.download': 'Herunterladen',
+  'common.delete': 'Löschen',
+  'common.edit': 'Bearbeiten',
+  'common.search': 'Suchen',
+  'common.loading': 'Lädt…',
+  'common.error': 'Fehler',
+  'common.retry': 'Erneut versuchen',
+  'common.back': 'Zurück',
+  'common.next': 'Weiter',
+  'common.add': 'Hinzufügen',
+  'common.remove': 'Entfernen',
+  'common.confirm': 'Bestätigen',
+  'common.name': 'Name',
+  'common.description': 'Beschreibung',
+  'common.settings': 'Einstellungen',
+  'common.none': 'Keine',
+  'common.open': 'Öffnen',
+  'common.view': 'Ansehen',
+  'common.share': 'Teilen',
+  'common.export': 'Exportieren',
+  'common.import': 'Importieren',
+  'common.deploy': 'Deployen',
+  'common.running': 'Läuft',
+  'common.stopped': 'Gestoppt',
+  'common.draft': 'Entwurf',
+  'common.unknown': 'Unbekannt',
+}

@@ -1,0 +1,249 @@
+version: '3.8'
+
+services:
+  # PostgreSQL 18 Database
+  postgres:
+    image: postgres:18-alpine
+    container_name: stapelwerk_postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-stapelwerk}
+      POSTGRES_USER: ${POSTGRES_USER:-stapelwerk_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
+      PGDATA: /var/lib/postgresql/data/pgdata
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stapelwerk_user} -d ${POSTGRES_DB:-stapelwerk}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    command: 
+      - "postgres"
+      - "-c"
+      - "max_connections=200"
+      - "-c"
+      - "shared_buffers=256MB"
+      - "-c"
+      - "effective_cache_size=1GB"
+      - "-c"
+      - "maintenance_work_mem=64MB"
+      - "-c"
+      - "checkpoint_completion_target=0.9"
+      - "-c"
+      - "wal_buffers=16MB"
+      - "-c"
+      - "default_statistics_target=100"
+      - "-c"
+      - "random_page_cost=1.1"
+      - "-c"
+      - "effective_io_concurrency=200"
+      - "-c"
+      - "work_mem=1310kB"
+      - "-c"
+      - "min_wal_size=1GB"
+      - "-c"
+      - "max_wal_size=4GB"
+
+  # Next.js Application
+  app:
+    image: ${CI_REGISTRY_IMAGE:-stapelwerk}:${DOCKER_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # Baked into the client bundle - must point at the public host
+        NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
+        NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-}
+    container_name: stapelwerk_app
+    environment:
+      # Node Environment
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: "0.0.0.0"
+      
+      # Database (support *_FILE for secrets)
+      DATABASE_URL: ${DATABASE_URL:-}
+      DATABASE_URL_FILE: ${DATABASE_URL_FILE:-}
+      
+      # NextAuth
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-}
+      NEXTAUTH_SECRET_FILE: ${NEXTAUTH_SECRET_FILE:-}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL is required}
+      
+      # Application
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://stapelwerk.minilab.live}
+      
+      # Sentry (optional)
+      SENTRY_DSN: ${SENTRY_DSN:-}
+      SENTRY_DSN_FILE: ${SENTRY_DSN_FILE:-}
+      SENTRY_AUTH_TOKEN: ${SENTRY_AUTH_TOKEN:-}
+      SENTRY_AUTH_TOKEN_FILE: ${SENTRY_AUTH_TOKEN_FILE:-}
+      SENTRY_ORG: ${SENTRY_ORG:-}
+      SENTRY_PROJECT: ${SENTRY_PROJECT:-}
+      
+      # Redis (if needed)
+      REDIS_URL: ${REDIS_URL:-}
+      REDIS_URL_FILE: ${REDIS_URL_FILE:-}
+      
+      # Other environment variables
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://stapelwerk.minilab.live}
+
+      # Direct-deploy bridge: the app container has no Docker socket, so it
+      # delegates `docker compose` to the websocket service over the shared
+      # app-network. Operator sets DEPLOY_BRIDGE_TOKEN in .env.deploy (a strong
+      # random value); it must match the websocket service's token below.
+      DEPLOY_BRIDGE_URL: ${DEPLOY_BRIDGE_URL:-http://websocket:3001}
+      DEPLOY_BRIDGE_TOKEN: ${DEPLOY_BRIDGE_TOKEN:-}
+      # Deploy SSH key: the app generates it here (ssh-keygen) and the ws process
+      # reads the same file (shared deploy-keys volume) to run remote deploys.
+      DEPLOY_SSH_KEY_FILE: ${DEPLOY_SSH_KEY_FILE:-}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+    restart: unless-stopped
+    volumes:
+      - deploy-keys:/deploy-keys
+    secrets:
+      - nextauth_secret
+      - database_url
+      - sentry_dsn
+      - redis_url
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    healthcheck:
+      # Inline check: healthcheck.js is not traced into the standalone output
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/api/health', (r) => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Realtime WebSocket server (live logs, terminal)
+  # Runs from the builder stage image: it has tsx + full node_modules,
+  # and its layers are shared with the app build (no extra build cost).
+  websocket:
+    image: ${CI_REGISTRY_IMAGE:-stapelwerk}-ws:${DOCKER_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    container_name: stapelwerk_websocket
+    # root so the startup command can `apk add` the docker CLI (image USER is nextjs)
+    user: root
+    # Install the docker CLI + compose plugin at startup (they talk to the mounted
+    # socket) so the direct-deploy executor can run `docker compose`, then start WS.
+    command: sh -c "apk add --no-cache docker-cli docker-cli-compose openssh-client && mkdir -p /deploy-keys && chown 1001:1001 /deploy-keys && npx tsx server/ws-server.ts"
+    environment:
+      NODE_ENV: production
+      WS_PORT: 3001
+      WS_HOST: "0.0.0.0"
+      # The terminal's docker-mode ownership check reads the DB (stack → owner),
+      # so the ws process needs the real DATABASE_URL — same as the app, not the
+      # build-time dummy baked into the image.
+      DATABASE_URL: postgresql://${POSTGRES_USER:-stapelwerk_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-stapelwerk}
+      # Direct-deploy executor + terminal talk to the host Docker daemon here
+      DOCKER_HOST: unix:///var/run/docker.sock
+      # Shared token for the /deploy bridge (must match the app service's value;
+      # operator sets DEPLOY_BRIDGE_TOKEN in .env.deploy).
+      DEPLOY_BRIDGE_TOKEN: ${DEPLOY_BRIDGE_TOKEN:-}
+      # Remote-target direct deploy (SSH): path to the PRIVATE key this process
+      # uses to reach remote Docker hosts. Key auth ONLY — never a password. The
+      # OPERATOR provides the key (mount it read-only below) and adds the matching
+      # PUBLIC key to each target host's ~/.ssh/authorized_keys. Unset => remote
+      # deploys are disabled and only "this server" (the socket) is available.
+      DEPLOY_SSH_KEY_FILE: ${DEPLOY_SSH_KEY_FILE:-}
+      # Terminal executor (see server/terminal-executor.ts); non-echo modes
+      # require a valid next-auth session on the ws upgrade. In docker mode the
+      # executor only ever reaches a stack's own compose containers
+      # (bms-<stackId>-…), so the allowed prefix is bms-.
+      TERMINAL_EXECUTOR: ${TERMINAL_EXECUTOR:-echo}
+      TERMINAL_CONTAINER_PREFIX: ${TERMINAL_CONTAINER_PREFIX:-bms-}
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-}
+    volumes:
+      # The single "this server" deploy target + terminal exec into stapelwerk_*
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Shared deploy key: the app generates it (ssh-keygen) into this volume and
+      # the ws process reads it here for remote SSH deploys. DEPLOY_SSH_KEY_FILE
+      # points at /deploy-keys/id_ed25519.
+      - deploy-keys:/deploy-keys
+    ports:
+      - "${WS_PORT_PUBLIC:-3001}:3001"
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3001/health', (r) => { process.exit(r.statusCode === 200 ? 0 : 1); }).on('error', () => { process.exit(1); });"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+
+  # One-off schema push + seed: docker compose --profile setup run --rm migrate
+  migrate:
+    profiles: ["setup"]
+    image: ${CI_REGISTRY_IMAGE:-stapelwerk}-ws:${DOCKER_IMAGE_TAG:-latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: builder
+    command: sh -c "npx prisma db push --skip-generate && npx tsx prisma/seed.ts"
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-stapelwerk_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-stapelwerk}
+      SEED_DEMO_PASSWORD: ${SEED_DEMO_PASSWORD:-demo1234}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: stapelwerk_redis
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    volumes:
+      - redis-data:/data
+    networks:
+      - app-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres-data:
+    driver: local
+  redis-data:
+    driver: local
+  deploy-keys:
+    driver: local
+
+secrets:
+  nextauth_secret:
+    file: ./secrets/NEXTAUTH_SECRET.txt
+  database_url:
+    file: ./secrets/DATABASE_URL.txt
+  sentry_dsn:
+    file: ./secrets/SENTRY_DSN.txt
+  redis_url:
+    file: ./secrets/REDIS_URL.txt
+
+networks:
+  app-network:
+    driver: bridge

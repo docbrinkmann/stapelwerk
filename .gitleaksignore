@@ -1,0 +1,14 @@
+# Justified false positives only — every entry names why it is not a secret.
+# Fingerprint format (working-tree scans, --no-git): <file>:<rule>:<line>
+
+# Test fixture: literal placeholder API key 'valid-key-123' asserted against middleware validation
+src/__tests__/security/security-middleware-validation.test.ts:generic-api-key:319
+
+# Test fixture: fake SSH key body "xyz" used to exercise key-file loading, not a real key
+src/lib/deploy/__tests__/remote-compose-executor.test.ts:private-key:254
+
+# Identifier, not a credential: seed key name 'p5_exception_approval'
+scripts/seed-security-core.ts:generic-api-key:55
+
+# Docs example: curl with literal Bearer 'invalid_token' in a security testing guide
+agent-os/specs/2025-10-26-production-readiness-fixes/implementation/task-7.6-security-testing-guide.md:curl-auth-header:399
