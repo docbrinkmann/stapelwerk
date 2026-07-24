@@ -33,7 +33,7 @@ resources      ✓ fits your Pi 4 (3.1 / 4 GB)
 Requirements: Docker with the compose plugin, ~2 GB RAM.
 
 ```bash
-git clone <repo-url> stapelwerk && cd stapelwerk
+git clone https://github.com/docbrinkmann/stapelwerk.git && cd stapelwerk
 cp .env.example .env
 # edit .env: set POSTGRES_PASSWORD and NEXTAUTH_SECRET (openssl rand -base64 32),
 # and pick SEED_DEMO_PASSWORD — it becomes your login password
