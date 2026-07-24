@@ -10,18 +10,18 @@ import './stack-builder.css';
 
 // Page metadata
 export const metadata: Metadata = {
-  title: 'Stack Builder - BuildMyStack',
+  title: 'Stack Builder - Stapelwerk',
   description: 'Build and configure your perfect self-hosted stack with our interactive drag-and-drop interface. Add services, configure settings, and export Docker Compose files.',
-  keywords: ['stack builder', 'docker compose', 'self-hosted stack', 'container orchestration', 'service configuration', 'BuildMyStack'],
+  keywords: ['stack builder', 'docker compose', 'self-hosted stack', 'container orchestration', 'service configuration', 'Stapelwerk'],
   openGraph: {
-    title: 'Stack Builder - BuildMyStack',
+    title: 'Stack Builder - Stapelwerk',
     description: 'Build and configure your perfect self-hosted stack with our interactive interface',
     type: 'website',
     url: '/stack-builder'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Stack Builder - BuildMyStack',
+    title: 'Stack Builder - Stapelwerk',
     description: 'Build and configure your perfect self-hosted stack with our interactive interface'
   }
 };

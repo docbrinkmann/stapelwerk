@@ -146,7 +146,7 @@ export function TerminalPanel({
 
         // Write welcome message
         term.writeln('\x1b[1;34m╭───────────────────────────────────────╮\x1b[0m')
-        term.writeln('\x1b[1;34m│\x1b[0m   Welcome to BuildMyStack Terminal   \x1b[1;34m│\x1b[0m')
+        term.writeln('\x1b[1;34m│\x1b[0m   Welcome to Stapelwerk Terminal   \x1b[1;34m│\x1b[0m')
         term.writeln('\x1b[1;34m╰───────────────────────────────────────╯\x1b[0m')
         term.writeln('')
 

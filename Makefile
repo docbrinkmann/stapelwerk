@@ -150,7 +150,7 @@ health: ## Check health of services
 	@docker-compose exec -T redis redis-cli ping || echo "$(RED)Redis not ready$(NC)"
 
 stats: ## Show Docker stats
-	@docker stats --no-stream build-my-stack-app build-my-stack-postgres build-my-stack-redis
+	@docker stats --no-stream stapelwerk-app stapelwerk-postgres stapelwerk-redis
 
 prune: ## Remove unused Docker resources
 	@echo "$(YELLOW)⚠️  Removing unused Docker resources...$(NC)"

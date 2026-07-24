@@ -1,4 +1,4 @@
-# gitleaks config for BuildMyStack.
+# gitleaks config for Stapelwerk.
 #
 # Every finding in the current history has been reviewed and classified as a
 # false positive: throwaway test fixtures, example values in docs, placeholder

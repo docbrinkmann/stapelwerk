@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Production Secrets Setup Script for BuildMyStack AI Recommendations
+# Production Secrets Setup Script for Stapelwerk AI Recommendations
 # This script sets up all required secrets for production deployment using Kubernetes Secrets
 
 set -e  # Exit on any error
@@ -8,7 +8,7 @@ set -e  # Exit on any error
 # Script Configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-NAMESPACE="buildmystack"
+NAMESPACE="stapelwerk"
 SECRET_LOG="${PROJECT_ROOT}/logs/secrets-setup-$(date +%Y%m%d-%H%M%S).log"
 
 # Colors for output
@@ -260,8 +260,8 @@ setup_smtp_secrets() {
         --from-literal=host="${SMTP_HOST}" \
         --from-literal=username="${SMTP_USERNAME}" \
         --from-literal=password="${SMTP_PASSWORD:-$(generate_password 24)}" \
-        --from-literal=from="${SMTP_FROM:-alerts@buildmystack.com}" \
-        --from-literal=to="${SMTP_TO:-devops@buildmystack.com}" \
+        --from-literal=from="${SMTP_FROM:-alerts@stapelwerk.com}" \
+        --from-literal=to="${SMTP_TO:-devops@stapelwerk.com}" \
         --dry-run=client -o yaml | kubectl apply -f -
     
     log "SUCCESS" "SMTP secrets configured"
@@ -276,7 +276,7 @@ setup_tls_secrets() {
     
     if [[ -n "$cert_path" && -n "$key_path" ]]; then
         if [[ -f "$cert_path" && -f "$key_path" ]]; then
-            kubectl create secret tls buildmystack-tls \
+            kubectl create secret tls stapelwerk-tls \
                 --namespace="$NAMESPACE" \
                 --cert="$cert_path" \
                 --key="$key_path" \
@@ -301,7 +301,7 @@ setup_service_account() {
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: buildmystack-ai-sa
+  name: stapelwerk-ai-sa
   namespace: ${NAMESPACE}
 automountServiceAccountToken: true
 ---
@@ -309,7 +309,7 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   namespace: ${NAMESPACE}
-  name: buildmystack-ai-role
+  name: stapelwerk-ai-role
 rules:
 - apiGroups: [""]
   resources: ["secrets", "configmaps"]
@@ -321,15 +321,15 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: buildmystack-ai-rolebinding
+  name: stapelwerk-ai-rolebinding
   namespace: ${NAMESPACE}
 subjects:
 - kind: ServiceAccount
-  name: buildmystack-ai-sa
+  name: stapelwerk-ai-sa
   namespace: ${NAMESPACE}
 roleRef:
   kind: Role
-  name: buildmystack-ai-role
+  name: stapelwerk-ai-role
   apiGroup: rbac.authorization.k8s.io
 EOF
     
@@ -340,10 +340,10 @@ EOF
 setup_config_map() {
     log "INFO" "Setting up production ConfigMap..."
     
-    kubectl create configmap buildmystack-config \
+    kubectl create configmap stapelwerk-config \
         --namespace="$NAMESPACE" \
         --from-literal=NODE_ENV="production" \
-        --from-literal=APP_NAME="BuildMyStack AI Recommendations" \
+        --from-literal=APP_NAME="Stapelwerk AI Recommendations" \
         --from-literal=APP_PORT="8080" \
         --from-literal=LOG_LEVEL="info" \
         --from-literal=LOG_FORMAT="json" \
@@ -351,7 +351,7 @@ setup_config_map() {
         --from-literal=HEALTH_CHECK_ENABLED="true" \
         --from-literal=FEATURE_FLAGS_PROVIDER="internal" \
         --from-literal=RATE_LIMITING_ENABLED="true" \
-        --from-literal=CORS_ALLOWED_ORIGINS="https://buildmystack.com,https://www.buildmystack.com" \
+        --from-literal=CORS_ALLOWED_ORIGINS="https://stapelwerk.com,https://www.stapelwerk.com" \
         --from-literal=AI_CACHE_ENABLED="true" \
         --from-literal=AI_CACHE_TTL="1h" \
         --from-literal=DEPLOYMENT_ENVIRONMENT="production" \
@@ -400,10 +400,10 @@ show_secret_summary() {
     kubectl get secrets -n "$NAMESPACE" --no-headers | grep -E "(db-secrets|redis-secrets|ai-secrets|app-secrets|monitoring-secrets|smtp-secrets)" | awk '{print "  ✓ " $1}'
     
     echo -e "\nCreated ConfigMaps:"
-    kubectl get configmaps -n "$NAMESPACE" --no-headers | grep -E "buildmystack-config" | awk '{print "  ✓ " $1}'
+    kubectl get configmaps -n "$NAMESPACE" --no-headers | grep -E "stapelwerk-config" | awk '{print "  ✓ " $1}'
     
     echo -e "\nService Account:"
-    kubectl get serviceaccount buildmystack-ai-sa -n "$NAMESPACE" --no-headers | awk '{print "  ✓ " $1}'
+    kubectl get serviceaccount stapelwerk-ai-sa -n "$NAMESPACE" --no-headers | awk '{print "  ✓ " $1}'
     
     echo -e "\nNext Steps:"
     echo "  1. Set up your production database with the generated credentials"
@@ -465,7 +465,7 @@ SMTP_TO=[STORED IN k8s secret: smtp-secrets.to]
 
 # Application Configuration (stored in ConfigMap)
 NODE_ENV=production
-APP_NAME=BuildMyStack AI Recommendations
+APP_NAME=Stapelwerk AI Recommendations
 APP_PORT=8080
 LOG_LEVEL=info
 LOG_FORMAT=json
@@ -482,7 +482,7 @@ show_usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-This script sets up all production secrets for the BuildMyStack AI Recommendations system.
+This script sets up all production secrets for the Stapelwerk AI Recommendations system.
 
 Required Environment Variables:
   PROD_DB_HOST                   Production database hostname
@@ -504,13 +504,13 @@ Optional Environment Variables:
   PROD_ADMIN_API_TOKEN           Admin API token (auto-generated if not provided)
   PROD_FEATURE_FLAG_TOKEN        Feature flag token (auto-generated if not provided)
   SMTP_PASSWORD                  SMTP password (auto-generated if not provided)
-  SMTP_FROM                      SMTP from address (defaults to alerts@buildmystack.com)
-  SMTP_TO                        SMTP to addresses (defaults to devops@buildmystack.com)
+  SMTP_FROM                      SMTP from address (defaults to alerts@stapelwerk.com)
+  SMTP_TO                        SMTP to addresses (defaults to devops@stapelwerk.com)
   TLS_CERT_PATH                  Path to TLS certificate file
   TLS_KEY_PATH                   Path to TLS private key file
 
 Options:
-  --namespace NAME               Kubernetes namespace (default: buildmystack)
+  --namespace NAME               Kubernetes namespace (default: stapelwerk)
   --validate-only                Only validate environment variables
   --dry-run                      Show what would be created without executing
   --help                         Show this help message

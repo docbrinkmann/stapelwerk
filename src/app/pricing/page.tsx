@@ -139,7 +139,7 @@ export default function PricingPage() {
           <div>
             <h2 className="text-xl font-semibold text-foreground">Self-host supporter</h2>
             <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-              BuildMyStack is AGPL-3.0 and a self-hosted build already has{" "}
+              Stapelwerk is AGPL-3.0 and a self-hosted build already has{" "}
               <strong className="text-foreground">every feature, no gates</strong>. This optional license
               funds development — signed builds, priority updates, and your name in SUPPORTERS. It is a
               thank-you, not a feature unlock.

@@ -34,7 +34,7 @@ services:
       POSTGRES_PASSWORD: secret
 ```
 
-### BuildMyStack YAML
+### Stapelwerk YAML
 
 Native format with additional metadata:
 
@@ -136,7 +136,7 @@ The importer validates:
 
 Each service is checked against the catalog:
 
-1. **Service Exists** - Must be in BuildMyStack catalog
+1. **Service Exists** - Must be in Stapelwerk catalog
 2. **Version Available** - Specified version must be available
 3. **Compatibility** - Service must be compatible with stack
 

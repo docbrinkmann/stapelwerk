@@ -344,6 +344,8 @@ describe('generateComposeWithSecrets — VPN kill-switch routing', () => {
     expect(doc.services.gluetun.devices).toEqual(['/dev/net/tun:/dev/net/tun'])
     expect(doc.services.gluetun.ports).toContain('8080:8080')
     expect(doc.services.gluetun.networks).toEqual(['appnet'])
+  })
+})
 
 describe('generateComposeWithSecrets — image tag override', () => {
   it('honors configuration.imageTag over the catalog default tag', () => {

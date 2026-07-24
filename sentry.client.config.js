@@ -34,8 +34,8 @@ Sentry.init({
     Sentry.browserTracingIntegration({
       tracePropagationTargets: [
         'localhost',
-        /^https:\/\/[^/]*build-my-stack[^/]*\.vercel\.app/,
-        /^https:\/\/api\.buildmystack\./,
+        /^https:\/\/[^/]*stapelwerk[^/]*\.vercel\.app/,
+        /^https:\/\/api\.stapelwerk\./,
       ],
     }),
     Sentry.browserProfilingIntegration(),

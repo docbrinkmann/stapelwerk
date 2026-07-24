@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# BuildMyStack - Production Setup Script
+# Stapelwerk - Production Setup Script
 # - Generates secrets
 # - Initializes Docker Swarm (if needed)
 # - Creates/updates Docker secrets
 # - Deploys the stack via docker stack deploy
 # - Runs basic health checks
 
-STACK_NAME="buildmystack"
+STACK_NAME="stapelwerk"
 COMPOSE_FILE="docker/docker-compose.prod.yml"
 SECRETS_DIR="secrets"
 SECRETS=(db_password redis_password jwt_secret)

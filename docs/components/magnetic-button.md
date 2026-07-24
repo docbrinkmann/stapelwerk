@@ -94,7 +94,7 @@ export function WithIcons() {
 
 ### Integration with Hero Section
 
-Real-world usage in BuildMyStack hero section:
+Real-world usage in Stapelwerk hero section:
 
 ```tsx
 import { MagneticButton } from '@/components/ui/magnetic-button'

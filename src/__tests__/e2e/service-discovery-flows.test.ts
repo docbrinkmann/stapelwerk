@@ -9,7 +9,7 @@ import { TestDataFactory } from '../helpers/test-data-factory'
  * End-to-End Test Suite: Service Discovery and Contribution Flows
  * 
  * Tests complete user workflows from service discovery to contribution and admin approval.
- * These tests simulate real user journeys through the BuildMyStack service catalog API.
+ * These tests simulate real user journeys through the Stapelwerk service catalog API.
  * 
  * Test Coverage:
  * - Service discovery workflow (browse, search, filter)

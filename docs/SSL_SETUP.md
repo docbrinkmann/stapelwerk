@@ -1,10 +1,10 @@
 # SSL Certificate Setup with Let's Encrypt
 
-This guide covers setting up free SSL certificates for BuildMyStack using Let's Encrypt and Certbot.
+This guide covers setting up free SSL certificates for Stapelwerk using Let's Encrypt and Certbot.
 
 ## Prerequisites
 
-- Domain name pointing to your server (buildmystack.minilab.live)
+- Domain name pointing to your server (stapelwerk.minilab.live)
 - Nginx installed and running
 - Ports 80 and 443 open in firewall
 
@@ -29,7 +29,7 @@ This method automatically configures Nginx for you.
 
 ```bash
 # Obtain and install certificate
-sudo certbot --nginx -d buildmystack.minilab.live
+sudo certbot --nginx -d stapelwerk.minilab.live
 
 # Follow the prompts:
 # - Enter email address for renewal notifications
@@ -43,10 +43,10 @@ sudo certbot --nginx -d buildmystack.minilab.live
 
 ```bash
 # Copy the nginx config
-sudo cp config/nginx/buildmystack.conf /etc/nginx/sites-available/buildmystack
+sudo cp config/nginx/stapelwerk.conf /etc/nginx/sites-available/stapelwerk
 
 # Initially comment out SSL lines (lines 27-58) for first-time setup
-sudo nano /etc/nginx/sites-available/buildmystack
+sudo nano /etc/nginx/sites-available/stapelwerk
 ```
 
 ### Step 2: Enable HTTP-only Configuration
@@ -62,7 +62,7 @@ Remove or comment out the HTTPS server block temporarily:
 
 ```bash
 # Create symlink
-sudo ln -s /etc/nginx/sites-available/buildmystack /etc/nginx/sites-enabled/
+sudo ln -s /etc/nginx/sites-available/stapelwerk /etc/nginx/sites-enabled/
 
 # Test configuration
 sudo nginx -t
@@ -75,17 +75,17 @@ sudo systemctl reload nginx
 
 ```bash
 # Get certificate only (don't modify nginx yet)
-sudo certbot certonly --nginx -d buildmystack.minilab.live
+sudo certbot certonly --nginx -d stapelwerk.minilab.live
 
 # Or use webroot method
-sudo certbot certonly --webroot -w /var/www/certbot -d buildmystack.minilab.live
+sudo certbot certonly --webroot -w /var/www/certbot -d stapelwerk.minilab.live
 ```
 
 ### Step 5: Update Nginx Configuration
 
 ```bash
 # Uncomment the HTTPS server block
-sudo nano /etc/nginx/sites-available/buildmystack
+sudo nano /etc/nginx/sites-available/stapelwerk
 
 # Uncomment lines 27-149
 ```
@@ -109,16 +109,16 @@ sudo systemctl reload nginx
 sudo certbot certificates
 
 # Should show:
-# - Certificate Name: buildmystack.minilab.live
+# - Certificate Name: stapelwerk.minilab.live
 # - Expiry Date: ~90 days from now
-# - Certificate Path: /etc/letsencrypt/live/buildmystack.minilab.live/fullchain.pem
+# - Certificate Path: /etc/letsencrypt/live/stapelwerk.minilab.live/fullchain.pem
 ```
 
 ### Test HTTPS
 
 ```bash
 # Test from command line
-curl -I https://buildmystack.minilab.live
+curl -I https://stapelwerk.minilab.live
 
 # Should return:
 # HTTP/2 200
@@ -127,7 +127,7 @@ curl -I https://buildmystack.minilab.live
 
 ### Test in Browser
 
-Visit: `https://buildmystack.minilab.live`
+Visit: `https://stapelwerk.minilab.live`
 
 - Should show secure connection (lock icon)
 - No certificate warnings
@@ -137,7 +137,7 @@ Visit: `https://buildmystack.minilab.live`
 
 ```bash
 # Use SSL Labs (takes a few minutes)
-# Visit: https://www.ssllabs.com/ssltest/analyze.html?d=buildmystack.minilab.live
+# Visit: https://www.ssllabs.com/ssltest/analyze.html?d=stapelwerk.minilab.live
 
 # Expected grade: A or A+
 ```
@@ -171,7 +171,7 @@ sudo certbot renew --dry-run
 sudo certbot renew
 
 # Renew specific certificate
-sudo certbot renew --cert-name buildmystack.minilab.live
+sudo certbot renew --cert-name stapelwerk.minilab.live
 ```
 
 ### Renewal Hook (Optional)
@@ -217,7 +217,7 @@ sudo ufw status
 
 ```bash
 # Check if certificate exists
-sudo ls -la /etc/letsencrypt/live/buildmystack.minilab.live/
+sudo ls -la /etc/letsencrypt/live/stapelwerk.minilab.live/
 
 # Should see: fullchain.pem, privkey.pem, chain.pem
 ```
@@ -241,7 +241,7 @@ sudo nginx -t
 
 ```bash
 # Check DNS resolution
-dig buildmystack.minilab.live
+dig stapelwerk.minilab.live
 
 # Check if nginx is listening
 sudo netstat -tlnp | grep nginx
@@ -259,15 +259,15 @@ Wait 1 week or use staging environment for testing:
 
 ```bash
 # Use staging server (for testing only)
-sudo certbot --staging --nginx -d buildmystack.minilab.live
+sudo certbot --staging --nginx -d stapelwerk.minilab.live
 ```
 
 ### Permission Denied Errors
 
 ```bash
 # Fix certificate permissions
-sudo chmod 0644 /etc/letsencrypt/live/buildmystack.minilab.live/fullchain.pem
-sudo chmod 0600 /etc/letsencrypt/live/buildmystack.minilab.live/privkey.pem
+sudo chmod 0644 /etc/letsencrypt/live/stapelwerk.minilab.live/fullchain.pem
+sudo chmod 0600 /etc/letsencrypt/live/stapelwerk.minilab.live/privkey.pem
 ```
 
 ## Monitoring
@@ -283,7 +283,7 @@ Certbot sends email notifications to the address you provided during setup.
 sudo certbot certificates | grep Expiry
 
 # Or
-echo | openssl s_client -servername buildmystack.minilab.live -connect buildmystack.minilab.live:443 2>/dev/null | openssl x509 -noout -dates
+echo | openssl s_client -servername stapelwerk.minilab.live -connect stapelwerk.minilab.live:443 2>/dev/null | openssl x509 -noout -dates
 ```
 
 ### Renewal Log
@@ -300,7 +300,7 @@ sudo tail -50 /var/log/letsencrypt/letsencrypt.log
 sudo tar -czf letsencrypt-backup-$(date +%Y%m%d).tar.gz /etc/letsencrypt/
 
 # Store backup securely
-sudo mv letsencrypt-backup-*.tar.gz /opt/build-my-stack/backups/
+sudo mv letsencrypt-backup-*.tar.gz /opt/stapelwerk/backups/
 ```
 
 ## Alternative: Manual Certificate
@@ -309,15 +309,15 @@ If you have your own SSL certificate:
 
 ```bash
 # Copy certificates
-sudo cp your-cert.crt /etc/ssl/certs/buildmystack.crt
-sudo cp your-key.key /etc/ssl/private/buildmystack.key
+sudo cp your-cert.crt /etc/ssl/certs/stapelwerk.crt
+sudo cp your-key.key /etc/ssl/private/stapelwerk.key
 
 # Update nginx config
-sudo nano /etc/nginx/sites-available/buildmystack
+sudo nano /etc/nginx/sites-available/stapelwerk
 
 # Change SSL certificate paths:
-ssl_certificate /etc/ssl/certs/buildmystack.crt;
-ssl_certificate_key /etc/ssl/private/buildmystack.key;
+ssl_certificate /etc/ssl/certs/stapelwerk.crt;
+ssl_certificate_key /etc/ssl/private/stapelwerk.key;
 ```
 
 ## Security Best Practices

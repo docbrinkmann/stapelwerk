@@ -11,4 +11,4 @@ ci_access:
 
 # Namespace restrictions
 #namespace:
-#  include: ["buildmystack"]
+#  include: ["stapelwerk"]

@@ -4,10 +4,10 @@ services:
   # PostgreSQL 18 Database
   postgres:
     image: postgres:18-alpine
-    container_name: build-my-stack_postgres
+    container_name: stapelwerk_postgres
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-buildmystack}
-      POSTGRES_USER: ${POSTGRES_USER:-buildmystack_user}
+      POSTGRES_DB: ${POSTGRES_DB:-stapelwerk}
+      POSTGRES_USER: ${POSTGRES_USER:-stapelwerk_user}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required}
       PGDATA: /var/lib/postgresql/data/pgdata
     volumes:
@@ -16,7 +16,7 @@ services:
       - app-network
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-buildmystack_user} -d ${POSTGRES_DB:-buildmystack}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stapelwerk_user} -d ${POSTGRES_DB:-stapelwerk}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -49,7 +49,7 @@ services:
 
   # Next.js Application
   app:
-    image: ${CI_REGISTRY_IMAGE:-build-my-stack}:${DOCKER_IMAGE_TAG:-latest}
+    image: ${CI_REGISTRY_IMAGE:-stapelwerk}:${DOCKER_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -57,7 +57,7 @@ services:
         # Baked into the client bundle - must point at the public host
         NEXT_PUBLIC_WS_URL: ${NEXT_PUBLIC_WS_URL:-}
         NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-}
-    container_name: build-my-stack_app
+    container_name: stapelwerk_app
     environment:
       # Node Environment
       NODE_ENV: production
@@ -74,7 +74,7 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL is required}
       
       # Application
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://buildmystack.minilab.live}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://stapelwerk.minilab.live}
       
       # Sentry (optional)
       SENTRY_DSN: ${SENTRY_DSN:-}
@@ -89,7 +89,7 @@ services:
       REDIS_URL_FILE: ${REDIS_URL_FILE:-}
       
       # Other environment variables
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://buildmystack.minilab.live}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://stapelwerk.minilab.live}
 
       # Direct-deploy bridge: the app container has no Docker socket, so it
       # delegates `docker compose` to the websocket service over the shared
@@ -137,12 +137,12 @@ services:
   # Runs from the builder stage image: it has tsx + full node_modules,
   # and its layers are shared with the app build (no extra build cost).
   websocket:
-    image: ${CI_REGISTRY_IMAGE:-build-my-stack}-ws:${DOCKER_IMAGE_TAG:-latest}
+    image: ${CI_REGISTRY_IMAGE:-stapelwerk}-ws:${DOCKER_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
       target: builder
-    container_name: build-my-stack_websocket
+    container_name: stapelwerk_websocket
     # root so the startup command can `apk add` the docker CLI (image USER is nextjs)
     user: root
     # Install the docker CLI + compose plugin at startup (they talk to the mounted
@@ -155,7 +155,7 @@ services:
       # The terminal's docker-mode ownership check reads the DB (stack → owner),
       # so the ws process needs the real DATABASE_URL — same as the app, not the
       # build-time dummy baked into the image.
-      DATABASE_URL: postgresql://${POSTGRES_USER:-buildmystack_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-buildmystack}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-stapelwerk_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-stapelwerk}
       # Direct-deploy executor + terminal talk to the host Docker daemon here
       DOCKER_HOST: unix:///var/run/docker.sock
       # Shared token for the /deploy bridge (must match the app service's value;
@@ -175,7 +175,7 @@ services:
       TERMINAL_CONTAINER_PREFIX: ${TERMINAL_CONTAINER_PREFIX:-bms-}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-}
     volumes:
-      # The single "this server" deploy target + terminal exec into build-my-stack_*
+      # The single "this server" deploy target + terminal exec into stapelwerk_*
       - /var/run/docker.sock:/var/run/docker.sock
       # Shared deploy key: the app generates it (ssh-keygen) into this volume and
       # the ws process reads it here for remote SSH deploys. DEPLOY_SSH_KEY_FILE
@@ -196,14 +196,14 @@ services:
   # One-off schema push + seed: docker compose --profile setup run --rm migrate
   migrate:
     profiles: ["setup"]
-    image: ${CI_REGISTRY_IMAGE:-build-my-stack}-ws:${DOCKER_IMAGE_TAG:-latest}
+    image: ${CI_REGISTRY_IMAGE:-stapelwerk}-ws:${DOCKER_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
       target: builder
     command: sh -c "npx prisma db push --skip-generate && npx tsx prisma/seed.ts"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-buildmystack_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-buildmystack}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-stapelwerk_user}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-stapelwerk}
       SEED_DEMO_PASSWORD: ${SEED_DEMO_PASSWORD:-demo1234}
     depends_on:
       postgres:
@@ -213,7 +213,7 @@ services:
 
   redis:
     image: redis:7-alpine
-    container_name: build-my-stack_redis
+    container_name: stapelwerk_redis
     command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
     volumes:
       - redis-data:/data

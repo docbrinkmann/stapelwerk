@@ -1,7 +1,7 @@
 /**
  * Image-update awareness — "is a newer tag available?" for a service's image.
  *
- * BuildMyStack pins service images to a specific tag (e.g. `postgres:18-alpine`).
+ * Stapelwerk pins service images to a specific tag (e.g. `postgres:18-alpine`).
  * This module answers, advisory-only, whether Docker Hub publishes a newer
  * *comparable* tag so the builder can surface an "update available" hint.
  *

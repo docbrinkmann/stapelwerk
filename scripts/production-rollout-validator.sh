@@ -26,7 +26,7 @@ BOLD='\033[1m'
 # Validation configuration
 VALIDATION_ID="rollout-$(date +%Y%m%d-%H%M%S)"
 ENVIRONMENT="${ENVIRONMENT:-production}"
-NAMESPACE="${NAMESPACE:-buildmystack-prod}"
+NAMESPACE="${NAMESPACE:-stapelwerk-prod}"
 APP_URL="${APP_URL:-http://localhost:3000}"
 TIMEOUT="${TIMEOUT:-300}" # 5 minutes
 RETRY_COUNT="${RETRY_COUNT:-3}"
@@ -40,7 +40,7 @@ PASSED_VALIDATIONS=0
 
 # Initialize validation
 init_validation() {
-    echo -e "${BOLD}${BLUE}=== BuildMyStack Production Rollout Validation ===${NC}"
+    echo -e "${BOLD}${BLUE}=== Stapelwerk Production Rollout Validation ===${NC}"
     echo -e "${CYAN}Validation ID: $VALIDATION_ID${NC}"
     echo -e "${CYAN}Environment: $ENVIRONMENT${NC}"
     echo -e "${CYAN}Started: $(date)${NC}"
@@ -307,8 +307,8 @@ validate_system_health() {
             log_validation "PASS" "K8S_HEALTH" "Kubernetes cluster accessible"
             
             # Check pod status
-            local ready_pods=$(kubectl get pods -n "$NAMESPACE" -l app=buildmystack -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}' | wc -w)
-            local total_pods=$(kubectl get pods -n "$NAMESPACE" -l app=buildmystack --no-headers | wc -l)
+            local ready_pods=$(kubectl get pods -n "$NAMESPACE" -l app=stapelwerk -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}' | wc -w)
+            local total_pods=$(kubectl get pods -n "$NAMESPACE" -l app=stapelwerk --no-headers | wc -l)
             
             if [[ $ready_pods -ge 1 ]]; then
                 log_validation "PASS" "POD_HEALTH" "$ready_pods/$total_pods pods running"
@@ -367,7 +367,7 @@ validate_performance() {
     
     # Memory usage check
     if command -v kubectl &>/dev/null; then
-        local memory_usage=$(kubectl top pods -n "$NAMESPACE" -l app=buildmystack --no-headers 2>/dev/null | \
+        local memory_usage=$(kubectl top pods -n "$NAMESPACE" -l app=stapelwerk --no-headers 2>/dev/null | \
                             awk '{gsub(/Mi/,"",$3); sum+=$3} END {print int(sum)}' || echo "0")
         
         if [[ $memory_usage -lt 1000 ]]; then
@@ -499,7 +499,7 @@ validate_monitoring() {
     # Test notification systems
     if [[ -n "${SLACK_WEBHOOK_URL:-}" ]]; then
         if curl -s -f -X POST -H 'Content-type: application/json' \
-                --data '{"text": "BuildMyStack validation test"}' \
+                --data '{"text": "Stapelwerk validation test"}' \
                 "$SLACK_WEBHOOK_URL" &>/dev/null; then
             log_validation "PASS" "SLACK_NOTIFICATIONS" "Slack notifications working"
         else
@@ -532,7 +532,7 @@ generate_validation_report() {
     fi
     
     cat > "$report_file" << EOF
-# BuildMyStack Production Rollout Validation Report
+# Stapelwerk Production Rollout Validation Report
 
 $status_emoji **Overall Status: $overall_status**
 
@@ -543,7 +543,7 @@ $status_emoji **Overall Status: $overall_status**
 
 ## Executive Summary
 
-The BuildMyStack AI-Powered Recommendations system has been successfully deployed to production with comprehensive validation completed. This report summarizes the validation results and production readiness status.
+The Stapelwerk AI-Powered Recommendations system has been successfully deployed to production with comprehensive validation completed. This report summarizes the validation results and production readiness status.
 
 ## Validation Results
 
@@ -672,7 +672,7 @@ fi)
 
 ---
 
-*This report was generated automatically by the BuildMyStack Production Rollout Validator*  
+*This report was generated automatically by the Stapelwerk Production Rollout Validator*  
 *Report ID: $VALIDATION_ID*
 EOF
     
@@ -696,7 +696,7 @@ EOF
              --data "{
                  \"attachments\": [{
                      \"color\": \"$color\",
-                     \"title\": \"$status_emoji BuildMyStack Production Rollout Complete\",
+                     \"title\": \"$status_emoji Stapelwerk Production Rollout Complete\",
                      \"text\": \"Status: $overall_status\\nSuccess Rate: ${success_rate}%\\nValidations: $PASSED_VALIDATIONS/$TOTAL_VALIDATIONS passed\",
                      \"fields\": [
                          {\"title\": \"Environment\", \"value\": \"$ENVIRONMENT\", \"short\": true},
@@ -738,7 +738,7 @@ run_full_validation() {
 # Help function
 show_help() {
     cat << EOF
-BuildMyStack Production Rollout Validator
+Stapelwerk Production Rollout Validator
 
 Usage: $0 [command] [options]
 
@@ -755,7 +755,7 @@ Commands:
 
 Options:
   --environment ENV     Environment to validate (default: production)
-  --namespace NS        Kubernetes namespace (default: buildmystack-prod)
+  --namespace NS        Kubernetes namespace (default: stapelwerk-prod)
   --app-url URL        Application URL (default: http://localhost:3000)
   --timeout SEC        Request timeout in seconds (default: 300)
   --help               Show this help message

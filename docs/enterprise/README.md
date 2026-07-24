@@ -116,7 +116,7 @@ The enterprise features are built on a modern, scalable architecture:
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd build-my-stack
+cd stapelwerk
 
 # Install dependencies
 npm install
@@ -142,7 +142,7 @@ npm run db:seed
 
 ```typescript
 // .env.local
-DATABASE_URL="postgresql://user:password@localhost:5432/buildmystack"
+DATABASE_URL="postgresql://user:password@localhost:5432/stapelwerk"
 REDIS_URL="redis://localhost:6379"
 NEXTAUTH_SECRET="your-secret-key"
 NEXTAUTH_URL="http://localhost:3000"
@@ -237,7 +237,7 @@ brew install redis
 brew services start redis
 
 # Create database
-createdb buildmystack
+createdb stapelwerk
 
 # Configure environment
 cp .env.example .env.local
@@ -253,7 +253,7 @@ npm run setup
 
 ```bash
 # Build production image
-docker build -t build-my-stack:latest .
+docker build -t stapelwerk:latest .
 
 # Run with docker-compose
 docker-compose -f docker-compose.prod.yml up -d
@@ -280,7 +280,7 @@ npm run start
 # Application
 NODE_ENV=production
 PORT=3000
-DATABASE_URL=postgresql://user:password@localhost:5432/buildmystack
+DATABASE_URL=postgresql://user:password@localhost:5432/stapelwerk
 
 # Authentication
 NEXTAUTH_SECRET=your-very-secure-secret

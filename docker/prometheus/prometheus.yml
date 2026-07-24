@@ -7,26 +7,26 @@ rule_files:
 
 scrape_configs:
   # Application (Next.js) metrics
-  - job_name: 'buildmystack-app'
+  - job_name: 'stapelwerk-app'
     scheme: http
     metrics_path: /api/metrics
     static_configs:
-      - targets: ['buildmystack-ai:8080']
+      - targets: ['stapelwerk-ai:8080']
 
   # PostgreSQL exporter (expected on :9187)
   - job_name: 'postgres-exporter'
     metrics_path: /metrics
     static_configs:
-      - targets: ['buildmystack-postgres-prod:9187']
+      - targets: ['stapelwerk-postgres-prod:9187']
 
   # Redis exporter (expected on :9121)
   - job_name: 'redis-exporter'
     metrics_path: /metrics
     static_configs:
-      - targets: ['buildmystack-redis-prod:9121']
+      - targets: ['stapelwerk-redis-prod:9121']
 
   # Nginx exporter (expected on :9113)
   - job_name: 'nginx-exporter'
     metrics_path: /metrics
     static_configs:
-      - targets: ['buildmystack-nginx-prod:9113']
+      - targets: ['stapelwerk-nginx-prod:9113']

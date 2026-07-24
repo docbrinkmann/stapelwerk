@@ -429,8 +429,8 @@ docker run -p 3000:3000 \
 2. **For Docker Testing:**
    ```bash
    # Build production image
-   docker build -f Dockerfile -t build-my-stack .
-   docker run -p 3000:3000 build-my-stack
+   docker build -f Dockerfile -t stapelwerk .
+   docker run -p 3000:3000 stapelwerk
    ```
 
 3. **For Production Deployment:**

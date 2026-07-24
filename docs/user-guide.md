@@ -1,4 +1,4 @@
-# BuildMyStack AI-Powered Recommendations - User Guide
+# Stapelwerk AI-Powered Recommendations - User Guide
 
 ## Table of Contents
 
@@ -15,11 +15,11 @@
 
 ## Getting Started
 
-Welcome to BuildMyStack! Our AI-powered platform helps you discover, build, and optimize technology stacks tailored to your specific needs. Whether you're starting a new project, exploring new technologies, or looking to optimize your existing stack, our intelligent recommendations will guide you to the best choices.
+Welcome to Stapelwerk! Our AI-powered platform helps you discover, build, and optimize technology stacks tailored to your specific needs. Whether you're starting a new project, exploring new technologies, or looking to optimize your existing stack, our intelligent recommendations will guide you to the best choices.
 
 ### Creating Your Account
 
-1. **Sign Up**: Visit [buildmystack.com](https://buildmystack.com) and click "Get Started"
+1. **Sign Up**: Visit [stapelwerk.com](https://stapelwerk.com) and click "Get Started"
 2. **Choose Your Sign-Up Method**:
    - Email and password
    - Google OAuth
@@ -45,7 +45,7 @@ Your personal dashboard provides:
 
 ## AI-Powered Recommendations
 
-Our AI recommendation engine is the heart of BuildMyStack, providing intelligent suggestions based on your preferences, project requirements, and community insights.
+Our AI recommendation engine is the heart of Stapelwerk, providing intelligent suggestions based on your preferences, project requirements, and community insights.
 
 ### How AI Recommendations Work
 
@@ -179,7 +179,7 @@ Templates are starting points that you can fully customize:
 ### Community Templates
 
 #### Official Templates
-**Maintained by BuildMyStack team**:
+**Maintained by Stapelwerk team**:
 - Thoroughly tested and validated
 - Regular updates with security patches
 - Comprehensive documentation
@@ -338,7 +338,7 @@ While building your stack, receive continuous suggestions:
 
 ## Personalization & Preferences
 
-BuildMyStack learns from your behavior and preferences to provide increasingly personalized recommendations.
+Stapelwerk learns from your behavior and preferences to provide increasingly personalized recommendations.
 
 ### Setting Up Your Profile
 
@@ -485,7 +485,7 @@ Connect with other developers, share experiences, and learn from the community.
 ### API Integration
 
 #### REST API Access
-**Programmatic access to BuildMyStack features**:
+**Programmatic access to Stapelwerk features**:
 
 ```javascript
 // Get personalized recommendations
@@ -539,11 +539,11 @@ const stack = await fetch('/api/stacks', {
 ### Custom Integrations
 
 #### IDE Plugins
-**Integrate BuildMyStack directly into your development environment**:
+**Integrate Stapelwerk directly into your development environment**:
 
 ##### VS Code Extension
 - **In-Editor Recommendations**: Get suggestions while coding
-- **Stack Synchronization**: Keep your project in sync with BuildMyStack
+- **Stack Synchronization**: Keep your project in sync with Stapelwerk
 - **Quick Documentation**: Access technology documentation instantly
 
 ##### JetBrains Plugin
@@ -564,7 +564,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
     - name: Validate Stack
-      uses: buildmystack/validate-action@v1
+      uses: stapelwerk/validate-action@v1
       with:
         stack-id: ${{ secrets.STACK_ID }}
         api-key: ${{ secrets.BUILDMYSTACK_API_KEY }}
@@ -755,7 +755,7 @@ jobs:
 
 #### Direct Support
 1. **Help Chat**: In-app chat support during business hours
-2. **Email Support**: support@buildmystack.com for detailed issues
+2. **Email Support**: support@stapelwerk.com for detailed issues
 3. **Bug Reports**: Use the in-app bug reporting feature
 4. **Feature Requests**: Submit ideas through our feedback system
 
@@ -766,11 +766,11 @@ jobs:
 **Q: How does the AI recommendation system work?**
 A: Our AI uses machine learning algorithms including collaborative filtering and content-based filtering to analyze your preferences, project requirements, and community data to suggest the most suitable technologies for your needs.
 
-**Q: Is BuildMyStack free to use?**
-A: Yes, BuildMyStack offers a free tier with access to basic recommendations and templates. Premium features include advanced analytics, priority support, and unlimited private stacks.
+**Q: Is Stapelwerk free to use?**
+A: Yes, Stapelwerk offers a free tier with access to basic recommendations and templates. Premium features include advanced analytics, priority support, and unlimited private stacks.
 
-**Q: Can I use BuildMyStack for team projects?**
-A: Absolutely! BuildMyStack supports team collaboration with shared stacks, role-based permissions, and team analytics.
+**Q: Can I use Stapelwerk for team projects?**
+A: Absolutely! Stapelwerk supports team collaboration with shared stacks, role-based permissions, and team analytics.
 
 ### Technical Questions
 
@@ -791,13 +791,13 @@ A: We use industry-standard encryption and security practices. Your data is neve
 **Q: Can I delete my account and data?**
 A: Yes, you can permanently delete your account and all associated data at any time through your account settings.
 
-**Q: Do you track my activity outside of BuildMyStack?**
-A: No, we only track your activity within the BuildMyStack platform to improve recommendations and user experience.
+**Q: Do you track my activity outside of Stapelwerk?**
+A: No, we only track your activity within the Stapelwerk platform to improve recommendations and user experience.
 
 ### Integration Questions
 
-**Q: Is there an API for BuildMyStack?**
-A: Yes, we offer a REST API for developers to integrate BuildMyStack features into their own tools and workflows.
+**Q: Is there an API for Stapelwerk?**
+A: Yes, we offer a REST API for developers to integrate Stapelwerk features into their own tools and workflows.
 
 **Q: Are there IDE plugins available?**
 A: We currently offer plugins for VS Code and JetBrains IDEs, with more integrations planned.
@@ -807,6 +807,6 @@ A: Yes, you can export your stacks in various formats including JSON, YAML, and 
 
 ---
 
-**Need more help?** Visit our [Help Center](https://help.buildmystack.com) or contact us at support@buildmystack.com.
+**Need more help?** Visit our [Help Center](https://help.stapelwerk.com) or contact us at support@stapelwerk.com.
 
-**Join the Community**: Connect with other developers on our [Discord server](https://discord.gg/buildmystack) or follow us on [Twitter](https://twitter.com/buildmystack) for updates and tips.
+**Join the Community**: Connect with other developers on our [Discord server](https://discord.gg/stapelwerk) or follow us on [Twitter](https://twitter.com/stapelwerk) for updates and tips.

@@ -1,5 +1,5 @@
 name: Bug report
-description: Something in BuildMyStack isn't working as expected
+description: Something in Stapelwerk isn't working as expected
 labels: ["bug"]
 body:
   - type: markdown
@@ -30,11 +30,11 @@ body:
   - type: dropdown
     id: how-run
     attributes:
-      label: How are you running BuildMyStack?
+      label: How are you running Stapelwerk?
       options:
         - Self-hosted (docker-compose.selfhost.yml)
         - Local dev (npm run dev)
-        - Hosted (buildmystack.dev)
+        - Hosted (stapelwerk.dev)
         - Other
     validations:
       required: true

@@ -1,7 +1,7 @@
 # Task 5: Approval Workflow and Review System - COMPLETED ✅
 
 ## Summary
-Task 5: Approval Workflow and Review System has been successfully completed for the "build-my-stack" project. All major components including workflow creation, state management, commenting system, diff visualization, and UI components have been implemented and tested.
+Task 5: Approval Workflow and Review System has been successfully completed for the "stapelwerk" project. All major components including workflow creation, state management, commenting system, diff visualization, and UI components have been implemented and tested.
 
 ## Final Implementation Results
 - **Workflow API Router**: Complete tRPC router with 8 endpoints

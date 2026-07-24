@@ -9,7 +9,7 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "${SCRIPT_DIR}/../.." && pwd)"
-NAMESPACE="buildmystack"
+NAMESPACE="stapelwerk"
 CLUSTER_NAME="bms-e2e"
 SAMPLE_MANIFEST="${SCRIPT_DIR}/sample-app.yaml"
 TIMEOUT="180s"

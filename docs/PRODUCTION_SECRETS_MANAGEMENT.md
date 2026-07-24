@@ -1,10 +1,10 @@
 # Production Secrets Management & Environment Setup
 
-This document outlines the best practices and procedures for managing secrets and configuring the production environment for the BuildMyStack AI Recommendations system.
+This document outlines the best practices and procedures for managing secrets and configuring the production environment for the Stapelwerk AI Recommendations system.
 
 ## 🔐 Secrets Management Overview
 
-Secure management of production secrets is critical for maintaining the security and integrity of the BuildMyStack AI-powered recommendation system. The following guidelines must be followed for all production deployments.
+Secure management of production secrets is critical for maintaining the security and integrity of the Stapelwerk AI-powered recommendation system. The following guidelines must be followed for all production deployments.
 
 ### Key Principles
 
@@ -40,17 +40,17 @@ vault write auth/kubernetes/config \
     kubernetes_host="https://$KUBERNETES_SERVICE_HOST:$KUBERNETES_SERVICE_PORT"
 
 # Create secret policy
-vault policy write buildmystack-ai-policy - <<EOF
-path "secret/data/buildmystack/ai/*" {
+vault policy write stapelwerk-ai-policy - <<EOF
+path "secret/data/stapelwerk/ai/*" {
   capabilities = ["read"]
 }
 EOF
 
 # Setup Kubernetes authentication
-vault write auth/kubernetes/role/buildmystack-ai \
-    bound_service_account_names=buildmystack-ai-sa \
-    bound_service_account_namespaces=buildmystack \
-    policies=buildmystack-ai-policy \
+vault write auth/kubernetes/role/stapelwerk-ai \
+    bound_service_account_names=stapelwerk-ai-sa \
+    bound_service_account_namespaces=stapelwerk \
+    policies=stapelwerk-ai-policy \
     ttl=24h
 ```
 
@@ -63,13 +63,13 @@ For AWS-based deployments, AWS Secrets Manager provides managed secret storage w
 ```bash
 # Create a secret with AWS CLI
 aws secretsmanager create-secret \
-    --name "/production/buildmystack-ai" \
-    --description "BuildMyStack AI Production Secrets" \
+    --name "/production/stapelwerk-ai" \
+    --description "Stapelwerk AI Production Secrets" \
     --secret-string "{\"db_password\":\"SECURE_PASSWORD\",\"redis_password\":\"SECURE_PASSWORD\"}"
 
 # Set up secret rotation
 aws secretsmanager rotate-secret \
-    --secret-id "/production/buildmystack-ai" \
+    --secret-id "/production/stapelwerk-ai" \
     --rotation-lambda-arn "arn:aws:lambda:REGION:ACCOUNT_ID:function:SecretRotation" \
     --rotation-rules "{\"AutomaticallyAfterDays\": 90}"
 ```
@@ -82,32 +82,32 @@ For basic deployments, Kubernetes Secrets provide a simple secret management sol
 
 ```bash
 # Create namespace if it doesn't exist
-kubectl create namespace buildmystack
+kubectl create namespace stapelwerk
 
 # Create secret for database
 kubectl create secret generic db-secrets \
-    --namespace buildmystack \
+    --namespace stapelwerk \
     --from-literal=password='SECURE_DB_PASSWORD'
 
 # Create secret for Redis
 kubectl create secret generic redis-secrets \
-    --namespace buildmystack \
+    --namespace stapelwerk \
     --from-literal=password='SECURE_REDIS_PASSWORD'
 
 # Create secret for API keys
 kubectl create secret generic ai-secrets \
-    --namespace buildmystack \
+    --namespace stapelwerk \
     --from-literal=openai-key='OPENAI_API_KEY' \
     --from-literal=anthropic-key='ANTHROPIC_API_KEY'
 
 # Create secret for JWT
 kubectl create secret generic app-secrets \
-    --namespace buildmystack \
+    --namespace stapelwerk \
     --from-literal=jwt-secret='SECURE_JWT_SECRET'
 
 # Create secret for monitoring
 kubectl create secret generic monitoring-secrets \
-    --namespace buildmystack \
+    --namespace stapelwerk \
     --from-literal=sentry-dsn='SENTRY_DSN'
 ```
 
@@ -172,14 +172,14 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: vault-agent-config
-  namespace: buildmystack
+  namespace: stapelwerk
 data:
   config.hcl: |
     auto_auth {
       method "kubernetes" {
         mount_path = "auth/kubernetes"
         config = {
-          role = "buildmystack-ai"
+          role = "stapelwerk-ai"
         }
       }
     }
@@ -187,7 +187,7 @@ data:
     template {
       destination = "/vault/secrets/config.env"
       contents = <<EOT
-        {{- with secret "secret/data/buildmystack/ai/production" -}}
+        {{- with secret "secret/data/stapelwerk/ai/production" -}}
         export DB_PASSWORD="{{ .Data.data.db_password }}"
         export REDIS_PASSWORD="{{ .Data.data.redis_password }}"
         export OPENAI_API_KEY="{{ .Data.data.openai_api_key }}"
@@ -205,8 +205,8 @@ Update deployment to use the Vault agent:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: buildmystack-ai
-  namespace: buildmystack
+  name: stapelwerk-ai
+  namespace: stapelwerk
 spec:
   # ... other deployment settings ...
   template:
@@ -214,10 +214,10 @@ spec:
       annotations:
         vault.hashicorp.com/agent-inject: "true"
         vault.hashicorp.com/agent-inject-status: "update"
-        vault.hashicorp.com/role: "buildmystack-ai"
-        vault.hashicorp.com/agent-inject-secret-config.env: "secret/data/buildmystack/ai/production"
+        vault.hashicorp.com/role: "stapelwerk-ai"
+        vault.hashicorp.com/agent-inject-secret-config.env: "secret/data/stapelwerk/ai/production"
         vault.hashicorp.com/agent-inject-template-config.env: |
-          {{- with secret "secret/data/buildmystack/ai/production" -}}
+          {{- with secret "secret/data/stapelwerk/ai/production" -}}
           export DB_PASSWORD="{{ .Data.data.db_password }}"
           export REDIS_PASSWORD="{{ .Data.data.redis_password }}"
           export OPENAI_API_KEY="{{ .Data.data.openai_api_key }}"
@@ -228,7 +228,7 @@ spec:
     spec:
       # ... container specs ...
       containers:
-      - name: buildmystack-ai
+      - name: stapelwerk-ai
         # ... container settings ...
         command:
         - /bin/sh
@@ -244,14 +244,14 @@ For AWS deployments, you can use the AWS Secrets Manager directly or with a side
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: buildmystack-ai
-  namespace: buildmystack
+  name: stapelwerk-ai
+  namespace: stapelwerk
 spec:
   # ... other deployment settings ...
   template:
     spec:
       containers:
-      - name: buildmystack-ai
+      - name: stapelwerk-ai
         # ... container settings ...
         env:
         - name: AWS_REGION
@@ -259,7 +259,7 @@ spec:
         - name: DB_PASSWORD
           valueFrom:
             secretKeyRef:
-              name: aws-secret-buildmystack
+              name: aws-secret-stapelwerk
               key: db_password
         # ... other env vars ...
       initContainers:
@@ -269,7 +269,7 @@ spec:
         - /bin/sh
         - -c
         - |
-          aws secretsmanager get-secret-value --secret-id /production/buildmystack-ai --query SecretString --output text > /tmp/secrets/secrets.json
+          aws secretsmanager get-secret-value --secret-id /production/stapelwerk-ai --query SecretString --output text > /tmp/secrets/secrets.json
           cat /tmp/secrets/secrets.json | jq -r 'to_entries | map("export \(.key)=\(.value|tostring)") | .[]' > /tmp/secrets/env-secrets
         volumeMounts:
         - name: secrets-volume
@@ -430,15 +430,15 @@ Always use dedicated service accounts with minimal privileges:
 
 ```sql
 -- Create application database user with limited permissions
-CREATE USER buildmystack_app WITH PASSWORD 'SECURE_PASSWORD';
-GRANT CONNECT ON DATABASE buildmystack_prod TO buildmystack_app;
-GRANT USAGE ON SCHEMA public TO buildmystack_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO buildmystack_app;
-GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO buildmystack_app;
+CREATE USER stapelwerk_app WITH PASSWORD 'SECURE_PASSWORD';
+GRANT CONNECT ON DATABASE stapelwerk_prod TO stapelwerk_app;
+GRANT USAGE ON SCHEMA public TO stapelwerk_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO stapelwerk_app;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO stapelwerk_app;
 
 -- Create read-only user for monitoring
-CREATE USER buildmystack_monitor WITH PASSWORD 'SECURE_MONITOR_PASSWORD';
-GRANT CONNECT ON DATABASE buildmystack_prod TO buildmystack_monitor;
-GRANT USAGE ON SCHEMA public TO buildmystack_monitor;
-GRANT SELECT ON ALL TABLES IN SCHEMA public TO buildmystack_monitor;
+CREATE USER stapelwerk_monitor WITH PASSWORD 'SECURE_MONITOR_PASSWORD';
+GRANT CONNECT ON DATABASE stapelwerk_prod TO stapelwerk_monitor;
+GRANT USAGE ON SCHEMA public TO stapelwerk_monitor;
+GRANT SELECT ON ALL TABLES IN SCHEMA public TO stapelwerk_monitor;
 ```

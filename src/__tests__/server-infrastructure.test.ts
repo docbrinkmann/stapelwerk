@@ -160,7 +160,7 @@ describe('Server Infrastructure Setup', () => {
       const serverSetup = join(projectRoot, 'docs/SERVER_SETUP.md')
       const content = readFileSync(serverSetup, 'utf-8')
       
-      expect(content).toMatch(/\/opt\/build-my-stack/)
+      expect(content).toMatch(/\/opt\/stapelwerk/)
     })
 
     it('should document firewall configuration', () => {

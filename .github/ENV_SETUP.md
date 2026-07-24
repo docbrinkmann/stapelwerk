@@ -56,7 +56,7 @@ This document outlines the required environment variables and secrets configurat
 ### Development Environment
 ```bash
 NODE_ENV=development
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/buildmystack_dev
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/stapelwerk_dev
 REDIS_URL=redis://localhost:6379
 NEXT_TELEMETRY_DISABLED=1
 ```
@@ -64,7 +64,7 @@ NEXT_TELEMETRY_DISABLED=1
 ### Test Environment
 ```bash
 NODE_ENV=test
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/buildmystack_test
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/stapelwerk_test
 REDIS_URL=redis://localhost:6379
 ```
 
@@ -73,7 +73,7 @@ REDIS_URL=redis://localhost:6379
 NODE_ENV=staging
 DATABASE_URL=<staging-database-url>
 REDIS_URL=<staging-redis-url>
-NEXTAUTH_URL=https://build-my-stack-staging.vercel.app
+NEXTAUTH_URL=https://stapelwerk-staging.vercel.app
 ```
 
 ### Production Environment
@@ -81,7 +81,7 @@ NEXTAUTH_URL=https://build-my-stack-staging.vercel.app
 NODE_ENV=production
 DATABASE_URL=<production-database-url>
 REDIS_URL=<production-redis-url>
-NEXTAUTH_URL=https://build-my-stack.vercel.app
+NEXTAUTH_URL=https://stapelwerk.vercel.app
 ```
 
 ## Vercel Environment Configuration
@@ -119,7 +119,7 @@ vercel secrets add sentry_dsn "https://..."
 
 # Staging secrets
 vercel secrets add staging_database_url "postgresql://..."
-vercel secrets add staging_nextauth_url "https://build-my-stack-staging.vercel.app"
+vercel secrets add staging_nextauth_url "https://stapelwerk-staging.vercel.app"
 vercel secrets add staging_nextauth_secret "staging-secret-key"
 ```
 

@@ -1,11 +1,11 @@
 # Deployment Setup - Task 5 Complete ✅
 
-**BuildMyStack** - Modern Full-Stack Platform
+**Stapelwerk** - Modern Full-Stack Platform
 
 ## Task 5: CI/CD Pipeline and Deployment Setup - COMPLETED (GitLab CI/CD)
 
 ### Overview
-This document summarizes the completed CI/CD pipeline and deployment infrastructure for the BuildMyStack platform.
+This document summarizes the completed CI/CD pipeline and deployment infrastructure for the Stapelwerk platform.
 
 ## ✅ Completed Components
 
@@ -236,4 +236,4 @@ npm run db:deploy
 
 **Task 5 Status: ✅ COMPLETED**
 
-The BuildMyStack platform now has a production-ready CI/CD pipeline and deployment infrastructure with comprehensive monitoring, security, and testing capabilities.
+The Stapelwerk platform now has a production-ready CI/CD pipeline and deployment infrastructure with comprehensive monitoring, security, and testing capabilities.

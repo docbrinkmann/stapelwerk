@@ -282,7 +282,7 @@ data:
       ],
       "refresh": "30s",
       "schemaVersion": 38,
-      "tags": ["build-my-stack"],
+      "tags": ["stapelwerk"],
       "templating": {"list": []},
       "time": {"from": "now-1h", "to": "now"},
       "timepicker": {},
@@ -390,7 +390,7 @@ data:
       ],
       "refresh": "1m",
       "schemaVersion": 38,
-      "tags": ["security", "build-my-stack"],
+      "tags": ["security", "stapelwerk"],
       "templating": {"list": []},
       "time": {"from": "now-7d", "to": "now"},
       "timepicker": {},
@@ -441,7 +441,7 @@ spec:
                   name: grafana-credentials
                   key: admin-password
             - name: GF_SERVER_ROOT_URL
-              value: "https://grafana.build-my-stack.dev"
+              value: "https://grafana.stapelwerk.dev"
             - name: GF_INSTALL_PLUGINS
               value: "grafana-piechart-panel"
           livenessProbe:

@@ -1,6 +1,6 @@
 # GitHub Actions CI/CD Workflows
 
-This directory contains comprehensive CI/CD workflows for the BuildMyStack project. The workflows provide automated testing, security scanning, performance monitoring, and deployment capabilities.
+This directory contains comprehensive CI/CD workflows for the Stapelwerk project. The workflows provide automated testing, security scanning, performance monitoring, and deployment capabilities.
 
 ## 🚀 Available Workflows
 

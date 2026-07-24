@@ -1,13 +1,13 @@
 /**
  * Compose deploy executor — OPTIONAL direct-deploy to the single Docker host
- * that BuildMyStack itself runs on, via the mounted `/var/run/docker.sock`.
+ * that Stapelwerk itself runs on, via the mounted `/var/run/docker.sock`.
  *
  * Scope guardrails (see the deployments router + Deployments UI):
  *   - Single local host only. NO SSH, NO credentials, NO remote targets.
  *   - Every stack deploys under a unique `bms-<stackId>` compose project, and
  *     any `container_name:` the compose generator emitted is stripped so compose
  *     owns naming — this keeps deployments isolated and guarantees we can NEVER
- *     collide with / tear down the `build-my-stack*` infra containers.
+ *     collide with / tear down the `stapelwerk*` infra containers.
  *
  * This module is intentionally free of DB / tRPC / WebSocket coupling: it just
  * spawns `docker compose` and streams lines to an `onLog` callback. The caller
@@ -49,7 +49,7 @@ export interface RunComposeResult {
 
 /**
  * Derive a safe, stable, collision-proof compose project name from a stack id.
- * Always prefixed `bms-` so a deployment can never share the `build-my-stack`
+ * Always prefixed `bms-` so a deployment can never share the `stapelwerk`
  * infra project namespace.
  */
 export function sanitizeProjectName(stackId: string): string {

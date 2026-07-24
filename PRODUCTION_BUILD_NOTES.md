@@ -96,7 +96,7 @@ Health: http://localhost:3000/api/health
 
 Once build issues resolved, production will use:
 - `docker-compose.prod.yml`
-- Pre-built image: `build-my-stack:latest`
+- Pre-built image: `stapelwerk:latest`
 - PostgreSQL 18 with optimized settings
 - Standalone Next.js output
 - Health checks with 40s start period

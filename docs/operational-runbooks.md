@@ -1,4 +1,4 @@
-# BuildMyStack AI-Powered Recommendations - Operational Runbooks
+# Stapelwerk AI-Powered Recommendations - Operational Runbooks
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@
 
 ## Overview
 
-This document provides comprehensive operational procedures for managing the BuildMyStack AI-Powered Recommendations system in production. These runbooks are designed for SRE teams, DevOps engineers, and on-call engineers.
+This document provides comprehensive operational procedures for managing the Stapelwerk AI-Powered Recommendations system in production. These runbooks are designed for SRE teams, DevOps engineers, and on-call engineers.
 
 ### System Components Overview
 - **Frontend**: Next.js application with real-time updates
@@ -29,14 +29,14 @@ This document provides comprehensive operational procedures for managing the Bui
 - **Primary On-Call**: SRE Team (pager: +1-xxx-xxx-xxxx)
 - **Secondary On-Call**: DevOps Team (slack: @devops-oncall)
 - **Engineering Lead**: AI/ML Team (slack: @ai-team-lead)
-- **Product Owner**: Product Team (email: product@buildmystack.com)
+- **Product Owner**: Product Team (email: product@stapelwerk.com)
 
 ## Monitoring and Alerting
 
 ### Primary Monitoring Dashboards
 
 #### 1. System Health Dashboard
-**URL**: `https://grafana.buildmystack.com/d/system-health`
+**URL**: `https://grafana.stapelwerk.com/d/system-health`
 **Refresh Interval**: 30 seconds
 
 **Key Metrics**:
@@ -47,7 +47,7 @@ This document provides comprehensive operational procedures for managing the Bui
 - Memory and CPU Usage
 
 #### 2. AI Recommendations Dashboard
-**URL**: `https://grafana.buildmystack.com/d/ai-recommendations`
+**URL**: `https://grafana.stapelwerk.com/d/ai-recommendations`
 **Refresh Interval**: 1 minute
 
 **Key Metrics**:
@@ -58,7 +58,7 @@ This document provides comprehensive operational procedures for managing the Bui
 - Cache Hit Ratios
 
 #### 3. Business Metrics Dashboard
-**URL**: `https://grafana.buildmystack.com/d/business-metrics`
+**URL**: `https://grafana.stapelwerk.com/d/business-metrics`
 **Refresh Interval**: 5 minutes
 
 **Key Metrics**:
@@ -80,10 +80,10 @@ Response Time: < 5 minutes
 Escalation: Auto-page primary on-call
 
 Runbook Steps:
-1. Check application pods status: `kubectl get pods -n buildmystack-prod`
-2. Check recent deployments: `kubectl rollout history deployment/buildmystack-app -n buildmystack-prod`
-3. Check logs: `kubectl logs -n buildmystack-prod deployment/buildmystack-app --tail=100`
-4. If deployment issue, rollback: `kubectl rollout undo deployment/buildmystack-app -n buildmystack-prod`
+1. Check application pods status: `kubectl get pods -n stapelwerk-prod`
+2. Check recent deployments: `kubectl rollout history deployment/stapelwerk-app -n stapelwerk-prod`
+3. Check logs: `kubectl logs -n stapelwerk-prod deployment/stapelwerk-app --tail=100`
+4. If deployment issue, rollback: `kubectl rollout undo deployment/stapelwerk-app -n stapelwerk-prod`
 5. Monitor recovery and update incident channel
 ```
 
@@ -96,11 +96,11 @@ Response Time: < 5 minutes
 Escalation: Auto-page primary on-call + DBA
 
 Runbook Steps:
-1. Check database status: `kubectl get pods -n buildmystack-prod -l app=postgres`
+1. Check database status: `kubectl get pods -n stapelwerk-prod -l app=postgres`
 2. Check connection pool metrics in Grafana dashboard
-3. Review database logs: `kubectl logs -n buildmystack-prod -l app=postgres --tail=200`
+3. Review database logs: `kubectl logs -n stapelwerk-prod -l app=postgres --tail=200`
 4. Check for long-running queries: Connect to DB and run monitoring queries
-5. Scale application pods if needed: `kubectl scale deployment buildmystack-app --replicas=5 -n buildmystack-prod`
+5. Scale application pods if needed: `kubectl scale deployment stapelwerk-app --replicas=5 -n stapelwerk-prod`
 6. Contact DBA if database-level intervention required
 ```
 
@@ -113,7 +113,7 @@ Response Time: < 10 minutes
 Escalation: Auto-page primary on-call
 
 Runbook Steps:
-1. Check error logs: `kubectl logs -n buildmystack-prod deployment/buildmystack-app --tail=200 | grep ERROR`
+1. Check error logs: `kubectl logs -n stapelwerk-prod deployment/stapelwerk-app --tail=200 | grep ERROR`
 2. Check recent deployments and feature flag changes
 3. Review API endpoint performance in Grafana
 4. Check external service dependencies (Redis, ML service)
@@ -147,7 +147,7 @@ Trigger: Redis cache hit rate < 80% for > 15 minutes
 Response Time: < 30 minutes
 
 Runbook Steps:
-1. Check Redis health: `kubectl get pods -n buildmystack-prod -l app=redis`
+1. Check Redis health: `kubectl get pods -n stapelwerk-prod -l app=redis`
 2. Review cache metrics in monitoring dashboard
 3. Check for cache evictions or memory pressure
 4. Review recent code changes affecting caching strategy
@@ -197,11 +197,11 @@ Runbook Steps:
 2. **Initial Assessment**
    ```bash
    # Check system status
-   curl -I https://buildmystack.com/api/health
+   curl -I https://stapelwerk.com/api/health
    
    # Check Kubernetes cluster health
    kubectl get nodes
-   kubectl get pods -n buildmystack-prod
+   kubectl get pods -n stapelwerk-prod
    
    # Check monitoring dashboards
    # - System Health: Critical metrics overview
@@ -219,14 +219,14 @@ Runbook Steps:
 1. **Deep Dive Investigation**
    ```bash
    # Check application logs
-   kubectl logs -n buildmystack-prod deployment/buildmystack-app --tail=500
+   kubectl logs -n stapelwerk-prod deployment/stapelwerk-app --tail=500
    
    # Check recent deployments
-   kubectl rollout history deployment/buildmystack-app -n buildmystack-prod
+   kubectl rollout history deployment/stapelwerk-app -n stapelwerk-prod
    
    # Check resource usage
    kubectl top nodes
-   kubectl top pods -n buildmystack-prod
+   kubectl top pods -n stapelwerk-prod
    
    # Check database health
    psql $DATABASE_URL -c "SELECT count(*) FROM pg_stat_activity;"
@@ -238,13 +238,13 @@ Runbook Steps:
 2. **Immediate Containment Actions**
    ```bash
    # If deployment-related, rollback
-   kubectl rollout undo deployment/buildmystack-app -n buildmystack-prod
+   kubectl rollout undo deployment/stapelwerk-app -n stapelwerk-prod
    
    # If feature flag related, disable problematic features
    redis-cli -u $REDIS_URL SET feature:problematic_feature:percentage 0
    
    # If resource exhaustion, scale up
-   kubectl scale deployment buildmystack-app --replicas=6 -n buildmystack-prod
+   kubectl scale deployment stapelwerk-app --replicas=6 -n stapelwerk-prod
    
    # If external dependency issue, enable graceful degradation
    # Update feature flags to bypass failing services
@@ -264,14 +264,14 @@ Runbook Steps:
    # Test and deploy following emergency deployment procedures
    
    # Or implement configuration fix
-   kubectl patch configmap app-config -n buildmystack-prod --patch='{"data":{"key":"value"}}'
-   kubectl rollout restart deployment/buildmystack-app -n buildmystack-prod
+   kubectl patch configmap app-config -n stapelwerk-prod --patch='{"data":{"key":"value"}}'
+   kubectl rollout restart deployment/stapelwerk-app -n stapelwerk-prod
    ```
 
 3. **Verify Resolution**
    ```bash
    # Check health endpoints
-   curl -s https://buildmystack.com/api/health | jq .
+   curl -s https://stapelwerk.com/api/health | jq .
    
    # Monitor key metrics for 15+ minutes
    # Verify user-facing functionality
@@ -302,21 +302,21 @@ Runbook Steps:
 **Investigation**:
 ```bash
 # Check pod memory usage
-kubectl top pods -n buildmystack-prod
+kubectl top pods -n stapelwerk-prod
 
 # Check pod resource limits
-kubectl describe pod <pod-name> -n buildmystack-prod
+kubectl describe pod <pod-name> -n stapelwerk-prod
 
 # Check for memory leaks in application logs
-kubectl logs -n buildmystack-prod <pod-name> | grep -i "memory\|heap\|oom"
+kubectl logs -n stapelwerk-prod <pod-name> | grep -i "memory\|heap\|oom"
 ```
 **Resolution**:
 ```bash
 # Immediate: Restart problematic pods
-kubectl delete pod <pod-name> -n buildmystack-prod
+kubectl delete pod <pod-name> -n stapelwerk-prod
 
 # Short-term: Increase memory limits
-kubectl patch deployment buildmystack-app -n buildmystack-prod \
+kubectl patch deployment stapelwerk-app -n stapelwerk-prod \
   -p '{"spec":{"template":{"spec":{"containers":[{"name":"app","resources":{"limits":{"memory":"1Gi"}}}]}}}}'
 
 # Long-term: Investigate and fix memory leaks in code
@@ -383,10 +383,10 @@ kubectl uncordon <node-name>
 kubectl get pv
 
 # Check PVC status
-kubectl get pvc -n buildmystack-prod
+kubectl get pvc -n stapelwerk-prod
 
 # Describe problematic PVC
-kubectl describe pvc <pvc-name> -n buildmystack-prod
+kubectl describe pvc <pvc-name> -n stapelwerk-prod
 ```
 **Resolution**:
 ```bash
@@ -411,7 +411,7 @@ kubectl get storageclass
 **Diagnostic Commands**:
 ```bash
 # Check API response times
-curl -w "@curl-format.txt" -o /dev/null -s https://buildmystack.com/api/health
+curl -w "@curl-format.txt" -o /dev/null -s https://stapelwerk.com/api/health
 
 # Check database slow queries
 psql $DATABASE_URL -c "SELECT query, mean_time, calls FROM pg_stat_statements ORDER BY mean_time DESC LIMIT 10;"
@@ -420,14 +420,14 @@ psql $DATABASE_URL -c "SELECT query, mean_time, calls FROM pg_stat_statements OR
 redis-cli -u $REDIS_URL --latency-history -i 1
 
 # Check application performance metrics
-kubectl logs -n buildmystack-prod deployment/buildmystack-app | grep "SLOW_QUERY\|PERFORMANCE"
+kubectl logs -n stapelwerk-prod deployment/stapelwerk-app | grep "SLOW_QUERY\|PERFORMANCE"
 ```
 
 #### High CPU Usage
 **Investigation Steps**:
 ```bash
 # Check pod CPU usage
-kubectl top pods -n buildmystack-prod
+kubectl top pods -n stapelwerk-prod
 
 # Check node CPU usage
 kubectl top nodes
@@ -436,7 +436,7 @@ kubectl top nodes
 # Use debugging endpoints or profiling tools
 
 # Check for CPU-intensive operations in logs
-kubectl logs -n buildmystack-prod deployment/buildmystack-app | grep -i "cpu\|performance\|slow"
+kubectl logs -n stapelwerk-prod deployment/stapelwerk-app | grep -i "cpu\|performance\|slow"
 ```
 
 ### Network Troubleshooting
@@ -444,7 +444,7 @@ kubectl logs -n buildmystack-prod deployment/buildmystack-app | grep -i "cpu\|pe
 #### DNS Resolution Issues
 ```bash
 # Test DNS resolution from pod
-kubectl exec -it <pod-name> -n buildmystack-prod -- nslookup google.com
+kubectl exec -it <pod-name> -n stapelwerk-prod -- nslookup google.com
 
 # Check kube-dns status
 kubectl get pods -n kube-system -l k8s-app=kube-dns
@@ -456,13 +456,13 @@ kubectl logs -n kube-system -l k8s-app=kube-dns
 #### Service Connectivity Issues
 ```bash
 # Check service endpoints
-kubectl get endpoints -n buildmystack-prod
+kubectl get endpoints -n stapelwerk-prod
 
 # Test service connectivity
-kubectl exec -it <pod-name> -n buildmystack-prod -- nc -zv <service-name> <port>
+kubectl exec -it <pod-name> -n stapelwerk-prod -- nc -zv <service-name> <port>
 
 # Check network policies
-kubectl get networkpolicies -n buildmystack-prod
+kubectl get networkpolicies -n stapelwerk-prod
 ```
 
 ## Maintenance Procedures
@@ -489,7 +489,7 @@ kubectl get networkpolicies -n buildmystack-prod
    kubectl get nodes -o wide
    
    # Review vulnerability scans
-   trivy image buildmystack:latest
+   trivy image stapelwerk:latest
    
    # Update base images if needed
    # Follow deployment procedures for updates
@@ -499,10 +499,10 @@ kubectl get networkpolicies -n buildmystack-prod
    ```bash
    # Check resource usage trends
    kubectl top nodes
-   kubectl top pods -n buildmystack-prod
+   kubectl top pods -n stapelwerk-prod
    
    # Review auto-scaling metrics
-   kubectl get hpa -n buildmystack-prod
+   kubectl get hpa -n stapelwerk-prod
    
    # Plan for capacity increases if needed
    ```
@@ -566,7 +566,7 @@ kubectl get networkpolicies -n buildmystack-prod
 echo "Maintenance started: $(date)" >> maintenance.log
 
 # 2. Enable maintenance mode (if applicable)
-kubectl patch configmap app-config -n buildmystack-prod \
+kubectl patch configmap app-config -n stapelwerk-prod \
   --patch='{"data":{"maintenance_mode":"true"}}'
 
 # 3. Perform maintenance tasks
@@ -576,7 +576,7 @@ kubectl patch configmap app-config -n buildmystack-prod \
 # Run health checks and functional tests
 
 # 5. Disable maintenance mode
-kubectl patch configmap app-config -n buildmystack-prod \
+kubectl patch configmap app-config -n stapelwerk-prod \
   --patch='{"data":{"maintenance_mode":"false"}}'
 
 # 6. Monitor post-maintenance
@@ -711,10 +711,10 @@ const httpAgent = new http.Agent({
 ```bash
 # Check current resource usage trends
 kubectl top nodes --sort-by=cpu
-kubectl top pods -n buildmystack-prod --sort-by=cpu
+kubectl top pods -n stapelwerk-prod --sort-by=cpu
 
 # Monitor auto-scaling metrics
-kubectl get hpa -n buildmystack-prod -o wide
+kubectl get hpa -n stapelwerk-prod -o wide
 
 # Check persistent volume usage
 df -h /data/postgres
@@ -723,10 +723,10 @@ df -h /data/postgres
 #### Scaling Procedures
 ```bash
 # Scale application horizontally
-kubectl scale deployment buildmystack-app --replicas=5 -n buildmystack-prod
+kubectl scale deployment stapelwerk-app --replicas=5 -n stapelwerk-prod
 
 # Scale vertically (increase resources)
-kubectl patch deployment buildmystack-app -n buildmystack-prod \
+kubectl patch deployment stapelwerk-app -n stapelwerk-prod \
   -p '{"spec":{"template":{"spec":{"containers":[{"name":"app","resources":{"limits":{"memory":"2Gi","cpu":"1000m"}}}]}}}}'
 
 # Scale database (if using cloud provider)
@@ -839,7 +839,7 @@ du -sh /data/backups/
 ```bash
 # Point-in-time recovery
 # 1. Stop application
-kubectl scale deployment buildmystack-app --replicas=0 -n buildmystack-prod
+kubectl scale deployment stapelwerk-app --replicas=0 -n stapelwerk-prod
 
 # 2. Restore from backup
 ./scripts/db-backup-restore.sh restore <backup-timestamp>
@@ -848,10 +848,10 @@ kubectl scale deployment buildmystack-app --replicas=0 -n buildmystack-prod
 ./scripts/db-backup-restore.sh verify
 
 # 4. Restart application
-kubectl scale deployment buildmystack-app --replicas=3 -n buildmystack-prod
+kubectl scale deployment stapelwerk-app --replicas=3 -n stapelwerk-prod
 
 # 5. Verify application functionality
-curl -s https://buildmystack.com/api/health
+curl -s https://stapelwerk.com/api/health
 ```
 
 ## Security Operations
@@ -861,13 +861,13 @@ curl -s https://buildmystack.com/api/health
 #### Daily Security Checks
 ```bash
 # Check for failed authentication attempts
-kubectl logs -n buildmystack-prod deployment/buildmystack-app | grep "AUTH_FAILED"
+kubectl logs -n stapelwerk-prod deployment/stapelwerk-app | grep "AUTH_FAILED"
 
 # Monitor for suspicious activity patterns
-kubectl logs -n buildmystack-prod deployment/buildmystack-app | grep "RATE_LIMIT_EXCEEDED"
+kubectl logs -n stapelwerk-prod deployment/stapelwerk-app | grep "RATE_LIMIT_EXCEEDED"
 
 # Check SSL certificate expiry
-echo | openssl s_client -servername buildmystack.com -connect buildmystack.com:443 2>/dev/null | openssl x509 -noout -dates
+echo | openssl s_client -servername stapelwerk.com -connect stapelwerk.com:443 2>/dev/null | openssl x509 -noout -dates
 ```
 
 #### Security Incident Response
@@ -877,10 +877,10 @@ echo | openssl s_client -servername buildmystack.com -connect buildmystack.com:4
 kubectl cordon <affected-node>
 
 # 2. Preserve evidence
-kubectl logs -n buildmystack-prod deployment/buildmystack-app > incident-logs-$(date +%Y%m%d-%H%M%S).log
+kubectl logs -n stapelwerk-prod deployment/stapelwerk-app > incident-logs-$(date +%Y%m%d-%H%M%S).log
 
 # 3. Block malicious IPs at ingress level
-kubectl patch ingress buildmystack-ingress -n buildmystack-prod --patch='...'
+kubectl patch ingress stapelwerk-ingress -n stapelwerk-prod --patch='...'
 
 # 4. Notify security team immediately
 # Follow security incident escalation procedures
@@ -894,7 +894,7 @@ kubectl patch ingress buildmystack-ingress -n buildmystack-prod --patch='...'
 kubectl auth can-i --list --as=user@company.com
 
 # Review application access logs
-kubectl logs -n buildmystack-prod deployment/buildmystack-app | grep "USER_LOGIN"
+kubectl logs -n stapelwerk-prod deployment/stapelwerk-app | grep "USER_LOGIN"
 
 # Review database access
 psql $DATABASE_URL -c "SELECT usename, usesuper FROM pg_user;"
@@ -909,16 +909,16 @@ openssl rand -base64 32 > new-secret.txt
 # 2. Update Kubernetes secrets
 kubectl create secret generic app-secrets-new \
   --from-literal=database-password="$(cat new-secret.txt)" \
-  -n buildmystack-prod
+  -n stapelwerk-prod
 
 # 3. Update application configuration
-kubectl patch deployment buildmystack-app -n buildmystack-prod --patch='...'
+kubectl patch deployment stapelwerk-app -n stapelwerk-prod --patch='...'
 
 # 4. Verify functionality
-curl -s https://buildmystack.com/api/health
+curl -s https://stapelwerk.com/api/health
 
 # 5. Remove old secrets
-kubectl delete secret app-secrets-old -n buildmystack-prod
+kubectl delete secret app-secrets-old -n stapelwerk-prod
 ```
 
 ## Deployment Procedures
@@ -928,7 +928,7 @@ kubectl delete secret app-secrets-old -n buildmystack-prod
 #### Pre-Deployment Checklist
 ```bash
 # 1. Verify staging deployment successful
-curl -s https://staging.buildmystack.com/api/health
+curl -s https://staging.stapelwerk.com/api/health
 
 # 2. Run automated tests
 npm run test:production
@@ -950,17 +950,17 @@ git tag -a v1.2.3 -m "Production release v1.2.3"
 git push origin v1.2.3
 
 # 2. Build and push image
-docker build -t buildmystack:v1.2.3 .
-docker push buildmystack:v1.2.3
+docker build -t stapelwerk:v1.2.3 .
+docker push stapelwerk:v1.2.3
 
 # 3. Update Kubernetes deployment
-kubectl set image deployment/buildmystack-app app=buildmystack:v1.2.3 -n buildmystack-prod
+kubectl set image deployment/stapelwerk-app app=stapelwerk:v1.2.3 -n stapelwerk-prod
 
 # 4. Monitor rollout
-kubectl rollout status deployment/buildmystack-app -n buildmystack-prod
+kubectl rollout status deployment/stapelwerk-app -n stapelwerk-prod
 
 # 5. Verify deployment
-curl -s https://buildmystack.com/api/health
+curl -s https://stapelwerk.com/api/health
 ./scripts/deployment-smoke-tests.sh
 ```
 
@@ -988,13 +988,13 @@ npm run test
 ./scripts/run-smoke-tests.sh
 
 # 4. Deploy to staging first
-kubectl set image deployment/buildmystack-app app=buildmystack:hotfix-123 -n buildmystack-staging
+kubectl set image deployment/stapelwerk-app app=stapelwerk:hotfix-123 -n stapelwerk-staging
 
 # 5. Verify staging works
-curl -s https://staging.buildmystack.com/api/health
+curl -s https://staging.stapelwerk.com/api/health
 
 # 6. Deploy to production
-kubectl set image deployment/buildmystack-app app=buildmystack:hotfix-123 -n buildmystack-prod
+kubectl set image deployment/stapelwerk-app app=stapelwerk:hotfix-123 -n stapelwerk-prod
 
 # 7. Monitor closely
 # Watch metrics for 1+ hour
@@ -1004,14 +1004,14 @@ kubectl set image deployment/buildmystack-app app=buildmystack:hotfix-123 -n bui
 ```bash
 # If deployment fails or causes issues:
 # 1. Immediate rollback
-kubectl rollout undo deployment/buildmystack-app -n buildmystack-prod
+kubectl rollout undo deployment/stapelwerk-app -n stapelwerk-prod
 
 # 2. Verify rollback success
-kubectl rollout status deployment/buildmystack-app -n buildmystack-prod
-curl -s https://buildmystack.com/api/health
+kubectl rollout status deployment/stapelwerk-app -n stapelwerk-prod
+curl -s https://stapelwerk.com/api/health
 
 # 3. Check specific version rollback if needed
-kubectl rollout undo deployment/buildmystack-app --to-revision=2 -n buildmystack-prod
+kubectl rollout undo deployment/stapelwerk-app --to-revision=2 -n stapelwerk-prod
 ```
 
 ## Backup and Recovery
@@ -1038,10 +1038,10 @@ kubectl rollout undo deployment/buildmystack-app --to-revision=2 -n buildmystack
 redis-cli -u $REDIS_URL bgsave
 
 # Configuration backup
-kubectl get all -n buildmystack-prod -o yaml > backup-$(date +%Y%m%d).yaml
+kubectl get all -n stapelwerk-prod -o yaml > backup-$(date +%Y%m%d).yaml
 
 # Upload to backup storage
-aws s3 cp backup-$(date +%Y%m%d).yaml s3://buildmystack-backups/configs/
+aws s3 cp backup-$(date +%Y%m%d).yaml s3://stapelwerk-backups/configs/
 ```
 
 ### Disaster Recovery
@@ -1089,7 +1089,7 @@ kubectl apply -f backup-configs/
 ##### Database-Only Recovery
 ```bash
 # 1. Stop application to prevent data corruption
-kubectl scale deployment buildmystack-app --replicas=0 -n buildmystack-prod
+kubectl scale deployment stapelwerk-app --replicas=0 -n stapelwerk-prod
 
 # 2. Restore database
 ./scripts/db-backup-restore.sh restore <specific-backup-timestamp>
@@ -1098,7 +1098,7 @@ kubectl scale deployment buildmystack-app --replicas=0 -n buildmystack-prod
 ./scripts/db-backup-restore.sh verify
 
 # 4. Restart application
-kubectl scale deployment buildmystack-app --replicas=3 -n buildmystack-prod
+kubectl scale deployment stapelwerk-app --replicas=3 -n stapelwerk-prod
 
 # 5. Run application health checks
 ./scripts/run-smoke-tests.sh
@@ -1123,7 +1123,7 @@ kubectl scale deployment buildmystack-app --replicas=3 -n buildmystack-prod
 ```bash
 # Post-recovery validation checklist
 # 1. All services health checks pass
-curl -s https://buildmystack.com/api/health | jq .status
+curl -s https://stapelwerk.com/api/health | jq .status
 
 # 2. Critical user flows work
 ./scripts/user-flow-tests.sh
@@ -1140,6 +1140,6 @@ curl -s https://buildmystack.com/api/health | jq .status
 
 ---
 
-This operational runbook provides comprehensive procedures for managing the BuildMyStack AI-Powered Recommendations system. Regular review and updates of these procedures ensure effective incident response and system maintenance.
+This operational runbook provides comprehensive procedures for managing the Stapelwerk AI-Powered Recommendations system. Regular review and updates of these procedures ensure effective incident response and system maintenance.
 
-For questions or updates to these procedures, contact the SRE team at sre@buildmystack.com.
+For questions or updates to these procedures, contact the SRE team at sre@stapelwerk.com.

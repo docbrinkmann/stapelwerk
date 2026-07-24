@@ -31,39 +31,39 @@ Before initiating rollback:
 
 ```bash
 # View deployment history
-kubectl rollout history deployment/build-my-stack -n production
+kubectl rollout history deployment/stapelwerk -n production
 
 # Rollback to previous version
-kubectl rollout undo deployment/build-my-stack -n production
+kubectl rollout undo deployment/stapelwerk -n production
 
 # Rollback to specific revision
-kubectl rollout undo deployment/build-my-stack -n production --to-revision=3
+kubectl rollout undo deployment/stapelwerk -n production --to-revision=3
 
 # Verify rollback
-kubectl rollout status deployment/build-my-stack -n production
+kubectl rollout status deployment/stapelwerk -n production
 ```
 
 #### Using Helm
 
 ```bash
 # View release history
-helm history build-my-stack -n production
+helm history stapelwerk -n production
 
 # Rollback to previous release
-helm rollback build-my-stack -n production
+helm rollback stapelwerk -n production
 
 # Rollback to specific revision
-helm rollback build-my-stack 3 -n production
+helm rollback stapelwerk 3 -n production
 
 # Verify
-helm status build-my-stack -n production
+helm status stapelwerk -n production
 ```
 
 #### Using ArgoCD (GitOps)
 
 ```bash
 # Via CLI
-argocd app rollback build-my-stack-production REVISION_ID
+argocd app rollback stapelwerk-production REVISION_ID
 
 # Via UI
 1. Open ArgoCD dashboard
@@ -82,22 +82,22 @@ argocd app rollback build-my-stack-production REVISION_ID
 npx prisma migrate resolve --rolled-back MIGRATION_NAME
 
 # Or restore from backup
-pg_restore -h localhost -U postgres -d buildmystack backup.dump
+pg_restore -h localhost -U postgres -d stapelwerk backup.dump
 ```
 
 #### Full Database Restore
 
 ```bash
 # Stop application
-kubectl scale deployment/build-my-stack --replicas=0 -n production
+kubectl scale deployment/stapelwerk --replicas=0 -n production
 
 # Restore from backup
 pg_restore --clean --if-exists \
-  -h $DB_HOST -U $DB_USER -d buildmystack \
-  /backups/buildmystack-YYYYMMDD.dump
+  -h $DB_HOST -U $DB_USER -d stapelwerk \
+  /backups/stapelwerk-YYYYMMDD.dump
 
 # Restart application
-kubectl scale deployment/build-my-stack --replicas=3 -n production
+kubectl scale deployment/stapelwerk --replicas=3 -n production
 ```
 
 ### 3. Infrastructure Rollback (Pulumi)
@@ -111,7 +111,7 @@ pulumi stack export > current-state.json
 pulumi stack import < previous-state.json
 
 # Or destroy and recreate
-pulumi destroy --target urn:pulumi:prod::build-my-stack::resource
+pulumi destroy --target urn:pulumi:prod::stapelwerk::resource
 pulumi up
 ```
 
@@ -167,7 +167,7 @@ set -e
 
 REVISION=${1:-""}
 NAMESPACE="production"
-DEPLOYMENT="build-my-stack"
+DEPLOYMENT="stapelwerk"
 
 echo "🔄 Starting rollback..."
 
@@ -206,18 +206,18 @@ fi
 echo "🔄 Starting database rollback..."
 
 # Scale down app
-kubectl scale deployment/build-my-stack --replicas=0 -n production
+kubectl scale deployment/stapelwerk --replicas=0 -n production
 
 # Wait for pods to terminate
 sleep 10
 
 # Restore database
 pg_restore --clean --if-exists \
-  -h $DB_HOST -U $DB_USER -d buildmystack \
+  -h $DB_HOST -U $DB_USER -d stapelwerk \
   $BACKUP_FILE
 
 # Scale up app
-kubectl scale deployment/build-my-stack --replicas=3 -n production
+kubectl scale deployment/stapelwerk --replicas=3 -n production
 
 echo "✅ Database rollback complete!"
 ```
@@ -230,7 +230,7 @@ echo "✅ Database rollback complete!"
 
 1. **Verify Service Health**
    ```bash
-   curl -s https://build-my-stack.example.com/api/health | jq
+   curl -s https://stapelwerk.example.com/api/health | jq
    ```
 
 2. **Monitor Metrics**
@@ -240,7 +240,7 @@ echo "✅ Database rollback complete!"
 
 3. **Review Logs**
    ```bash
-   kubectl logs -f deployment/build-my-stack -n production --tail=100
+   kubectl logs -f deployment/stapelwerk -n production --tail=100
    ```
 
 ### Follow-up Actions

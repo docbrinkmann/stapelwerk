@@ -174,19 +174,19 @@ run_pre_deployment_tests() {
 build_and_push_image() {
     log "INFO" "Building and pushing Docker image..."
     
-    local image_tag="${DOCKER_REGISTRY}/buildmystack-ai:${BUILD_VERSION:-latest}"
+    local image_tag="${DOCKER_REGISTRY}/stapelwerk-ai:${BUILD_VERSION:-latest}"
     
     # Build Docker image
     log "INFO" "Building Docker image: $image_tag"
     docker build -t "$image_tag" "$PROJECT_ROOT"
     
     # Tag as latest
-    docker tag "$image_tag" "${DOCKER_REGISTRY}/buildmystack-ai:latest"
+    docker tag "$image_tag" "${DOCKER_REGISTRY}/stapelwerk-ai:latest"
     
     # Push images
     log "INFO" "Pushing Docker image to registry..."
     docker push "$image_tag"
-    docker push "${DOCKER_REGISTRY}/buildmystack-ai:latest"
+    docker push "${DOCKER_REGISTRY}/stapelwerk-ai:latest"
     
     log "SUCCESS" "Docker image built and pushed: $image_tag"
 }
@@ -196,14 +196,14 @@ deploy_infrastructure() {
     log "INFO" "Deploying infrastructure components..."
     
     # Create namespace if it doesn't exist
-    kubectl create namespace buildmystack --dry-run=client -o yaml | kubectl apply -f -
+    kubectl create namespace stapelwerk --dry-run=client -o yaml | kubectl apply -f -
     
     # Deploy database (if using managed service, this might be external)
     if [[ "$DB_DEPLOY_TYPE" == "kubernetes" ]]; then
         log "INFO" "Deploying database..."
         helm upgrade --install postgres postgresql-ha \
             --repo https://charts.bitnami.com/bitnami \
-            --namespace buildmystack \
+            --namespace stapelwerk \
             --set postgresql.repmgrPassword="$SECRET_DB_REPMGR_PASSWORD" \
             --set postgresql.postgresqlPassword="$SECRET_DB_PASSWORD"
     fi
@@ -213,7 +213,7 @@ deploy_infrastructure() {
         log "INFO" "Deploying Redis..."
         helm upgrade --install redis redis \
             --repo https://charts.bitnami.com/bitnami \
-            --namespace buildmystack \
+            --namespace stapelwerk \
             --set auth.password="$SECRET_REDIS_PASSWORD"
     fi
     
@@ -240,10 +240,10 @@ deploy_application() {
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: buildmystack-ai
-  namespace: buildmystack
+  name: stapelwerk-ai
+  namespace: stapelwerk
   labels:
-    app: buildmystack-ai
+    app: stapelwerk-ai
     version: "${BUILD_VERSION:-latest}"
     phase: "${phase}"
 spec:
@@ -255,17 +255,17 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: buildmystack-ai
+      app: stapelwerk-ai
   template:
     metadata:
       labels:
-        app: buildmystack-ai
+        app: stapelwerk-ai
         version: "${BUILD_VERSION:-latest}"
         phase: "${phase}"
     spec:
       containers:
-      - name: buildmystack-ai
-        image: ${DOCKER_REGISTRY}/buildmystack-ai:${BUILD_VERSION:-latest}
+      - name: stapelwerk-ai
+        image: ${DOCKER_REGISTRY}/stapelwerk-ai:${BUILD_VERSION:-latest}
         ports:
         - containerPort: 8080
         env:
@@ -341,11 +341,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: buildmystack-ai-service
-  namespace: buildmystack
+  name: stapelwerk-ai-service
+  namespace: stapelwerk
 spec:
   selector:
-    app: buildmystack-ai
+    app: stapelwerk-ai
   ports:
   - port: 80
     targetPort: 8080
@@ -356,7 +356,7 @@ EOF
     kubectl apply -f "${PROJECT_ROOT}/k8s-deployment-${phase}.yaml"
     
     # Wait for deployment to be ready
-    kubectl rollout status deployment/buildmystack-ai -n buildmystack --timeout=300s
+    kubectl rollout status deployment/stapelwerk-ai -n stapelwerk --timeout=300s
     
     log "SUCCESS" "Application deployment completed for phase: $phase"
 }
@@ -369,11 +369,11 @@ run_smoke_tests() {
     
     # Get service endpoint
     local service_url
-    service_url=$(kubectl get service buildmystack-ai-service -n buildmystack -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "localhost")
+    service_url=$(kubectl get service stapelwerk-ai-service -n stapelwerk -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "localhost")
     
     if [[ "$service_url" == "localhost" ]]; then
         # If no load balancer, use port-forward for testing
-        kubectl port-forward service/buildmystack-ai-service 8080:80 -n buildmystack &
+        kubectl port-forward service/stapelwerk-ai-service 8080:80 -n stapelwerk &
         local port_forward_pid=$!
         service_url="http://localhost:8080"
         sleep 5  # Wait for port-forward to establish
@@ -432,7 +432,7 @@ update_feature_flags() {
     
     # Update feature flags via API call to the application
     local service_url
-    service_url=$(kubectl get service buildmystack-ai-service -n buildmystack -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "localhost:8080")
+    service_url=$(kubectl get service stapelwerk-ai-service -n stapelwerk -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "localhost:8080")
     
     if curl -X POST \
          -H "Content-Type: application/json" \
@@ -460,7 +460,7 @@ monitor_deployment() {
     while [[ $(date +%s) -lt $end_time ]]; do
         # Check pod health
         local ready_pods
-        ready_pods=$(kubectl get pods -n buildmystack -l app=buildmystack-ai --field-selector=status.phase=Running -o json | jq '.items | length')
+        ready_pods=$(kubectl get pods -n stapelwerk -l app=stapelwerk-ai --field-selector=status.phase=Running -o json | jq '.items | length')
         
         if [[ $ready_pods -lt 3 ]]; then
             log "WARN" "Only $ready_pods pods are ready (expected: 3)"
@@ -470,7 +470,7 @@ monitor_deployment() {
         
         # Check basic metrics (this would typically query your monitoring system)
         local service_url
-        service_url=$(kubectl get service buildmystack-ai-service -n buildmystack -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "localhost:8080")
+        service_url=$(kubectl get service stapelwerk-ai-service -n stapelwerk -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "localhost:8080")
         
         # Test response time
         local response_time
@@ -504,13 +504,13 @@ send_notification() {
         esac
         
         curl -X POST -H 'Content-type: application/json' \
-             --data "{\"text\":\"${emoji} BuildMyStack AI Deployment: ${message}\"}" \
+             --data "{\"text\":\"${emoji} Stapelwerk AI Deployment: ${message}\"}" \
              "$SLACK_WEBHOOK_URL" || true
     fi
     
     # Email notification (if configured)
     if [[ -n "$SMTP_HOST" && -n "$NOTIFICATION_EMAIL" ]]; then
-        echo "$message" | mail -s "BuildMyStack AI Deployment - $level" "$NOTIFICATION_EMAIL" || true
+        echo "$message" | mail -s "Stapelwerk AI Deployment - $level" "$NOTIFICATION_EMAIL" || true
     fi
 }
 
@@ -669,8 +669,8 @@ rollback_deployment() {
     
     # Rollback to previous deployment
     log "INFO" "Rolling back Kubernetes deployment..."
-    if kubectl rollout undo deployment/buildmystack-ai -n buildmystack; then
-        kubectl rollout status deployment/buildmystack-ai -n buildmystack --timeout=300s
+    if kubectl rollout undo deployment/stapelwerk-ai -n stapelwerk; then
+        kubectl rollout status deployment/stapelwerk-ai -n stapelwerk --timeout=300s
         log "SUCCESS" "Kubernetes deployment rolled back"
     else
         log "ERROR" "Failed to rollback Kubernetes deployment"
@@ -690,18 +690,18 @@ check_deployment_status() {
     
     # Check Kubernetes deployment status
     echo "Kubernetes Deployment Status:"
-    kubectl get deployment buildmystack-ai -n buildmystack -o wide 2>/dev/null || echo "No deployment found"
+    kubectl get deployment stapelwerk-ai -n stapelwerk -o wide 2>/dev/null || echo "No deployment found"
     
     echo -e "\\nPod Status:"
-    kubectl get pods -n buildmystack -l app=buildmystack-ai 2>/dev/null || echo "No pods found"
+    kubectl get pods -n stapelwerk -l app=stapelwerk-ai 2>/dev/null || echo "No pods found"
     
     echo -e "\\nService Status:"
-    kubectl get service buildmystack-ai-service -n buildmystack 2>/dev/null || echo "No service found"
+    kubectl get service stapelwerk-ai-service -n stapelwerk 2>/dev/null || echo "No service found"
     
     # Check feature flags status
     echo -e "\\nFeature Flags Status:"
     local service_url
-    service_url=$(kubectl get service buildmystack-ai-service -n buildmystack -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "localhost:8080")
+    service_url=$(kubectl get service stapelwerk-ai-service -n stapelwerk -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "localhost:8080")
     
     if curl -s "$service_url/api/feature-flags" | jq . 2>/dev/null; then
         log "SUCCESS" "Feature flags retrieved successfully"

@@ -2,7 +2,7 @@
 
 ## Overview
 
-I've successfully implemented a comprehensive enterprise user management system with multi-organization session handling for the build-my-stack project. This system provides secure, scalable user and session management across multiple organizations while maintaining strict data isolation and privacy controls.
+I've successfully implemented a comprehensive enterprise user management system with multi-organization session handling for the stapelwerk project. This system provides secure, scalable user and session management across multiple organizations while maintaining strict data isolation and privacy controls.
 
 ## Key Features Implemented
 

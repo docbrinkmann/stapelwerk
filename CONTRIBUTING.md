@@ -1,6 +1,6 @@
 # Contributing Guide
 
-Thanks for helping build BuildMyStack! This document describes how to develop,
+Thanks for helping build Stapelwerk! This document describes how to develop,
 test, and validate changes. By contributing you agree to the
 [Code of Conduct](CODE_OF_CONDUCT.md).
 
@@ -46,7 +46,7 @@ runs, your PR is good.
 
 ## Developer Certificate of Origin (sign-off)
 
-BuildMyStack uses the [DCO](docs/DCO.md) instead of a CLA. Every commit must be
+Stapelwerk uses the [DCO](docs/DCO.md) instead of a CLA. Every commit must be
 signed off, which certifies you wrote (or have the right to submit) the change:
 
 ```bash
@@ -207,10 +207,10 @@ FORCE_DB_SETUP=true npm run test:unit
 
 ```bash
 # Build
-docker build -t build-my-stack:latest .
+docker build -t stapelwerk:latest .
 
 # Run
-docker run -p 3000:3000 --env-file .env.local build-my-stack:latest
+docker run -p 3000:3000 --env-file .env.local stapelwerk:latest
 ```
 
 ### Secrets Management
@@ -223,7 +223,7 @@ FOO_FILE=/run/secrets/FOO
 ### Image Size Check
 
 ```bash
-docker image inspect build-my-stack:latest --format='{{.Size}}'
+docker image inspect stapelwerk:latest --format='{{.Size}}'
 # Target: < 350MB
 ```
 
@@ -231,7 +231,7 @@ docker image inspect build-my-stack:latest --format='{{.Size}}'
 
 The image defines `HEALTHCHECK` on `/api/health`:
 ```bash
-docker inspect --format='{{json .State.Health}}' $(docker ps -q -f name=build-my-stack)
+docker inspect --format='{{json .State.Health}}' $(docker ps -q -f name=stapelwerk)
 ```
 
 ---
@@ -240,6 +240,6 @@ docker inspect --format='{{json .State.Health}}' $(docker ps -q -f name=build-my
 
 - **Questions / bugs**: open a GitHub issue (use the templates)
 - **Security**: do not open a public issue — see [SECURITY.md](SECURITY.md)
-  (security@buildmystack.dev)
+  (security@stapelwerk.dev)
 
 Thank you for contributing!

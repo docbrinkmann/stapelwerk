@@ -68,7 +68,7 @@ Content appears with coordinated timing:
 <section aria-label="Hero section">
   <h1>Build Your Perfect Docker Stack</h1>
   <p>Create production-ready Docker Compose configurations...</p>
-  <button aria-label="Get started with BuildMyStack">Get Started</button>
+  <button aria-label="Get started with Stapelwerk">Get Started</button>
 </section>
 ```
 

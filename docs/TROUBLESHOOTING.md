@@ -7,16 +7,16 @@ Common issues and fixes for production deployments.
   - Recreate secrets: `docker secret rm db_password && docker secret create db_password secrets/db_password.txt` (repeat for others)
 
 - Nginx 502/Bad Gateway
-  - Check app container: `docker service ls | grep buildmystack`
+  - Check app container: `docker service ls | grep stapelwerk`
   - Verify app health: `curl -I http://localhost:8080/health`
-  - Validate nginx config: `docker exec buildmystack-nginx-prod nginx -t`
+  - Validate nginx config: `docker exec stapelwerk-nginx-prod nginx -t`
 
 - SSL issues
   - Generate self-signed certs under docker/certs (see implementation report)
   - Check mounts in docker-compose.prod.yml
 
 - Database connection failures
-  - Verify secret: `docker exec $(docker ps -q -f name=buildmystack-ai) cat /run/secrets/db_password`
+  - Verify secret: `docker exec $(docker ps -q -f name=stapelwerk-ai) cat /run/secrets/db_password`
   - Check Postgres: `docker ps | grep postgres` and `pg_isready`
 
 - Grafana/Prometheus not reachable

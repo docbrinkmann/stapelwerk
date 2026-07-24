@@ -5,7 +5,7 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-    image: build-my-stack-next:latest
+    image: stapelwerk-next:latest
     container_name: bms-next-web
     restart: unless-stopped
     ports:

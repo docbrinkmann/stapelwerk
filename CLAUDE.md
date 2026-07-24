@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this is
 
-BuildMyStack — a guided Docker stack builder (web UI for composing/deploying curated self-hosted service stacks). Next.js App Router + tRPC + Prisma/PostgreSQL, TypeScript throughout.
+Stapelwerk — a guided Docker stack builder (web UI for composing/deploying curated self-hosted service stacks). Next.js App Router + tRPC + Prisma/PostgreSQL, TypeScript throughout.
 
 ## Commands
 

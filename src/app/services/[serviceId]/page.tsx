@@ -22,7 +22,7 @@ async function getService(id: number) {
 export async function generateMetadata({ params }: { params: Promise<{ serviceId: string }> }): Promise<Metadata> {
   const { serviceId } = await params
   const svc = Number.isFinite(Number(serviceId)) ? await getService(Number(serviceId)) : null
-  return { title: svc ? `${(svc as any).name} — BuildMyStack` : 'Service — BuildMyStack' }
+  return { title: svc ? `${(svc as any).name} — Stapelwerk` : 'Service — Stapelwerk' }
 }
 
 function Section({ title, icon: Icon, children }: { title: string; icon: any; children: React.ReactNode }) {

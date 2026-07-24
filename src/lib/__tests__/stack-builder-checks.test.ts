@@ -182,6 +182,8 @@ describe('auditToBuilderChecks', () => {
     const audit = auditCompose({ services: { db: { image: 'postgres:18', volumes: ['d:/x'], environment: { POSTGRES_PASSWORD: 'change_me' } } } })
     const secretCheck = auditToBuilderChecks(audit).find(c => c.kind === 'secret')
     expect(secretCheck?.severity).toBe('error')
+  })
+})
 
 describe('analyzeStack — jump targets (click a check → fix location)', () => {
   it('port conflict targets the first service, Ports section', () => {

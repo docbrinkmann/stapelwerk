@@ -3,7 +3,7 @@
 import re
 
 def fix_trpc_categories_test():
-    file_path = '/Users/sebastian/projects/build-my-stack/src/__tests__/trpc/categories.test.ts'
+    file_path = '/Users/sebastian/projects/stapelwerk/src/__tests__/trpc/categories.test.ts'
     
     with open(file_path, 'r', encoding='utf-8') as f:
         content = f.read()

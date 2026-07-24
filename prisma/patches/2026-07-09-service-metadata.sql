@@ -1,8 +1,8 @@
 -- Service-metadata long-tail curation (2026-07-09).
 -- Idempotent UPDATEs for existing rows — the seed is destructive elsewhere
 -- (deleteMany), so live catalogs are patched with this file instead:
---   ssh <host> 'docker exec -i build-my-stack_postgres \
---     psql -U buildmystack_user -d buildmystack' < prisma/patches/2026-07-09-service-metadata.sql
+--   ssh <host> 'docker exec -i stapelwerk_postgres \
+--     psql -U stapelwerk_user -d stapelwerk' < prisma/patches/2026-07-09-service-metadata.sql
 -- Values mirror prisma/seed.ts exactly (same JSON shapes).
 
 -- ClickHouse: official image supports first-start DB/user/password env.

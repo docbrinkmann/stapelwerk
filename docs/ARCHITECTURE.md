@@ -184,7 +184,7 @@ graph TD
 ### Directory Structure
 
 ```
-build-my-stack/
+stapelwerk/
 ├── src/
 │   ├── app/                    # Next.js App Router
 │   │   ├── (routes)/           # Route groups

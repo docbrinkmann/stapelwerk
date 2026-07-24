@@ -1,16 +1,18 @@
-# BuildMyStack
+# Stapelwerk
 
 **Your Jellyfin + \*arr media server, composed and checked before you deploy — wired right the first time.**
 
 AGPL-3.0 · a self-hosted build has every feature, no gates.
 
-BuildMyStack is a guided Docker stack builder for self-hosters. You pick a use case — say, a media server (Jellyfin + Sonarr / Radarr / Prowlarr + qBittorrent + Gluetun) — and it composes the services, checks that they actually fit together (compatibility, resource budget, port collisions, and whether your download client is genuinely confined to the VPN), and hands you a clean `docker-compose.yml` you can run anywhere.
+> **Why "Stapelwerk"?** *(SHTAH-pel-verk)* — **Stapel** is German for **stack**, and a **Stapellauf** is the moment a shipyard launches a correctly built ship. Stapelwerk is the works where your stack gets built, checked and verified — *before* it launches.
 
-It's the step *between* a deploy panel and an LLM: Coolify / Portainer / Dokploy deploy what you already chose; an LLM types a compose that looks right and dies on the first real edge case. BuildMyStack decides what belongs together, checks that it fits, then gives you the file.
+Stapelwerk is a guided Docker stack builder for self-hosters. You pick a use case — say, a media server (Jellyfin + Sonarr / Radarr / Prowlarr + qBittorrent + Gluetun) — and it composes the services, checks that they actually fit together (compatibility, resource budget, port collisions, and whether your download client is genuinely confined to the VPN), and hands you a clean `docker-compose.yml` you can run anywhere.
+
+It's the step *between* a deploy panel and an LLM: Coolify / Portainer / Dokploy deploy what you already chose; an LLM types a compose that looks right and dies on the first real edge case. Stapelwerk decides what belongs together, checks that it fits, then gives you the file.
 
 ## The one thing it gets right: the VPN kill-switch
 
-The classic media-stack mistake is running a torrent client next to a VPN container but not actually routing its traffic through the tunnel — so the moment the VPN drops, your real IP leaks. BuildMyStack encodes the fix once and verifies it on every build:
+The classic media-stack mistake is running a torrent client next to a VPN container but not actually routing its traffic through the tunnel — so the moment the VPN drops, your real IP leaks. Stapelwerk encodes the fix once and verifies it on every build:
 
 - the download client runs *inside* the VPN container's network namespace (`network_mode: service:gluetun`), publishes **no ports of its own**, and `depends_on` the gateway;
 - Gluetun gets `cap_add: [NET_ADMIN]` + `/dev/net/tun` and owns the routed ports;
@@ -31,7 +33,7 @@ resources      ✓ fits your Pi 4 (3.1 / 4 GB)
 Requirements: Docker with the compose plugin, ~2 GB RAM.
 
 ```bash
-git clone <repo-url> buildmystack && cd buildmystack
+git clone <repo-url> stapelwerk && cd stapelwerk
 cp .env.example .env
 # edit .env: set POSTGRES_PASSWORD and NEXTAUTH_SECRET (openssl rand -base64 32),
 # and pick SEED_DEMO_PASSWORD — it becomes your login password
@@ -39,7 +41,7 @@ docker compose -f docker-compose.selfhost.yml up -d --build
 docker compose -f docker-compose.selfhost.yml --profile setup run --rm migrate
 ```
 
-Open http://localhost:3000 and log in as `demo@buildmystack.dev` with your
+Open http://localhost:3000 and log in as `demo@stapelwerk.dev` with your
 `SEED_DEMO_PASSWORD`. (There is no public sign-up; the seed creates your user.)
 
 Serving on a LAN name or domain? Set `NEXTAUTH_URL`, `NEXT_PUBLIC_APP_URL`,
@@ -52,7 +54,7 @@ authenticated session and stack ownership, but the socket is root-equivalent
 on the host — remove the mount and set `TERMINAL_EXECUTOR=echo` in `.env` if
 you only want composing and export. See [SECURITY.md](SECURITY.md).
 
-**Self-host promise:** a self-hosted BuildMyStack has **all features, no
+**Self-host promise:** a self-hosted Stapelwerk has **all features, no
 gates**. Plan limits and billing exist only on the hosted instance and are
 never part of the self-host experience.
 
@@ -88,7 +90,7 @@ Next.js (App Router) + **tRPC v11** + **Prisma / PostgreSQL**, TypeScript throug
 
 ## Open-core & pricing
 
-BuildMyStack is **AGPL-3.0 open-core**. A self-hosted build has **every feature and zero gates** — plan limits only activate on the hosted instance, behind `BILLING_ENABLED` (unset by default → unlimited; see [`src/lib/plans.ts`](src/lib/plans.ts)).
+Stapelwerk is **AGPL-3.0 open-core**. A self-hosted build has **every feature and zero gates** — plan limits only activate on the hosted instance, behind `BILLING_ENABLED` (unset by default → unlimited; see [`src/lib/plans.ts`](src/lib/plans.ts)).
 
 Monetization is **patronage + one-time outcomes, not a monthly SaaS**:
 
@@ -115,11 +117,11 @@ CI runs on GitLab pipelines: **quality → unit → integration → e2e → buil
 
 ## Security
 
-Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md) for the disclosure process (**security@build-my-stack.dev**, reproduction steps appreciated). Don't open a public issue for security bugs.
+Please report vulnerabilities privately — see [SECURITY.md](SECURITY.md) for the disclosure process (**security@stapelwerk.dev**, reproduction steps appreciated). Don't open a public issue for security bugs.
 
 ## License
 
-BuildMyStack is free software, licensed under the **GNU Affero General Public
+Stapelwerk is free software, licensed under the **GNU Affero General Public
 License v3.0 only** (AGPL-3.0-only) — see [LICENSE](LICENSE).
 Copyright (C) 2026 Sebastian Schmidt.
 
@@ -128,6 +130,6 @@ The entire application is open source; running a self-hosted build unlocks every
 ## Status & scope
 
 - **Focus:** the media / \*arr vertical is the beachhead — the Gluetun kill-switch checks are wired and covered by tests. Version `0.1.0`.
-- **Not a deploy panel.** BuildMyStack composes and checks, then hands off; always-on host management is Coolify / Dokploy / Openship territory. Direct deploy is an optional convenience, not the product: the key-sovereign `deploy.sh` runs from *your* machine over *your* SSH, and the managed server-side path (Pro/Fleet) uses *our* deploy key that you authorize on your host — we never hold *your* key either way.
+- **Not a deploy panel.** Stapelwerk composes and checks, then hands off; always-on host management is Coolify / Dokploy / Openship territory. Direct deploy is an optional convenience, not the product: the key-sovereign `deploy.sh` runs from *your* machine over *your* SSH, and the managed server-side path (Pro/Fleet) uses *our* deploy key that you authorize on your host — we never hold *your* key either way.
 - **No "kept current" / scheduled CVE re-checks** — that feature does not exist; the checks run at compose time.
 - **Roadmap:** the runtime attestation (booting the stack and confirming traffic actually dies when the VPN drops) runs on local-socket deploys; extending it to remote/SSH deploys is next. The compose-time checks verify the *configuration* — see the honest scope in `LAUNCH-RUNBOOK.md`.

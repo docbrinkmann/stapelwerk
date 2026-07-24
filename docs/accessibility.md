@@ -2,7 +2,7 @@
 
 ## Overview
 
-BuildMyStack's UI/UX modernization achieves **100% WCAG 2.2 Level AA compliance** across all new components and patterns. This guide documents our accessibility implementation, testing procedures, and best practices.
+Stapelwerk's UI/UX modernization achieves **100% WCAG 2.2 Level AA compliance** across all new components and patterns. This guide documents our accessibility implementation, testing procedures, and best practices.
 
 ## Table of Contents
 
@@ -93,7 +93,7 @@ BuildMyStack's UI/UX modernization achieves **100% WCAG 2.2 Level AA compliance*
 
 ```tsx
 <MagneticButton
-  aria-label="Get started with BuildMyStack"
+  aria-label="Get started with Stapelwerk"
   aria-describedby="cta-description"
 >
   Get Started

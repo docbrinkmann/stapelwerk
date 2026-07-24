@@ -1,6 +1,6 @@
 # Environment Setup Guide for Production Deployment
 
-This guide provides step-by-step instructions for setting up the production environment for the BuildMyStack AI Recommendations system.
+This guide provides step-by-step instructions for setting up the production environment for the Stapelwerk AI Recommendations system.
 
 ## 📋 Prerequisites
 
@@ -74,7 +74,7 @@ You'll need accounts and API keys for:
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd build-my-stack
+cd stapelwerk
 
 # Ensure scripts are executable
 chmod +x scripts/*.sh
@@ -94,7 +94,7 @@ kubectl cluster-info
 kubectl get nodes
 
 # Create production namespace
-kubectl create namespace buildmystack
+kubectl create namespace stapelwerk
 ```
 
 ### Step 3: Prepare Environment Variables
@@ -113,8 +113,8 @@ nano .env.production
 ```bash
 # Database Configuration
 export PROD_DB_HOST="your-postgres-host.com"
-export PROD_DB_NAME="buildmystack_prod"
-export PROD_DB_USER="buildmystack_app"
+export PROD_DB_NAME="stapelwerk_prod"
+export PROD_DB_USER="stapelwerk_app"
 export PROD_DB_PASSWORD="your-secure-db-password"
 
 # Redis Configuration
@@ -134,8 +134,8 @@ export PAGERDUTY_INTEGRATION_KEY="your-pagerduty-integration-key"
 export SMTP_HOST="smtp.your-provider.com"
 export SMTP_USERNAME="your-smtp-username"
 export SMTP_PASSWORD="your-smtp-password"
-export SMTP_FROM="alerts@buildmystack.com"
-export SMTP_TO="devops@buildmystack.com,engineering@buildmystack.com"
+export SMTP_FROM="alerts@stapelwerk.com"
+export SMTP_TO="devops@stapelwerk.com,engineering@stapelwerk.com"
 
 # Optional: Custom secrets (will be auto-generated if not provided)
 export PROD_JWT_SECRET="your-64-character-jwt-secret"
@@ -195,15 +195,15 @@ If you're using an external database service (recommended), you'll need to:
 
 ```bash
 # 1. Create the production database
-createdb -h $PROD_DB_HOST -U postgres buildmystack_prod
+createdb -h $PROD_DB_HOST -U postgres stapelwerk_prod
 
 # 2. Create application user
-psql -h $PROD_DB_HOST -U postgres -d buildmystack_prod -c "
-CREATE USER buildmystack_app WITH PASSWORD '$PROD_DB_PASSWORD';
-GRANT CONNECT ON DATABASE buildmystack_prod TO buildmystack_app;
-GRANT USAGE ON SCHEMA public TO buildmystack_app;
-GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO buildmystack_app;
-GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO buildmystack_app;
+psql -h $PROD_DB_HOST -U postgres -d stapelwerk_prod -c "
+CREATE USER stapelwerk_app WITH PASSWORD '$PROD_DB_PASSWORD';
+GRANT CONNECT ON DATABASE stapelwerk_prod TO stapelwerk_app;
+GRANT USAGE ON SCHEMA public TO stapelwerk_app;
+GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA public TO stapelwerk_app;
+GRANT USAGE ON ALL SEQUENCES IN SCHEMA public TO stapelwerk_app;
 "
 
 # 3. Run database migrations (if applicable)
@@ -233,14 +233,14 @@ CONFIG SET save "300 1"
 
 ```bash
 # Build the production Docker image
-docker build -t $DOCKER_REGISTRY/buildmystack-ai:$BUILD_VERSION -f docker/production.Dockerfile .
+docker build -t $DOCKER_REGISTRY/stapelwerk-ai:$BUILD_VERSION -f docker/production.Dockerfile .
 
 # Tag as latest
-docker tag $DOCKER_REGISTRY/buildmystack-ai:$BUILD_VERSION $DOCKER_REGISTRY/buildmystack-ai:latest
+docker tag $DOCKER_REGISTRY/stapelwerk-ai:$BUILD_VERSION $DOCKER_REGISTRY/stapelwerk-ai:latest
 
 # Push to registry
-docker push $DOCKER_REGISTRY/buildmystack-ai:$BUILD_VERSION
-docker push $DOCKER_REGISTRY/buildmystack-ai:latest
+docker push $DOCKER_REGISTRY/stapelwerk-ai:$BUILD_VERSION
+docker push $DOCKER_REGISTRY/stapelwerk-ai:latest
 ```
 
 ### Step 10: Test Local Production Environment (Optional)
@@ -287,10 +287,10 @@ After deployment, monitor the system:
 ./scripts/deploy-production.sh status
 
 # View logs
-kubectl logs -f deployment/buildmystack-ai -n buildmystack
+kubectl logs -f deployment/stapelwerk-ai -n stapelwerk
 
 # Check metrics
-kubectl port-forward svc/buildmystack-ai-service 8080:80 -n buildmystack
+kubectl port-forward svc/stapelwerk-ai-service 8080:80 -n stapelwerk
 curl http://localhost:8080/metrics
 
 # Monitor feature flags
@@ -324,20 +324,20 @@ kubectl config current-context
 kubectl config use-context your-production-cluster
 
 # Check permissions
-kubectl auth can-i create secrets -n buildmystack
+kubectl auth can-i create secrets -n stapelwerk
 ```
 
 #### 3. Secret Creation Issues
 
 ```bash
 # Check if secrets exist
-kubectl get secrets -n buildmystack
+kubectl get secrets -n stapelwerk
 
 # Re-run secrets setup
 ./scripts/setup-production-secrets.sh
 
 # View secret details (without values)
-kubectl describe secret db-secrets -n buildmystack
+kubectl describe secret db-secrets -n stapelwerk
 ```
 
 #### 4. Docker Registry Issues
@@ -426,8 +426,8 @@ For issues with the production deployment:
 2. **Review deployment logs**: `./scripts/deploy-production.sh logs`
 3. **Run environment validation**: `./scripts/validate-production-env.sh`
 4. **Contact the team**:
-   - Engineering Team: engineering@buildmystack.com
-   - DevOps Team: devops@buildmystack.com
+   - Engineering Team: engineering@stapelwerk.com
+   - DevOps Team: devops@stapelwerk.com
    - Emergency: [On-call contact information]
 
 ---

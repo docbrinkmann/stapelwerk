@@ -88,7 +88,7 @@ export function mapEventToPlan(
 
 /** Hosted checkout URL for a plan, carrying the user id as custom data. */
 export function checkoutUrl(plan: PlanId, userId: string): string | null {
-  const store = process.env.LEMONSQUEEZY_STORE_URL // e.g. https://buildmystack.lemonsqueezy.com
+  const store = process.env.LEMONSQUEEZY_STORE_URL // e.g. https://stapelwerk.lemonsqueezy.com
   const variant =
     plan === 'pro'
       ? process.env.LEMONSQUEEZY_VARIANT_PRO

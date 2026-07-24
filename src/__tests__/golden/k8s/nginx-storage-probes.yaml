@@ -1,13 +1,13 @@
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: buildmystack
+  name: stapelwerk
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: nginx-data
-  namespace: buildmystack
+  namespace: stapelwerk
 spec:
   accessModes:
     - ReadWriteOnce
@@ -20,7 +20,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: nginx
-  namespace: buildmystack
+  namespace: stapelwerk
 spec:
   replicas: 1
   selector:
@@ -64,7 +64,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: nginx
-  namespace: buildmystack
+  namespace: stapelwerk
 spec:
   type: ClusterIP
   selector:

@@ -18,7 +18,7 @@ const createTemplate = (title: string, content: string, nav: string) => `
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>${title} - BuildMyStack Documentation</title>
+    <title>${title} - Stapelwerk Documentation</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -204,7 +204,7 @@ async function buildDocs(): Promise<void> {
             // Create placeholder index
             const placeholder = createTemplate(
                 'Documentation',
-                '<h1>BuildMyStack Documentation</h1><p>Documentation coming soon...</p>',
+                '<h1>Stapelwerk Documentation</h1><p>Documentation coming soon...</p>',
                 '<ul><li><a href="index.html">Home</a></li></ul>'
             );
             await fs.writeFile(path.join(OUTPUT_DIR, 'index.html'), placeholder);

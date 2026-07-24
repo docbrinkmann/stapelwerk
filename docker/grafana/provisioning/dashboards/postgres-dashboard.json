@@ -45,11 +45,11 @@
   "refresh": "30s",
   "schemaVersion": 36,
   "style": "dark",
-  "tags": ["buildmystack", "postgres"],
+  "tags": ["stapelwerk", "postgres"],
   "templating": {"list": []},
   "time": {"from": "now-6h", "to": "now"},
   "timezone": "",
-  "title": "BuildMyStack - PostgreSQL",
-  "uid": "buildmystack-postgres",
+  "title": "Stapelwerk - PostgreSQL",
+  "uid": "stapelwerk-postgres",
   "version": 1
 }

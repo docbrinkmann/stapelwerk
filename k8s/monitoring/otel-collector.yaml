@@ -1,4 +1,4 @@
-# OpenTelemetry Collector Configuration for BuildMyStack
+# OpenTelemetry Collector Configuration for Stapelwerk
 # Spec Reference: Phase 4.4 - Monitoring & Observability
 # 
 # This configuration receives traces, metrics, and logs from the application
@@ -35,7 +35,7 @@ data:
       resource:
         attributes:
           - key: service.namespace
-            value: build-my-stack
+            value: stapelwerk
             action: upsert
           - key: deployment.environment
             from_attribute: OTEL_RESOURCE_ATTRIBUTES
@@ -45,7 +45,7 @@ data:
       # Prometheus for metrics
       prometheus:
         endpoint: 0.0.0.0:8889
-        namespace: buildmystack
+        namespace: stapelwerk
         resource_to_telemetry_conversion:
           enabled: true
 

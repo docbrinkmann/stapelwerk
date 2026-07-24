@@ -117,7 +117,7 @@ export default function Header() {
                 <span className="text-base font-bold text-background md:text-lg">B</span>
               </div>
               <span className="text-lg font-semibold tracking-tight text-foreground md:text-xl">
-                BuildMyStack
+                Stapelwerk
               </span>
             </motion.a>
 

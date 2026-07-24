@@ -25,7 +25,7 @@ BOLD='\033[1m'
 # Monitoring configuration
 MONITOR_ID="monitor-$(date +%Y%m%d-%H%M%S)"
 DEPLOYMENT_ENV="${DEPLOYMENT_ENV:-production}"
-NAMESPACE="${NAMESPACE:-buildmystack-prod}"
+NAMESPACE="${NAMESPACE:-stapelwerk-prod}"
 APP_URL="${APP_URL:-http://localhost:3000}"
 HEALTH_CHECK_INTERVAL="${HEALTH_CHECK_INTERVAL:-30}" # seconds
 ERROR_THRESHOLD="${ERROR_THRESHOLD:-5}" # consecutive errors
@@ -57,7 +57,7 @@ declare -A HEALTH_METRICS=(
 
 # Initialize monitoring
 init_monitoring() {
-    echo -e "${BOLD}${BLUE}=== BuildMyStack Deployment Monitoring ===${NC}"
+    echo -e "${BOLD}${BLUE}=== Stapelwerk Deployment Monitoring ===${NC}"
     echo -e "${CYAN}Monitor ID: $MONITOR_ID${NC}"
     echo -e "${CYAN}Environment: $DEPLOYMENT_ENV${NC}"
     echo -e "${CYAN}Namespace: $NAMESPACE${NC}"
@@ -167,7 +167,7 @@ send_alert() {
             --data "{
                 \"attachments\": [{
                     \"color\": \"$color\",
-                    \"title\": \"$emoji BuildMyStack Deployment Alert\",
+                    \"title\": \"$emoji Stapelwerk Deployment Alert\",
                     \"text\": \"$message\",
                     \"fields\": [
                         {\"title\": \"Environment\", \"value\": \"$DEPLOYMENT_ENV\", \"short\": true},
@@ -221,7 +221,7 @@ check_api_health() {
 }
 
 check_database_health() {
-    if kubectl exec -n "$NAMESPACE" deployment/buildmystack -- npm run db:health &>/dev/null; then
+    if kubectl exec -n "$NAMESPACE" deployment/stapelwerk -- npm run db:health &>/dev/null; then
         HEALTH_METRICS[database_status]="healthy"
         return 0
     else
@@ -243,8 +243,8 @@ check_redis_health() {
 }
 
 check_pod_health() {
-    local ready_pods=$(kubectl get pods -n "$NAMESPACE" -l app=buildmystack -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}' | wc -w)
-    local total_pods=$(kubectl get pods -n "$NAMESPACE" -l app=buildmystack --no-headers | wc -l)
+    local ready_pods=$(kubectl get pods -n "$NAMESPACE" -l app=stapelwerk -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}' | wc -w)
+    local total_pods=$(kubectl get pods -n "$NAMESPACE" -l app=stapelwerk --no-headers | wc -l)
     
     HEALTH_METRICS[pod_count]=$total_pods
     HEALTH_METRICS[ready_pods]=$ready_pods
@@ -263,7 +263,7 @@ check_pod_health() {
 check_resource_usage() {
     # Check CPU usage
     local cpu_usage
-    if cpu_usage=$(kubectl top pods -n "$NAMESPACE" -l app=buildmystack --no-headers | awk '{sum+=$2} END {print int(sum)}' 2>/dev/null); then
+    if cpu_usage=$(kubectl top pods -n "$NAMESPACE" -l app=stapelwerk --no-headers | awk '{sum+=$2} END {print int(sum)}' 2>/dev/null); then
         HEALTH_METRICS[cpu_usage]=$cpu_usage
         if [[ $cpu_usage -gt $CPU_THRESHOLD ]]; then
             log_warning "High CPU usage: ${cpu_usage}% (threshold: ${CPU_THRESHOLD}%)"
@@ -272,7 +272,7 @@ check_resource_usage() {
     
     # Check memory usage
     local memory_usage
-    if memory_usage=$(kubectl top pods -n "$NAMESPACE" -l app=buildmystack --no-headers | awk '{gsub(/Mi/,"",$3); sum+=$3} END {print int(sum/10)}' 2>/dev/null); then
+    if memory_usage=$(kubectl top pods -n "$NAMESPACE" -l app=stapelwerk --no-headers | awk '{gsub(/Mi/,"",$3); sum+=$3} END {print int(sum/10)}' 2>/dev/null); then
         HEALTH_METRICS[memory_usage]=$memory_usage
         if [[ $memory_usage -gt $MEMORY_THRESHOLD ]]; then
             log_warning "High memory usage: ${memory_usage}% (threshold: ${MEMORY_THRESHOLD}%)"
@@ -293,7 +293,7 @@ check_error_rate() {
     # Simple error rate check by examining recent logs
     local error_count=0
     
-    if kubectl logs -n "$NAMESPACE" deployment/buildmystack --tail=100 --since=5m 2>/dev/null | grep -i error | wc -l > /tmp/error_count; then
+    if kubectl logs -n "$NAMESPACE" deployment/stapelwerk --tail=100 --since=5m 2>/dev/null | grep -i error | wc -l > /tmp/error_count; then
         error_count=$(cat /tmp/error_count)
         rm -f /tmp/error_count
     fi
@@ -397,7 +397,7 @@ trigger_rollback() {
 # Monitoring dashboard (real-time display)
 show_dashboard() {
     clear
-    echo -e "${BOLD}${BLUE}=== BuildMyStack Deployment Monitoring Dashboard ===${NC}"
+    echo -e "${BOLD}${BLUE}=== Stapelwerk Deployment Monitoring Dashboard ===${NC}"
     echo
     echo -e "${CYAN}Monitor ID:${NC} $MONITOR_ID"
     echo -e "${CYAN}Environment:${NC} $DEPLOYMENT_ENV"
@@ -465,13 +465,13 @@ trap 'log_info "Monitoring interrupted by user"; cleanup_monitoring' INT TERM
 # Help function
 show_help() {
     cat << EOF
-BuildMyStack Deployment Monitoring System
+Stapelwerk Deployment Monitoring System
 
 Usage: $0 [options]
 
 Options:
   --environment ENV         Deployment environment (default: production)
-  --namespace NS           Kubernetes namespace (default: buildmystack-prod)
+  --namespace NS           Kubernetes namespace (default: stapelwerk-prod)
   --app-url URL            Application URL for health checks (default: http://localhost:3000)
   --check-interval SEC     Health check interval in seconds (default: 30)
   --error-threshold N      Consecutive errors before rollback (default: 5)

@@ -638,7 +638,7 @@ Minor: [TBD]
 | Component | Status | Notes |
 |-----------|--------|-------|
 | **Docker App (Port 3000)** | ✅ Healthy | HTTP 429 (rate limiter working) |
-| **Dev Server (Port 3003)** | ✅ Running | HTTP 200, serving BuildMyStack |
+| **Dev Server (Port 3003)** | ✅ Running | HTTP 200, serving Stapelwerk |
 | **Database (PostgreSQL 18)** | ✅ Healthy | Container health check passed |
 | **Cache (Redis 7)** | ✅ Healthy | Container health check passed |
 | **Environment Variables** | ✅ Configured | Rate limiting active |
@@ -657,13 +657,13 @@ Minor: [TBD]
 **Container Status** (Docker Compose):
 ```
 NAME                      STATUS         PORTS
-build-my-stack-app        Up (healthy)   0.0.0.0:3000->3000/tcp
-build-my-stack-postgres   Up (healthy)   0.0.0.0:5432->5432/tcp
-build-my-stack-redis      Up (healthy)   0.0.0.0:6379->6379/tcp
+stapelwerk-app        Up (healthy)   0.0.0.0:3000->3000/tcp
+stapelwerk-postgres   Up (healthy)   0.0.0.0:5432->5432/tcp
+stapelwerk-redis      Up (healthy)   0.0.0.0:6379->6379/tcp
 ```
 
 **Docker Build Verification**:
-- Image: `build-my-stack-app:latest`
+- Image: `stapelwerk-app:latest`
 - Size: 4.94GB
 - Build: No-cache rebuild completed successfully
 - Deployment: All services healthy

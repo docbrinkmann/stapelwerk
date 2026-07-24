@@ -13,8 +13,8 @@ set -e
 
 # Configuration
 DOCKER_HOST="${DOCKER_HOST:-gitlab.minilab.live}"
-CONTAINER_NAME="${CONTAINER_NAME:-buildmystack-app}"
-DB_CONTAINER="${DB_CONTAINER:-buildmystack-db}"
+CONTAINER_NAME="${CONTAINER_NAME:-stapelwerk-app}"
+DB_CONTAINER="${DB_CONTAINER:-stapelwerk-db}"
 
 # Colors
 RED='\033[0;31m'
@@ -59,7 +59,7 @@ fi
 log_info "Test 2: Testing database operations..."
 
 # Test database read
-if ssh root@$DOCKER_HOST "docker exec $DB_CONTAINER psql -U buildmystack -c 'SELECT 1;'" > /dev/null 2>&1; then
+if ssh root@$DOCKER_HOST "docker exec $DB_CONTAINER psql -U stapelwerk -c 'SELECT 1;'" > /dev/null 2>&1; then
     log_success "Database read operations work"
 else
     log_error "Database read operations failed"
@@ -67,7 +67,7 @@ else
 fi
 
 # Test database write (create and drop test table)
-if ssh root@$DOCKER_HOST "docker exec $DB_CONTAINER psql -U buildmystack -c 'CREATE TABLE IF NOT EXISTS test_integration (id SERIAL PRIMARY KEY); DROP TABLE test_integration;'" > /dev/null 2>&1; then
+if ssh root@$DOCKER_HOST "docker exec $DB_CONTAINER psql -U stapelwerk -c 'CREATE TABLE IF NOT EXISTS test_integration (id SERIAL PRIMARY KEY); DROP TABLE test_integration;'" > /dev/null 2>&1; then
     log_success "Database write operations work"
 else
     log_error "Database write operations failed"

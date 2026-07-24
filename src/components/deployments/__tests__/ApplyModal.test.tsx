@@ -29,7 +29,7 @@ vi.mock('@/trpc/client', () => {
         getDeployPublicKey: {
           query: vi.fn(async () => ({
             configured: true,
-            publicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1 deploy@buildmystack',
+            publicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1 deploy@stapelwerk',
           })),
         },
         renderApplyCi: {
@@ -114,7 +114,7 @@ describe('ApplyModal', () => {
     })
     expect(await screen.findByTestId('apply-remote-fields')).toBeInTheDocument()
     const pubkey = await screen.findByTestId('apply-deploy-pubkey')
-    expect(pubkey).toHaveTextContent('ssh-ed25519 AAAAC3NzaC1lZDI1 deploy@buildmystack')
+    expect(pubkey).toHaveTextContent('ssh-ed25519 AAAAC3NzaC1lZDI1 deploy@stapelwerk')
 
     // Fill host + user (port defaults to 22), acknowledge the SSH-key liability, and submit.
     await act(async () => {

@@ -1,6 +1,6 @@
 # Server Setup Guide
 
-This guide covers the setup of the production server for BuildMyStack deployment.
+This guide covers the setup of the production server for Stapelwerk deployment.
 
 ## Server Information
 
@@ -41,9 +41,9 @@ docker compose version
 
 ```bash
 # Create directory structure
-sudo mkdir -p /opt/build-my-stack/{data,logs,backups,scripts}
-sudo chown -R $USER:$USER /opt/build-my-stack
-cd /opt/build-my-stack
+sudo mkdir -p /opt/stapelwerk/{data,logs,backups,scripts}
+sudo chown -R $USER:$USER /opt/stapelwerk
+cd /opt/stapelwerk
 ```
 
 ## SSH Key Setup for GitLab CI/CD
@@ -52,11 +52,11 @@ cd /opt/build-my-stack
 
 ```bash
 # On your local machine
-ssh-keygen -t ed25519 -C "gitlab-ci-deploy@build-my-stack" -f ~/.ssh/gitlab-ci-buildmystack
+ssh-keygen -t ed25519 -C "gitlab-ci-deploy@stapelwerk" -f ~/.ssh/gitlab-ci-stapelwerk
 
 # This creates:
-# - ~/.ssh/gitlab-ci-buildmystack (private key)
-# - ~/.ssh/gitlab-ci-buildmystack.pub (public key)
+# - ~/.ssh/gitlab-ci-stapelwerk (private key)
+# - ~/.ssh/gitlab-ci-stapelwerk.pub (public key)
 ```
 
 ### 2. Add Public Key to Server
@@ -67,7 +67,7 @@ mkdir -p ~/.ssh
 chmod 700 ~/.ssh
 
 # Add the public key
-echo "ssh-ed25519 AAAAC3... gitlab-ci-deploy@build-my-stack" >> ~/.ssh/authorized_keys
+echo "ssh-ed25519 AAAAC3... gitlab-ci-deploy@stapelwerk" >> ~/.ssh/authorized_keys
 chmod 600 ~/.ssh/authorized_keys
 ```
 
@@ -75,7 +75,7 @@ chmod 600 ~/.ssh/authorized_keys
 
 ```bash
 # From your local machine
-ssh -i ~/.ssh/gitlab-ci-buildmystack user@***************
+ssh -i ~/.ssh/gitlab-ci-stapelwerk user@***************
 
 # Should connect without password
 ```
@@ -105,7 +105,7 @@ docker info | grep Registry
 ### 1. Copy Environment Template
 
 ```bash
-cd /opt/build-my-stack
+cd /opt/stapelwerk
 cp .env.production.example .env.production
 ```
 
@@ -131,8 +131,8 @@ chmod 600 .env.production
 
 ```bash
 # From your local machine
-scp docker-compose.prod.yml user@***************:/opt/build-my-stack/docker-compose.yml
-scp .env.production user@***************:/opt/build-my-stack/.env.production
+scp docker-compose.prod.yml user@***************:/opt/stapelwerk/docker-compose.yml
+scp .env.production user@***************:/opt/stapelwerk/.env.production
 ```
 
 ## GitLab CI/CD Variables Setup
@@ -141,19 +141,19 @@ Add these variables in GitLab project → **Settings** → **CI/CD** → **Varia
 
 | Variable | Type | Value | Protected | Masked |
 |----------|------|-------|-----------|--------|
-| `SSH_PRIVATE_KEY` | File | Content of ~/.ssh/gitlab-ci-buildmystack | ✓ | ✓ |
+| `SSH_PRIVATE_KEY` | File | Content of ~/.ssh/gitlab-ci-stapelwerk | ✓ | ✓ |
 | `SERVER_HOST` | Variable | *************** | ✓ | ✗ |
 | `SERVER_USER` | Variable | your-username | ✓ | ✗ |
 | `DATABASE_URL` | Variable | postgresql://... | ✓ | ✓ |
 | `NEXTAUTH_SECRET` | Variable | generated-secret | ✓ | ✓ |
-| `NEXTAUTH_URL` | Variable | https://buildmystack.minilab.live | ✓ | ✗ |
+| `NEXTAUTH_URL` | Variable | https://stapelwerk.minilab.live | ✓ | ✗ |
 
 ## Initial Deployment Test
 
 ### 1. Pull a Test Image
 
 ```bash
-cd /opt/build-my-stack
+cd /opt/stapelwerk
 
 # Pull PostgreSQL image
 docker pull postgres:18-alpine
@@ -170,7 +170,7 @@ docker compose logs postgres
 
 ```bash
 # Connect to database
-docker compose exec postgres psql -U buildmystack_user -d buildmystack
+docker compose exec postgres psql -U stapelwerk_user -d stapelwerk
 
 # Run test query
 SELECT version();
@@ -316,7 +316,7 @@ docker compose restart postgres
 
 ```bash
 # Test connection with verbose output
-ssh -vvv -i ~/.ssh/gitlab-ci-buildmystack user@***************
+ssh -vvv -i ~/.ssh/gitlab-ci-stapelwerk user@***************
 
 # Check authorized_keys permissions
 chmod 600 ~/.ssh/authorized_keys

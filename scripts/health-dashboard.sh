@@ -27,11 +27,11 @@ BOLD='\033[1m'
 DASHBOARD_PORT="${DASHBOARD_PORT:-8080}"
 UPDATE_INTERVAL="${UPDATE_INTERVAL:-30}" # seconds
 ENVIRONMENT="${ENVIRONMENT:-production}"
-NAMESPACE="${NAMESPACE:-buildmystack-prod}"
+NAMESPACE="${NAMESPACE:-stapelwerk-prod}"
 
 # Initialize dashboard
 init_dashboard() {
-    echo -e "${BOLD}${BLUE}=== BuildMyStack Health Dashboard ===${NC}"
+    echo -e "${BOLD}${BLUE}=== Stapelwerk Health Dashboard ===${NC}"
     echo -e "${CYAN}Port: $DASHBOARD_PORT${NC}"
     echo -e "${CYAN}Environment: $ENVIRONMENT${NC}"
     echo -e "${CYAN}Update Interval: ${UPDATE_INTERVAL}s${NC}"
@@ -55,7 +55,7 @@ create_dashboard_html() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BuildMyStack - Health Dashboard</title>
+    <title>Stapelwerk - Health Dashboard</title>
     <link rel="stylesheet" href="assets/css/dashboard.css">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23667eea'%3E%3Cpath d='M12 2L2 7v10c0 5.55 3.84 9.74 9 11 5.16-1.26 9-5.45 9-11V7l-10-5z'/%3E%3C/svg%3E">
 </head>
@@ -65,7 +65,7 @@ create_dashboard_html() {
         <div class="container">
             <h1 class="logo">
                 <span class="icon">🛡️</span>
-                BuildMyStack Health Dashboard
+                Stapelwerk Health Dashboard
             </h1>
             <div class="header-info">
                 <span class="environment" id="environment">{{ENVIRONMENT}}</span>
@@ -1462,11 +1462,11 @@ disk_usage=0
 # Try to get real metrics from Kubernetes
 if command -v kubectl &>/dev/null; then
     # Get CPU usage (simplified)
-    cpu_usage=$(kubectl top pods -n "${NAMESPACE:-buildmystack-prod}" --no-headers 2>/dev/null | \
+    cpu_usage=$(kubectl top pods -n "${NAMESPACE:-stapelwerk-prod}" --no-headers 2>/dev/null | \
                 awk '{gsub(/m/,"",$2); sum+=$2} END {print int(sum/10)}' || echo "45")
     
     # Get memory usage (simplified)  
-    memory_usage=$(kubectl top pods -n "${NAMESPACE:-buildmystack-prod}" --no-headers 2>/dev/null | \
+    memory_usage=$(kubectl top pods -n "${NAMESPACE:-stapelwerk-prod}" --no-headers 2>/dev/null | \
                    awk '{gsub(/Mi/,"",$3); sum+=$3} END {print int(sum/10)}' || echo "62")
 fi
 
@@ -1519,7 +1519,7 @@ echo ""
 
 # Get pod status
 if command -v kubectl &>/dev/null; then
-    kubectl get pods -n "${NAMESPACE:-buildmystack-prod}" -o json 2>/dev/null | \
+    kubectl get pods -n "${NAMESPACE:-stapelwerk-prod}" -o json 2>/dev/null | \
     jq '{
         pods: [
             .items[] | {
@@ -1587,7 +1587,7 @@ generate_static_dashboard() {
 # Help function
 show_help() {
     cat << EOF
-BuildMyStack Health Dashboard
+Stapelwerk Health Dashboard
 
 Usage: $0 <command> [options]
 
@@ -1599,7 +1599,7 @@ Commands:
 Options:
   --port PORT           Dashboard port (default: 8080)
   --environment ENV     Environment (default: production)
-  --namespace NS        Kubernetes namespace (default: buildmystack-prod)
+  --namespace NS        Kubernetes namespace (default: stapelwerk-prod)
   --update-interval SEC Update interval in seconds (default: 30)
   --help               Show this help message
 

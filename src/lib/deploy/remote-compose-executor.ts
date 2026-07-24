@@ -20,7 +20,7 @@
  *
  * Isolation parity with the local executor: only ever `bms-*` projects, staged
  * under `~/.bms/<project>` on the target, so a remote deploy can never collide
- * with / tear down unrelated (e.g. `build-my-stack*`) containers on that host.
+ * with / tear down unrelated (e.g. `stapelwerk*`) containers on that host.
  */
 
 import { spawn, execFileSync } from 'child_process'
@@ -196,7 +196,7 @@ export function ensureDeployKeyPair(opts?: { force?: boolean }): DeployPublicKey
   }
   execFileSync(
     'ssh-keygen',
-    ['-t', 'ed25519', '-N', '', '-C', 'buildmystack-deploy', '-f', file],
+    ['-t', 'ed25519', '-N', '', '-C', 'stapelwerk-deploy', '-f', file],
     { timeout: 15000, stdio: 'ignore' },
   );
   chmodSync(file, 0o600);

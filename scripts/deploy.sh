@@ -1,5 +1,5 @@
 #!/bin/bash
-# BuildMyStack Deployment Script
+# Stapelwerk Deployment Script
 # Deploys Docker containers with database migrations and health checks
 
 set -e  # Exit on error
@@ -16,7 +16,7 @@ DEPLOY_TOKEN="${DEPLOY_TOKEN:-}"
 MAX_RETRIES=3
 HEALTH_CHECK_TIMEOUT=60
 
-echo -e "${GREEN}🚀 BuildMyStack Deployment Script${NC}"
+echo -e "${GREEN}🚀 Stapelwerk Deployment Script${NC}"
 echo "Image Tag: $IMAGE_TAG"
 echo "Date: $(date)"
 echo "----------------------------------------"
@@ -51,7 +51,7 @@ fi
 # Step 3: Run database migrations
 echo -e "\n${YELLOW}Step 3/7:${NC} Running database migrations..."
 if docker run --rm \
-    --network build-my-stack_app-network \
+    --network stapelwerk_app-network \
     -e DATABASE_URL="$DATABASE_URL" \
     "$CI_REGISTRY_IMAGE:$IMAGE_TAG" \
     sh -c "npx prisma migrate deploy"; then
@@ -108,7 +108,7 @@ echo -e "${GREEN}✓${NC} Cleanup complete"
 echo -e "\n${GREEN}========================================${NC}"
 echo -e "${GREEN}✅ Deployment successful!${NC}"
 echo -e "${GREEN}========================================${NC}"
-echo "Application: https://buildmystack.minilab.live"
+echo "Application: https://stapelwerk.minilab.live"
 echo "Image: $CI_REGISTRY_IMAGE:$IMAGE_TAG"
 echo "Deployed at: $(date)"
 

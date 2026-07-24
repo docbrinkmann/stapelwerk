@@ -1,6 +1,6 @@
 # Accessibility Audit Report
 
-**Project:** BuildMyStack UI/UX Modernization
+**Project:** Stapelwerk UI/UX Modernization
 **Date:** 2025-11-13
 **Standards:** WCAG 2.2 Level AA
 **Auditor:** Testing Engineer (Automated + Manual)
@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-This document outlines the comprehensive accessibility testing strategy and automated test suite implemented for the BuildMyStack UI/UX modernization project. The testing infrastructure ensures 100% WCAG 2.2 Level AA compliance through automated tests using axe-core, Playwright, and custom validation scripts.
+This document outlines the comprehensive accessibility testing strategy and automated test suite implemented for the Stapelwerk UI/UX modernization project. The testing infrastructure ensures 100% WCAG 2.2 Level AA compliance through automated tests using axe-core, Playwright, and custom validation scripts.
 
 ### Testing Coverage
 

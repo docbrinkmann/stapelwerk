@@ -155,7 +155,7 @@ describe('terminal executor', () => {
 
     const { ws, messages } = fakeClient()
     // Owner, but trying to reach the app's own infra container.
-    const sessionId = await createTerminalSession(ws, 'u1', { stackId: 's3', containerId: 'build-my-stack_postgres' })
+    const sessionId = await createTerminalSession(ws, 'u1', { stackId: 's3', containerId: 'stapelwerk_postgres' })
     await new Promise((r) => setTimeout(r, 10))
 
     expect(httpRequests).toHaveLength(0)

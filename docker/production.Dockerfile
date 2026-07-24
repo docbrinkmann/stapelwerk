@@ -1,4 +1,4 @@
-# Production Dockerfile for BuildMyStack AI Recommendations
+# Production Dockerfile for Stapelwerk AI Recommendations
 # Optimized for security, performance, and minimal attack surface
 
 # Use Node.js LTS with Alpine for minimal image size and security
@@ -40,7 +40,7 @@ FROM node:18-alpine AS production
 
 # Create non-root user for security
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S buildmystack -u 1001
+    adduser -S stapelwerk -u 1001
 
 # Install production runtime dependencies
 RUN apk add --no-cache \
@@ -52,18 +52,18 @@ RUN apk add --no-cache \
 WORKDIR /usr/src/app
 
 # Copy application from builder stage
-COPY --from=builder --chown=buildmystack:nodejs /usr/src/app/node_modules ./node_modules
-COPY --from=builder --chown=buildmystack:nodejs /usr/src/app/package*.json ./
-COPY --from=builder --chown=buildmystack:nodejs /usr/src/app/dist ./dist 2>/dev/null || echo "No dist directory"
-COPY --from=builder --chown=buildmystack:nodejs /usr/src/app/src ./src
-COPY --from=builder --chown=buildmystack:nodejs /usr/src/app/*.js ./
+COPY --from=builder --chown=stapelwerk:nodejs /usr/src/app/node_modules ./node_modules
+COPY --from=builder --chown=stapelwerk:nodejs /usr/src/app/package*.json ./
+COPY --from=builder --chown=stapelwerk:nodejs /usr/src/app/dist ./dist 2>/dev/null || echo "No dist directory"
+COPY --from=builder --chown=stapelwerk:nodejs /usr/src/app/src ./src
+COPY --from=builder --chown=stapelwerk:nodejs /usr/src/app/*.js ./
 
 # Create required directories
 RUN mkdir -p /usr/src/app/logs && \
-    chown -R buildmystack:nodejs /usr/src/app/logs
+    chown -R stapelwerk:nodejs /usr/src/app/logs
 
 # Switch to non-root user
-USER buildmystack
+USER stapelwerk
 
 # Expose application port
 EXPOSE 8080

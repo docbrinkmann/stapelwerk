@@ -131,7 +131,7 @@ function safeParseJSON<T = any>(val: string | null | undefined, fallback: T): T 
 // Direct-deploy executor wiring — OPTIONAL "Deploy to this server" feature.
 // Deploys a stack's generated compose to the local Docker host via the mounted
 // socket. Bounded + safe: single host, no SSH/credentials, unique bms-* project,
-// container_name stripped so we can never touch the build-my-stack* infra.
+// container_name stripped so we can never touch the stapelwerk* infra.
 // ---------------------------------------------------------------------------
 
 type PrismaLike = Context['prisma']
@@ -397,7 +397,7 @@ export const deploymentsRouter = createTRPCRouter({
       }
       // Plan gate: remote targets are the priced axis (free 0, pro 2, fleet 10).
       if (location === 'remote') {
-        // Liability gate: registering a remote target hands BuildMyStack an SSH
+        // Liability gate: registering a remote target hands Stapelwerk an SSH
         // key that can run docker on the operator's host. They must explicitly
         // acknowledge that before we store it — Export/handoff is the safe default.
         if (!input.riskAcknowledged) {
@@ -784,7 +784,7 @@ export const deploymentsRouter = createTRPCRouter({
       const composeYaml = await assembleStackCompose(ctx.prisma, input.stackId, {
         blockSensitiveBindMounts: !target.remote,
       })
-      // Liability gate: never let BuildMyStack deploy a download client that
+      // Liability gate: never let Stapelwerk deploy a download client that
       // isn't confined to a VPN. Deterministic, pre-flight, covers local AND
       // remote (no Docker needed) — a leak-by-construction is refused before
       // anything starts, so a leaking torrent client is never brought up in

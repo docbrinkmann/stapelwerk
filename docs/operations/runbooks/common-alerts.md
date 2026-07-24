@@ -7,7 +7,7 @@
 
 ## Alert Response Overview
 
-This runbook provides step-by-step procedures for responding to common alerts in the BuildMyStack production environment.
+This runbook provides step-by-step procedures for responding to common alerts in the Stapelwerk production environment.
 
 ---
 
@@ -27,17 +27,17 @@ This runbook provides step-by-step procedures for responding to common alerts in
 
 1. **Check recent deployments**
    ```bash
-   kubectl rollout history deployment/build-my-stack -n production
+   kubectl rollout history deployment/stapelwerk -n production
    ```
 
 2. **Review application logs**
    ```bash
-   kubectl logs -f deployment/build-my-stack -n production --tail=500 | grep -i error
+   kubectl logs -f deployment/stapelwerk -n production --tail=500 | grep -i error
    ```
 
 3. **Check database connectivity**
    ```bash
-   kubectl exec -it deployment/build-my-stack -n production -- \
+   kubectl exec -it deployment/stapelwerk -n production -- \
      nc -zv $DB_HOST 5432
    ```
 
@@ -106,7 +106,7 @@ This runbook provides step-by-step procedures for responding to common alerts in
 
 1. **Check pod status**
    ```bash
-   kubectl get pods -n production -l app=build-my-stack
+   kubectl get pods -n production -l app=stapelwerk
    kubectl describe pod <pod-name> -n production
    ```
 
@@ -122,7 +122,7 @@ This runbook provides step-by-step procedures for responding to common alerts in
 
 4. **Check resource limits**
    ```bash
-   kubectl describe deployment/build-my-stack -n production | grep -A5 Resources
+   kubectl describe deployment/stapelwerk -n production | grep -A5 Resources
    ```
 
 **Resolution:**
@@ -153,7 +153,7 @@ This runbook provides step-by-step procedures for responding to common alerts in
 2. **Check for memory leaks**
    ```bash
    # Review heap dumps if available
-   kubectl exec deployment/build-my-stack -n production -- \
+   kubectl exec deployment/stapelwerk -n production -- \
      node --inspect=0.0.0.0:9229
    ```
 
@@ -192,7 +192,7 @@ This runbook provides step-by-step procedures for responding to common alerts in
 
 3. **Check for runaway processes**
    ```bash
-   kubectl exec deployment/build-my-stack -n production -- top -b -n1
+   kubectl exec deployment/stapelwerk -n production -- top -b -n1
    ```
 
 **Resolution:**
@@ -218,19 +218,19 @@ This runbook provides step-by-step procedures for responding to common alerts in
 1. **Check connection count**
    ```sql
    SELECT count(*) FROM pg_stat_activity 
-   WHERE datname = 'buildmystack';
+   WHERE datname = 'stapelwerk';
    ```
 
 2. **Check for idle connections**
    ```sql
    SELECT * FROM pg_stat_activity 
    WHERE state = 'idle' 
-   AND datname = 'buildmystack';
+   AND datname = 'stapelwerk';
    ```
 
 3. **Review connection pool config**
    ```bash
-   kubectl exec deployment/build-my-stack -n production -- \
+   kubectl exec deployment/stapelwerk -n production -- \
      printenv | grep -i pool
    ```
 
@@ -248,23 +248,23 @@ This runbook provides step-by-step procedures for responding to common alerts in
 
 ```bash
 # Quick rollback to previous version
-kubectl rollout undo deployment/build-my-stack -n production
+kubectl rollout undo deployment/stapelwerk -n production
 
 # Wait for rollout
-kubectl rollout status deployment/build-my-stack -n production
+kubectl rollout status deployment/stapelwerk -n production
 
 # Verify health
-curl -s https://build-my-stack.example.com/api/health | jq
+curl -s https://stapelwerk.example.com/api/health | jq
 ```
 
 ### Scale Procedure
 
 ```bash
 # Scale up
-kubectl scale deployment/build-my-stack --replicas=5 -n production
+kubectl scale deployment/stapelwerk --replicas=5 -n production
 
 # Verify scaling
-kubectl get pods -n production -l app=build-my-stack
+kubectl get pods -n production -l app=stapelwerk
 ```
 
 ### Database Issues

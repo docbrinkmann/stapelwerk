@@ -1,4 +1,4 @@
-# BuildMyStack AI-Powered Recommendations - Technical Architecture Documentation
+# Stapelwerk AI-Powered Recommendations - Technical Architecture Documentation
 
 ## Table of Contents
 
@@ -15,7 +15,7 @@
 
 ## System Overview
 
-BuildMyStack AI-Powered Recommendations is an intelligent technology stack recommendation platform that uses advanced machine learning algorithms to provide personalized technology recommendations based on user preferences, project requirements, and community feedback.
+Stapelwerk AI-Powered Recommendations is an intelligent technology stack recommendation platform that uses advanced machine learning algorithms to provide personalized technology recommendations based on user preferences, project requirements, and community feedback.
 
 ### Key Capabilities
 - **AI-Powered Recommendations**: Collaborative filtering and content-based recommendation engine
@@ -826,14 +826,14 @@ The production environment uses Docker Compose with enterprise-grade security an
 services:
   # Next.js Application (Primary)
   app:
-    image: build-my-stack:latest
-    container_name: build-my-stack-app
+    image: stapelwerk:latest
+    container_name: stapelwerk-app
     restart: unless-stopped
     ports:
       - "3000:3000"
     environment:
       NODE_ENV: production
-      DATABASE_URL: postgresql://postgres@postgres:5432/buildmystack
+      DATABASE_URL: postgresql://postgres@postgres:5432/stapelwerk
       REDIS_URL: redis://redis:6379
     secrets:
       - db_password
@@ -854,7 +854,7 @@ services:
   # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
-    container_name: build-my-stack-nginx
+    container_name: stapelwerk-nginx
     restart: unless-stopped
     ports:
       - "80:80"
@@ -873,10 +873,10 @@ services:
   # PostgreSQL 18 Database
   postgres:
     image: postgres:18-alpine
-    container_name: build-my-stack-postgres
+    container_name: stapelwerk-postgres
     restart: unless-stopped
     environment:
-      POSTGRES_DB: buildmystack
+      POSTGRES_DB: stapelwerk
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD_FILE: /run/secrets/db_password
     secrets:
@@ -892,7 +892,7 @@ services:
   # Redis Cache Layer
   redis:
     image: redis:7-alpine
-    container_name: build-my-stack-redis
+    container_name: stapelwerk-redis
     restart: unless-stopped
     command: redis-server --requirepass ""
     volumes:
@@ -906,7 +906,7 @@ services:
   # Prometheus Monitoring
   prometheus:
     image: prom/prometheus:latest
-    container_name: build-my-stack-prometheus
+    container_name: stapelwerk-prometheus
     restart: unless-stopped
     ports:
       - "9090:9090"
@@ -926,7 +926,7 @@ services:
   # Grafana Dashboards
   grafana:
     image: grafana/grafana:latest
-    container_name: build-my-stack-grafana
+    container_name: stapelwerk-grafana
     restart: unless-stopped
     ports:
       - "3001:3000"
@@ -1131,7 +1131,7 @@ unit-tests:
   services:
     - postgres:18
   variables:
-    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/buildmystack_test"
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/stapelwerk_test"
   script:
     - npm run db:generate
     - npm run db:deploy
@@ -1183,7 +1183,7 @@ deploy-staging:
   stage: deploy-staging
   environment:
     name: staging
-    url: https://build-my-stack-staging.vercel.app
+    url: https://stapelwerk-staging.vercel.app
   before_script:
     - npm install -g vercel@latest
   script:
@@ -1198,7 +1198,7 @@ deploy-production:
   stage: deploy-production
   environment:
     name: production
-    url: https://build-my-stack.vercel.app
+    url: https://stapelwerk.vercel.app
   before_script:
     - npm install -g vercel@latest
   script:
@@ -1207,7 +1207,7 @@ deploy-production:
     - vercel deploy --prebuilt --prod --token $VERCEL_TOKEN
     # Health check
     - sleep 60
-    - curl --fail https://build-my-stack.vercel.app/api/health
+    - curl --fail https://stapelwerk.vercel.app/api/health
   rules:
     - if: $CI_COMMIT_BRANCH == "main"
       when: manual
@@ -1232,7 +1232,7 @@ deploy-production:
 apiVersion: v1
 kind: Namespace
 metadata:
-  name: buildmystack-prod
+  name: stapelwerk-prod
   labels:
     environment: production
 ---
@@ -1240,8 +1240,8 @@ metadata:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: buildmystack-app
-  namespace: buildmystack-prod
+  name: stapelwerk-app
+  namespace: stapelwerk-prod
 spec:
   replicas: 3
   strategy:
@@ -1251,17 +1251,17 @@ spec:
       maxUnavailable: 0
   selector:
     matchLabels:
-      app: buildmystack
+      app: stapelwerk
       version: v1
   template:
     metadata:
       labels:
-        app: buildmystack
+        app: stapelwerk
         version: v1
     spec:
       containers:
       - name: app
-        image: buildmystack:latest
+        image: stapelwerk:latest
         ports:
         - containerPort: 3000
           name: http
@@ -1302,13 +1302,13 @@ spec:
 apiVersion: autoscaling/v2
 kind: HorizontalPodAutoscaler
 metadata:
-  name: buildmystack-hpa
-  namespace: buildmystack-prod
+  name: stapelwerk-hpa
+  namespace: stapelwerk-prod
 spec:
   scaleTargetRef:
     apiVersion: apps/v1
     kind: Deployment
-    name: buildmystack-app
+    name: stapelwerk-app
   minReplicas: 3
   maxReplicas: 10
   metrics:
@@ -1331,8 +1331,8 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: buildmystack-ingress
-  namespace: buildmystack-prod
+  name: stapelwerk-ingress
+  namespace: stapelwerk-prod
   annotations:
     kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -1343,28 +1343,28 @@ metadata:
 spec:
   tls:
   - hosts:
-    - buildmystack.com
-    - api.buildmystack.com
-    secretName: buildmystack-tls
+    - stapelwerk.com
+    - api.stapelwerk.com
+    secretName: stapelwerk-tls
   rules:
-  - host: buildmystack.com
+  - host: stapelwerk.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: buildmystack-service
+            name: stapelwerk-service
             port:
               number: 80
-  - host: api.buildmystack.com
+  - host: api.stapelwerk.com
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service:
-            name: buildmystack-api-service
+            name: stapelwerk-api-service
             port:
               number: 80
 ```
@@ -1837,6 +1837,6 @@ interface HealthStatus {
 }
 ```
 
-This technical architecture documentation provides a comprehensive overview of the BuildMyStack AI-Powered Recommendations system. The architecture is designed for scalability, security, and maintainability, with comprehensive monitoring and observability features built-in.
+This technical architecture documentation provides a comprehensive overview of the Stapelwerk AI-Powered Recommendations system. The architecture is designed for scalability, security, and maintainability, with comprehensive monitoring and observability features built-in.
 
 The system leverages modern technologies and best practices to deliver high-performance, intelligent recommendations while maintaining enterprise-grade security and reliability standards.

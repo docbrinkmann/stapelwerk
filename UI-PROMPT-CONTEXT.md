@@ -1,4 +1,4 @@
-# UI-Prompt-Context — BuildMyStack
+# UI-Prompt-Context — Stapelwerk
 
 Kompaktes Briefing als Kontext für einen nachgelagerten UI-Prompt. Beantwortet drei Kernfragen und definiert Scope/Constraints.
 
@@ -6,11 +6,11 @@ Kompaktes Briefing als Kontext für einen nachgelagerten UI-Prompt. Beantwortet 
 
 ## 1. Zielgruppe & Funktion der SaaS
 
-**BuildMyStack ist KEIN Coolify/Dokploy-Klon.** Es ist ein **guided Docker-Stack-Builder als SaaS** — eine Web-App, die nicht-technischen Usern hilft, getestete Docker-Stacks visuell zu komponieren und als `docker-compose` zu exportieren.
+**Stapelwerk ist KEIN Coolify/Dokploy-Klon.** Es ist ein **guided Docker-Stack-Builder als SaaS** — eine Web-App, die nicht-technischen Usern hilft, getestete Docker-Stacks visuell zu komponieren und als `docker-compose` zu exportieren.
 
 ### Abgrenzung
 
-| Aspekt | Coolify / Dokploy | BuildMyStack |
+| Aspekt | Coolify / Dokploy | Stapelwerk |
 |---|---|---|
 | Rolle | Self-hosted PaaS / Deployment-Plattform | SaaS-Builder / Konfigurations-Wizard |
 | Was passiert mit der Infrastruktur? | Plattform deployt direkt auf eigene Server | User bekommt `docker-compose` + Anleitung, deployt selbst |

@@ -1,6 +1,6 @@
 # Phase 5 Testing Implementation - File Inventory
 
-**Project:** BuildMyStack UI/UX Modernization  
+**Project:** Stapelwerk UI/UX Modernization  
 **Phase:** 5 - Testing and Validation  
 **Status:** ✅ Complete  
 **Date:** 2025-11-13  
@@ -12,37 +12,37 @@
 ## New Files Created (14)
 
 ### Test Configuration (1)
-1. `/Users/sebastian/projects/build-my-stack/playwright-visual.config.ts`
+1. `/Users/sebastian/projects/stapelwerk/playwright-visual.config.ts`
 
 ### Visual Regression Tests (3)
-2. `/Users/sebastian/projects/build-my-stack/src/__tests__/visual/hero-section.visual.test.ts`
-3. `/Users/sebastian/projects/build-my-stack/src/__tests__/visual/service-cards.visual.test.ts`
-4. `/Users/sebastian/projects/build-my-stack/src/__tests__/visual/command-palette.visual.test.ts`
+2. `/Users/sebastian/projects/stapelwerk/src/__tests__/visual/hero-section.visual.test.ts`
+3. `/Users/sebastian/projects/stapelwerk/src/__tests__/visual/service-cards.visual.test.ts`
+4. `/Users/sebastian/projects/stapelwerk/src/__tests__/visual/command-palette.visual.test.ts`
 
 ### Accessibility Tests (3)
-5. `/Users/sebastian/projects/build-my-stack/src/__tests__/accessibility/wcag-compliance.test.ts`
-6. `/Users/sebastian/projects/build-my-stack/src/__tests__/accessibility/keyboard-nav.test.ts`
-7. `/Users/sebastian/projects/build-my-stack/src/__tests__/accessibility/screen-reader.test.ts`
+5. `/Users/sebastian/projects/stapelwerk/src/__tests__/accessibility/wcag-compliance.test.ts`
+6. `/Users/sebastian/projects/stapelwerk/src/__tests__/accessibility/keyboard-nav.test.ts`
+7. `/Users/sebastian/projects/stapelwerk/src/__tests__/accessibility/screen-reader.test.ts`
 
 ### Performance Tests (3)
-8. `/Users/sebastian/projects/build-my-stack/.lighthouserc.json`
-9. `/Users/sebastian/projects/build-my-stack/src/__tests__/performance/core-web-vitals.test.ts`
-10. `/Users/sebastian/projects/build-my-stack/scripts/analyze-bundle.ts`
+8. `/Users/sebastian/projects/stapelwerk/.lighthouserc.json`
+9. `/Users/sebastian/projects/stapelwerk/src/__tests__/performance/core-web-vitals.test.ts`
+10. `/Users/sebastian/projects/stapelwerk/scripts/analyze-bundle.ts`
 
 ### Documentation (4)
-11. `/Users/sebastian/projects/build-my-stack/docs/accessibility-audit-report.md`
-12. `/Users/sebastian/projects/build-my-stack/docs/performance-report.md`
-13. `/Users/sebastian/projects/build-my-stack/src/__tests__/README.md`
-14. `/Users/sebastian/projects/build-my-stack/agent-os/specs/2025-11-12-ui-ux-modernization/implementation/5-testing-implementation.md`
+11. `/Users/sebastian/projects/stapelwerk/docs/accessibility-audit-report.md`
+12. `/Users/sebastian/projects/stapelwerk/docs/performance-report.md`
+13. `/Users/sebastian/projects/stapelwerk/src/__tests__/README.md`
+14. `/Users/sebastian/projects/stapelwerk/agent-os/specs/2025-11-12-ui-ux-modernization/implementation/5-testing-implementation.md`
 
 ---
 
 ## Modified Files (2)
 
-15. `/Users/sebastian/projects/build-my-stack/package.json`
+15. `/Users/sebastian/projects/stapelwerk/package.json`
     - Added 5 npm scripts: test:visual, test:accessibility, test:performance, test:all-quality, bundle:analyze
 
-16. `/Users/sebastian/projects/build-my-stack/agent-os/specs/2025-11-12-ui-ux-modernization/tasks.md`
+16. `/Users/sebastian/projects/stapelwerk/agent-os/specs/2025-11-12-ui-ux-modernization/tasks.md`
     - Added Phase 5 Testing tasks (5.1, 5.2, 5.3)
     - Added Phase 6 Documentation tasks
     - Marked all Phase 5 acceptance criteria as complete

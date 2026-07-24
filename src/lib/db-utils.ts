@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 
 /**
- * Database utility functions for BuildMyStack
+ * Database utility functions for Stapelwerk
  */
 
 // Global Prisma instance for development

@@ -1,6 +1,6 @@
 # Production Deployment Checklist
 
-This checklist ensures all requirements are met before deploying the BuildMyStack AI Recommendations system to production.
+This checklist ensures all requirements are met before deploying the Stapelwerk AI Recommendations system to production.
 
 ## 📋 Pre-Deployment Checklist
 

@@ -4,7 +4,7 @@
 
 set -e
 
-echo "🔐 BuildMyStack - Production Environment Setup"
+echo "🔐 Stapelwerk - Production Environment Setup"
 echo "=============================================="
 echo ""
 
@@ -41,18 +41,18 @@ if [ -z "$GITLAB_USERNAME" ]; then
     exit 1
 fi
 
-CI_REGISTRY_IMAGE="$CI_REGISTRY/$GITLAB_USERNAME/build-my-stack"
+CI_REGISTRY_IMAGE="$CI_REGISTRY/$GITLAB_USERNAME/stapelwerk"
 
 # Server configuration
 read -p "Server IP address [***************]: " SERVER_HOST
 SERVER_HOST=${SERVER_HOST:-***************}
 
-read -p "Application domain [buildmystack.minilab.live]: " APP_DOMAIN
-APP_DOMAIN=${APP_DOMAIN:-buildmystack.minilab.live}
+read -p "Application domain [stapelwerk.minilab.live]: " APP_DOMAIN
+APP_DOMAIN=${APP_DOMAIN:-stapelwerk.minilab.live}
 
 # Database configuration
-POSTGRES_DB="buildmystack"
-POSTGRES_USER="buildmystack_user"
+POSTGRES_DB="stapelwerk"
+POSTGRES_USER="stapelwerk_user"
 DATABASE_URL="postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}"
 
 # Sentry (optional)
@@ -63,7 +63,7 @@ echo "📄 Generating .env.production file..."
 
 # Create .env.production
 cat > .env.production << EOF
-# BuildMyStack Production Environment Variables
+# Stapelwerk Production Environment Variables
 # Generated: $(date)
 # NEVER commit this file to version control!
 
@@ -186,6 +186,6 @@ echo "🔒 Permissions: 600 (owner read/write only)"
 echo ""
 echo "Next steps:"
 echo "1. Review and edit .env.production if needed"
-echo "2. Copy this file to your production server: /opt/build-my-stack/.env.production"
+echo "2. Copy this file to your production server: /opt/stapelwerk/.env.production"
 echo "3. Set up GitLab CI/CD variables (see next section)"
 echo ""

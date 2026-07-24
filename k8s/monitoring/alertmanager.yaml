@@ -13,8 +13,8 @@ data:
     global:
       # Global SMTP configuration for email alerts
       smtp_smarthost: 'smtp.example.com:587'
-      smtp_from: 'alertmanager@build-my-stack.dev'
-      smtp_auth_username: 'alertmanager@build-my-stack.dev'
+      smtp_from: 'alertmanager@stapelwerk.dev'
+      smtp_auth_username: 'alertmanager@stapelwerk.dev'
       smtp_auth_password_file: /etc/alertmanager/secrets/smtp-password
       smtp_require_tls: true
 
@@ -116,7 +116,7 @@ data:
                 url: '{{ (index .Alerts 0).Annotations.runbook_url }}'
               - type: button
                 text: 'Dashboard :chart_with_upwards_trend:'
-                url: 'https://grafana.build-my-stack.dev'
+                url: 'https://grafana.stapelwerk.dev'
 
       # Critical alerts Slack channel
       - name: 'critical-slack'
@@ -166,7 +166,7 @@ data:
               *Summary:* {{ .CommonAnnotations.summary }}
               *Description:* {{ .CommonAnnotations.description }}
         email_configs:
-          - to: 'security@build-my-stack.dev'
+          - to: 'security@stapelwerk.dev'
             send_resolved: true
             headers:
               Subject: '[{{ .Status | toUpper }}] Security Alert: {{ .CommonLabels.alertname }}'
@@ -238,7 +238,7 @@ spec:
           args:
             - '--config.file=/etc/alertmanager/alertmanager.yml'
             - '--storage.path=/alertmanager'
-            - '--web.external-url=https://alertmanager.build-my-stack.dev'
+            - '--web.external-url=https://alertmanager.stapelwerk.dev'
             - '--cluster.listen-address='
           ports:
             - name: http

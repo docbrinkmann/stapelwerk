@@ -218,7 +218,7 @@ All type issues resolved:
 **Error Detected**:
 ```
 TypeError: Cannot read properties of undefined (reading 'call')
-at file:///Users/sebastian/projects/build-my-stack/.next/server/pages/_document.js (63:104)
+at file:///Users/sebastian/projects/stapelwerk/.next/server/pages/_document.js (63:104)
 ```
 
 **Analysis**:

@@ -36,11 +36,11 @@
   "refresh": "30s",
   "schemaVersion": 36,
   "style": "dark",
-  "tags": ["buildmystack", "nextjs"],
+  "tags": ["stapelwerk", "nextjs"],
   "templating": { "list": [] },
   "time": { "from": "now-6h", "to": "now" },
   "timezone": "",
-  "title": "BuildMyStack - Application",
-  "uid": "buildmystack-nextjs",
+  "title": "Stapelwerk - Application",
+  "uid": "stapelwerk-nextjs",
   "version": 1
 }

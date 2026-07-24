@@ -16,7 +16,7 @@ DB_URL="${DATABASE_URL:-}"
 DB_PROVIDER="${DB_PROVIDER:-postgresql}"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
-DB_NAME="${DB_NAME:-buildmystack}"
+DB_NAME="${DB_NAME:-stapelwerk}"
 DB_USER="${DB_USER:-postgres}"
 DB_PASSWORD="${DB_PASSWORD:-}"
 
@@ -306,7 +306,7 @@ upload_to_remote() {
     
     log "INFO" "Uploading backup to remote storage..."
     
-    local remote_path="buildmystack-backups/${backup_type}/$(basename "$backup_file")"
+    local remote_path="stapelwerk-backups/${backup_type}/$(basename "$backup_file")"
     
     # AWS S3 upload
     if [[ -n "$S3_BUCKET" ]] && command -v aws &> /dev/null; then
@@ -513,11 +513,11 @@ cleanup_old_backups() {
 install_crontab() {
     log "HEADER" "=== Installing Backup Crontab ==="
     
-    local cron_file="/tmp/buildmystack_backup_cron"
+    local cron_file="/tmp/stapelwerk_backup_cron"
     
     # Create cron entries
     cat > "$cron_file" << EOF
-# BuildMyStack Database Backup Schedule
+# Stapelwerk Database Backup Schedule
 # Daily backup at 2:00 AM
 0 2 * * * $SCRIPT_DIR/db-backup-restore.sh backup daily >> ${PROJECT_ROOT}/logs/cron-backup.log 2>&1
 
@@ -538,7 +538,7 @@ EOF
         
         # Show installed cron jobs
         log "INFO" "Installed cron jobs:"
-        crontab -l | grep -A10 "BuildMyStack Database Backup"
+        crontab -l | grep -A10 "Stapelwerk Database Backup"
     else
         log "ERROR" "Failed to install crontab"
         rm -f "$cron_file"

@@ -41,7 +41,7 @@ describe('buildReport', () => {
     expect(r.status).toBe('leak-proof')
     expect(r.findings.find((f) => f.service === 'qbittorrent')?.verdict).toBe('ok')
     expect(r.composeSha256).toBe(sha256Hex(LEAK_PROOF_COMPOSE))
-    expect(r.issuer).toBe('BuildMyStack')
+    expect(r.issuer).toBe('Stapelwerk')
   })
 
   it('attests leak for a compose that does not confine the client', () => {

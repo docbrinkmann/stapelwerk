@@ -14,7 +14,7 @@ FAILED=0
 WARNINGS=0
 
 echo -e "${BLUE}╔════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BLUE}║   BuildMyStack Development Environment Validation     ║${NC}"
+echo -e "${BLUE}║   Stapelwerk Development Environment Validation     ║${NC}"
 echo -e "${BLUE}╚════════════════════════════════════════════════════════╝${NC}"
 echo ""
 
@@ -63,9 +63,9 @@ check_container() {
 
 echo -e "${YELLOW}═══ Phase 1: Docker Container Health ═══${NC}"
 echo ""
-check_container "build-my-stack-app"
-check_container "build-my-stack-postgres"
-check_container "build-my-stack-redis"
+check_container "stapelwerk-app"
+check_container "stapelwerk-postgres"
+check_container "stapelwerk-redis"
 echo ""
 
 echo -e "${YELLOW}═══ Phase 2: Application Endpoints ═══${NC}"
@@ -78,7 +78,7 @@ echo ""
 echo -e "${YELLOW}═══ Phase 3: Database Connectivity ═══${NC}"
 echo ""
 echo -n "Checking PostgreSQL connection... "
-if docker exec build-my-stack-postgres pg_isready -U postgres >/dev/null 2>&1; then
+if docker exec stapelwerk-postgres pg_isready -U postgres >/dev/null 2>&1; then
     echo -e "${GREEN}✓ PASS${NC}"
     ((PASSED++))
 else
@@ -87,7 +87,7 @@ else
 fi
 
 echo -n "Checking database version... "
-VERSION=$(docker exec build-my-stack-postgres psql -U postgres -t -c "SELECT version();" 2>/dev/null | head -1)
+VERSION=$(docker exec stapelwerk-postgres psql -U postgres -t -c "SELECT version();" 2>/dev/null | head -1)
 if echo "$VERSION" | grep -q "PostgreSQL 18"; then
     echo -e "${GREEN}✓ PASS${NC} (PostgreSQL 18.0)"
     ((PASSED++))

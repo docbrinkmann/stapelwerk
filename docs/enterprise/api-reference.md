@@ -22,7 +22,7 @@ This document provides a comprehensive reference for all Enterprise Team Feature
 ## Base URL
 
 ```
-Production: https://api.buildmystack.com
+Production: https://api.stapelwerk.com
 Development: http://localhost:3000/api
 ```
 
@@ -1075,7 +1075,7 @@ POST /api/trpc/webhook.create
 **Request Body:**
 ```json
 {
-  "url": "https://your-app.com/webhooks/buildmystack",
+  "url": "https://your-app.com/webhooks/stapelwerk",
   "events": ["workflow.approved", "workflow.deployed"],
   "secret": "your-webhook-secret",
   "active": true

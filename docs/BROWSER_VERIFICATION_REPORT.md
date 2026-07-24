@@ -163,7 +163,7 @@ The Modern UI/UX Transformation has been **successfully verified** in a live bro
 
 **Verified Elements:**
 - ✅ Gradient text on "Docker Stack" heading
-- ✅ Gradient logo on "BuildMyStack" branding
+- ✅ Gradient logo on "Stapelwerk" branding
 - ✅ Service status indicators (green "Running" badges with pulse)
 - ✅ Company logos (Docker, AWS, Azure, GCP)
 - ✅ Service emoji icons (🌐, 🗄️, ⚡)
@@ -226,7 +226,7 @@ The Modern UI/UX Transformation has been **successfully verified** in a live bro
 |-----------|-------------|--------|----------|
 | **1.3.1 Info and Relationships** | Semantic HTML | ✅ PASS | Proper heading hierarchy, semantic elements |
 | **2.1.1 Keyboard** | All functionality via keyboard | ✅ PASS | Focus management verified, Tab navigation works |
-| **2.4.2 Page Titled** | Descriptive page title | ✅ PASS | Title: "BuildMyStack" |
+| **2.4.2 Page Titled** | Descriptive page title | ✅ PASS | Title: "Stapelwerk" |
 | **2.4.3 Focus Order** | Logical focus order | ✅ PASS | Tab order is logical |
 | **2.4.6 Headings and Labels** | Descriptive headings/labels | ✅ PASS | All labels are descriptive |
 | **3.2.3 Consistent Navigation** | Consistent navigation | ✅ PASS | Navigation is consistent |
@@ -336,7 +336,7 @@ The Modern UI/UX Transformation has been **successfully verified** in a live bro
 ### Footer
 - ✅ Version information: "v0.1.0"
 - ✅ Technology credit: "Built with Next.js 15 & TypeScript"
-- ✅ Copyright notice: "© 2025 BuildMyStack. Built with Next.js 15."
+- ✅ Copyright notice: "© 2025 Stapelwerk. Built with Next.js 15."
 
 ---
 

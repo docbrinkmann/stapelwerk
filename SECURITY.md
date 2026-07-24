@@ -4,7 +4,7 @@
 
 Please report security issues **privately** — do not open a public issue.
 
-Email **security@buildmystack.dev** with:
+Email **security@stapelwerk.dev** with:
 
 - a description of the issue and its impact,
 - steps to reproduce (a proof of concept if you have one),
@@ -19,7 +19,7 @@ disclosure.
 
 ## Supported versions
 
-BuildMyStack is pre-1.0; only the latest `main` receives security fixes.
+Stapelwerk is pre-1.0; only the latest `main` receives security fixes.
 
 | Version | Supported |
 | ------- | --------- |
@@ -28,7 +28,7 @@ BuildMyStack is pre-1.0; only the latest `main` receives security fixes.
 
 ## Threat model — what to look at first
 
-BuildMyStack can hold real power over your infrastructure, so a few surfaces
+Stapelwerk can hold real power over your infrastructure, so a few surfaces
 matter more than the rest. If you are reviewing the code, start here:
 
 - **The deploy bridge** (`server/ws-server.ts` `/deploy`, `src/lib/deploy/`).

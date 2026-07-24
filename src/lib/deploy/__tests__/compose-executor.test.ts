@@ -35,11 +35,11 @@ describe('sanitizeProjectName', () => {
     expect(sanitizeProjectName('')).toBe('bms-stack')
   })
 
-  it('can never collide with the build-my-stack infra project', () => {
-    const name = sanitizeProjectName('build-my-stack')
-    expect(name).toBe('bms-build-my-stack')
+  it('can never collide with the stapelwerk infra project', () => {
+    const name = sanitizeProjectName('stapelwerk')
+    expect(name).toBe('bms-stapelwerk')
     expect(name.startsWith('bms-')).toBe(true)
-    expect(name).not.toBe('build-my-stack')
+    expect(name).not.toBe('stapelwerk')
   })
 })
 
@@ -124,7 +124,7 @@ describe('runCompose', () => {
 
   it('refuses to run for a non-bms project (infra guard)', async () => {
     await expect(
-      runCompose({ project: 'build-my-stack', composeYaml: '', action: 'up', onLog: () => undefined, rootDir: ROOT }),
+      runCompose({ project: 'stapelwerk', composeYaml: '', action: 'up', onLog: () => undefined, rootDir: ROOT }),
     ).rejects.toThrow(/non-bms/)
     expect(spawnMock).not.toHaveBeenCalled()
   })

@@ -16,7 +16,7 @@ DB_URL="${DATABASE_URL:-}"
 DB_PROVIDER="${DB_PROVIDER:-postgresql}"
 DB_HOST="${DB_HOST:-localhost}"
 DB_PORT="${DB_PORT:-5432}"
-DB_NAME="${DB_NAME:-buildmystack}"
+DB_NAME="${DB_NAME:-stapelwerk}"
 DB_USER="${DB_USER:-postgres}"
 DB_PASSWORD="${DB_PASSWORD:-}"
 

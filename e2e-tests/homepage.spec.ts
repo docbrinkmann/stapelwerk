@@ -8,7 +8,7 @@ test.describe('Homepage', () => {
 
   test('should load homepage successfully', async ({ page }) => {
     // Check that the page loads with expected content
-    await expect(page).toHaveTitle(/buildmystack/i)
+    await expect(page).toHaveTitle(/stapelwerk/i)
 
     // The marketing homepage has no <main> landmark — its primary content
     // is the hero section.

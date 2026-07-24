@@ -1,6 +1,6 @@
 # Developer Certificate of Origin
 
-BuildMyStack uses the Developer Certificate of Origin (DCO) instead of a CLA.
+Stapelwerk uses the Developer Certificate of Origin (DCO) instead of a CLA.
 Every commit in a merge/pull request must be signed off:
 
 ```bash

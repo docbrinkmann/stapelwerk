@@ -79,10 +79,10 @@ def process_file(file_path):
 def main():
     # Files to process
     files = [
-        '/Users/sebastian/projects/build-my-stack/src/__tests__/security/input-validation-boundaries.test.ts',
-        '/Users/sebastian/projects/build-my-stack/src/__tests__/security/security-middleware-validation.test.ts',
-        '/Users/sebastian/projects/build-my-stack/src/__tests__/security/security-performance.test.ts',
-        '/Users/sebastian/projects/build-my-stack/src/__tests__/security/sql-injection-prevention.test.ts',
+        '/Users/sebastian/projects/stapelwerk/src/__tests__/security/input-validation-boundaries.test.ts',
+        '/Users/sebastian/projects/stapelwerk/src/__tests__/security/security-middleware-validation.test.ts',
+        '/Users/sebastian/projects/stapelwerk/src/__tests__/security/security-performance.test.ts',
+        '/Users/sebastian/projects/stapelwerk/src/__tests__/security/sql-injection-prevention.test.ts',
     ]
     
     changes_made = False

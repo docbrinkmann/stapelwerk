@@ -1,5 +1,5 @@
 #!/bin/bash
-# BuildMyStack Rollback Script
+# Stapelwerk Rollback Script
 # Reverts to a previous Docker image version
 
 set -e
@@ -20,7 +20,7 @@ fi
 
 ROLLBACK_TAG=$1
 
-echo -e "${YELLOW}⏪ BuildMyStack Rollback Script${NC}"
+echo -e "${YELLOW}⏪ Stapelwerk Rollback Script${NC}"
 echo "Rolling back to: $ROLLBACK_TAG"
 echo "Date: $(date)"
 echo "----------------------------------------"

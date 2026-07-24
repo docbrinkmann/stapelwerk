@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 **Last Updated:** 2025-11-10
-**Base URL:** `http://localhost:3000` (development) | `https://buildmystack.com` (production)
+**Base URL:** `http://localhost:3000` (development) | `https://stapelwerk.com` (production)
 
 ---
 
@@ -1268,9 +1268,9 @@ const { data, isLoading, refetch } = trpc.services.list.useQuery({
 
 ## Support
 
-**Documentation:** [https://buildmystack.com/docs](https://buildmystack.com/docs)
-**GitHub:** [https://github.com/buildmystack/buildmystack](https://github.com/buildmystack/buildmystack)
-**Email:** support@buildmystack.com
+**Documentation:** [https://stapelwerk.com/docs](https://stapelwerk.com/docs)
+**GitHub:** [https://github.com/stapelwerk/stapelwerk](https://github.com/stapelwerk/stapelwerk)
+**Email:** support@stapelwerk.com
 
 ---
 

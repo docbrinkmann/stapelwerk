@@ -1,6 +1,6 @@
 # Deployment Verification Checklist
 
-This document provides a comprehensive checklist for verifying the BuildMyStack deployment on GitLab Pages and Docker hosting.
+This document provides a comprehensive checklist for verifying the Stapelwerk deployment on GitLab Pages and Docker hosting.
 
 ## 🎯 Quick Verification
 
@@ -34,7 +34,7 @@ docker --version
 docker ps
 
 # Check available disk space
-df -h /opt/buildmystack
+df -h /opt/stapelwerk
 
 # Check memory usage
 free -h
@@ -47,54 +47,54 @@ docker network ls
 
 ```bash
 # Check PostgreSQL container status
-docker ps | grep buildmystack-db
+docker ps | grep stapelwerk-db
 
 # Test database connection
-docker exec buildmystack-db pg_isready -U buildmystack
+docker exec stapelwerk-db pg_isready -U stapelwerk
 
 # Check database version
-docker exec buildmystack-db psql -U buildmystack -c "SELECT version();"
+docker exec stapelwerk-db psql -U stapelwerk -c "SELECT version();"
 
 # Verify database size
-docker exec buildmystack-db psql -U buildmystack -c "SELECT pg_size_pretty(pg_database_size('buildmystack'));"
+docker exec stapelwerk-db psql -U stapelwerk -c "SELECT pg_size_pretty(pg_database_size('stapelwerk'));"
 ```
 
 #### Application Container
 
 ```bash
 # Check container status
-docker ps | grep buildmystack-app
+docker ps | grep stapelwerk-app
 
 # View container logs
-docker logs --tail 100 buildmystack-app
+docker logs --tail 100 stapelwerk-app
 
 # Check container health
-docker inspect buildmystack-app | grep -A 10 Health
+docker inspect stapelwerk-app | grep -A 10 Health
 
 # View container stats
-docker stats --no-stream buildmystack-app
+docker stats --no-stream stapelwerk-app
 ```
 
 ### Application Verification
 
 #### Health Endpoints
 
-- [ ] Main health endpoint: https://buildmystack.minilab.live/api/health
+- [ ] Main health endpoint: https://stapelwerk.minilab.live/api/health
   ```bash
-  curl https://buildmystack.minilab.live/api/health
+  curl https://stapelwerk.minilab.live/api/health
   # Expected: {"status": "ok", "timestamp": "..."}
   ```
 
-- [ ] Database health: https://buildmystack.minilab.live/api/health/db
+- [ ] Database health: https://stapelwerk.minilab.live/api/health/db
   ```bash
-  curl https://buildmystack.minilab.live/api/health/db
+  curl https://stapelwerk.minilab.live/api/health/db
   # Expected: {"database": "connected", ...}
   ```
 
 #### Core Functionality
 
-- [ ] Home page loads: https://buildmystack.minilab.live/
-- [ ] API routes respond: https://buildmystack.minilab.live/api/status
+- [ ] Home page loads: https://stapelwerk.minilab.live/
+- [ ] API routes respond: https://stapelwerk.minilab.live/api/status
 - [ ] Authentication works (if applicable)
 - [ ] Database queries execute successfully
 - [ ] File uploads work (if applicable)
@@ -102,8 +102,8 @@ docker stats --no-stream buildmystack-app
 
 #### Static Content (GitLab Pages)
 
-- [ ] GitLab Pages site loads: https://sebastian.gitlab.io/build-my-stack/
-- [ ] Documentation is accessible: https://sebastian.gitlab.io/build-my-stack/docs/
+- [ ] GitLab Pages site loads: https://sebastian.gitlab.io/stapelwerk/
+- [ ] Documentation is accessible: https://sebastian.gitlab.io/stapelwerk/docs/
 - [ ] All documentation pages render correctly
 - [ ] Navigation between docs pages works
 - [ ] Images and assets load properly
@@ -114,10 +114,10 @@ docker stats --no-stream buildmystack-app
 
 ```bash
 # Check SSL certificate
-echo | openssl s_client -servername buildmystack.minilab.live -connect buildmystack.minilab.live:443 2>/dev/null | openssl x509 -noout -dates
+echo | openssl s_client -servername stapelwerk.minilab.live -connect stapelwerk.minilab.live:443 2>/dev/null | openssl x509 -noout -dates
 
 # Test SSL labs (manual check)
-# Visit: https://www.ssllabs.com/ssltest/analyze.html?d=buildmystack.minilab.live
+# Visit: https://www.ssllabs.com/ssltest/analyze.html?d=stapelwerk.minilab.live
 ```
 
 - [ ] SSL certificate is valid
@@ -129,7 +129,7 @@ echo | openssl s_client -servername buildmystack.minilab.live -connect buildmyst
 
 ```bash
 # Check security headers
-curl -I https://buildmystack.minilab.live/
+curl -I https://stapelwerk.minilab.live/
 ```
 
 Verify presence of:
@@ -159,7 +159,7 @@ sudo ss -tulpn | grep LISTEN
 
 ```bash
 # Test home page response time
-curl -w "@curl-format.txt" -o /dev/null -s https://buildmystack.minilab.live/
+curl -w "@curl-format.txt" -o /dev/null -s https://stapelwerk.minilab.live/
 
 # Create curl-format.txt:
 cat > curl-format.txt << 'EOF'
@@ -183,10 +183,10 @@ EOF
 
 ```bash
 # Simple load test with Apache Bench
-ab -n 1000 -c 10 https://buildmystack.minilab.live/
+ab -n 1000 -c 10 https://stapelwerk.minilab.live/
 
 # Or use wrk
-wrk -t4 -c100 -d30s https://buildmystack.minilab.live/
+wrk -t4 -c100 -d30s https://stapelwerk.minilab.live/
 ```
 
 ### Database Verification
@@ -195,10 +195,10 @@ wrk -t4 -c100 -d30s https://buildmystack.minilab.live/
 
 ```bash
 # Check migration status
-docker exec buildmystack-app npx prisma migrate status
+docker exec stapelwerk-app npx prisma migrate status
 
 # View migration history
-docker exec buildmystack-db psql -U buildmystack -c "SELECT * FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 10;"
+docker exec stapelwerk-db psql -U stapelwerk -c "SELECT * FROM _prisma_migrations ORDER BY finished_at DESC LIMIT 10;"
 ```
 
 - [ ] All migrations applied successfully
@@ -209,10 +209,10 @@ docker exec buildmystack-db psql -U buildmystack -c "SELECT * FROM _prisma_migra
 
 ```bash
 # Check if backups exist
-ls -lh /opt/buildmystack/backups/
+ls -lh /opt/stapelwerk/backups/
 
 # Verify latest backup
-ls -lht /opt/buildmystack/backups/ | head -5
+ls -lht /opt/stapelwerk/backups/ | head -5
 
 # Check backup cron job
 crontab -l | grep backup-db.sh
@@ -228,7 +228,7 @@ crontab -l | grep backup-db.sh
 
 ```bash
 # Create a test restore (use a test database)
-bash /opt/buildmystack/scripts/backup-db.sh
+bash /opt/stapelwerk/scripts/backup-db.sh
 # Follow restore instructions in CRON_SETUP.md
 ```
 
@@ -238,13 +238,13 @@ bash /opt/buildmystack/scripts/backup-db.sh
 
 ```bash
 # View application logs
-docker logs -f buildmystack-app
+docker logs -f stapelwerk-app
 
 # Search for errors
-docker logs buildmystack-app 2>&1 | grep -i error
+docker logs stapelwerk-app 2>&1 | grep -i error
 
 # Check for warnings
-docker logs buildmystack-app 2>&1 | grep -i warning
+docker logs stapelwerk-app 2>&1 | grep -i warning
 ```
 
 - [ ] No critical errors in logs
@@ -287,7 +287,7 @@ netstat -i
 
 ```bash
 # View latest pipeline
-# Visit: https://gitlab.com/sebastian/build-my-stack/-/pipelines
+# Visit: https://gitlab.com/sebastian/stapelwerk/-/pipelines
 
 # Or use GitLab CLI
 glab ci status
@@ -298,10 +298,10 @@ glab ci view
 
 ```bash
 # List Docker images in registry
-# Visit: https://gitlab.com/sebastian/build-my-stack/container_registry
+# Visit: https://gitlab.com/sebastian/stapelwerk/container_registry
 
 # Or check locally
-docker images | grep buildmystack
+docker images | grep stapelwerk
 ```
 
 - [ ] Latest image is tagged with commit SHA
@@ -317,16 +317,16 @@ docker images | grep buildmystack
 ssh root@gitlab.minilab.live
 
 # List available image versions
-docker images | grep buildmystack
+docker images | grep stapelwerk
 
 # Test rollback to previous version
-bash /opt/buildmystack/scripts/rollback.sh <PREVIOUS_TAG>
+bash /opt/stapelwerk/scripts/rollback.sh <PREVIOUS_TAG>
 
 # Verify application still works
-curl https://buildmystack.minilab.live/api/health
+curl https://stapelwerk.minilab.live/api/health
 
 # Roll forward to latest
-bash /opt/buildmystack/scripts/deploy.sh
+bash /opt/stapelwerk/scripts/deploy.sh
 ```
 
 - [ ] Rollback script executes without errors
@@ -348,26 +348,26 @@ bash /opt/buildmystack/scripts/deploy.sh
 
 ```bash
 # Check container logs
-docker logs buildmystack-app
+docker logs stapelwerk-app
 
 # Check environment variables
-docker exec buildmystack-app env | grep -E 'DATABASE_URL|NEXTAUTH'
+docker exec stapelwerk-app env | grep -E 'DATABASE_URL|NEXTAUTH'
 
 # Restart container
-docker restart buildmystack-app
+docker restart stapelwerk-app
 ```
 
 ### Database Connection Issues
 
 ```bash
 # Test database connectivity
-docker exec buildmystack-app ping buildmystack-db
+docker exec stapelwerk-app ping stapelwerk-db
 
 # Check database logs
-docker logs buildmystack-db
+docker logs stapelwerk-db
 
 # Verify database credentials
-docker exec buildmystack-db psql -U buildmystack -c "SELECT 1;"
+docker exec stapelwerk-db psql -U stapelwerk -c "SELECT 1;"
 ```
 
 ### SSL Certificate Issues
@@ -387,10 +387,10 @@ sudo systemctl reload nginx
 
 ```bash
 # Check container memory limits
-docker inspect buildmystack-app | grep -A 5 Memory
+docker inspect stapelwerk-app | grep -A 5 Memory
 
 # Restart container to clear memory
-docker restart buildmystack-app
+docker restart stapelwerk-app
 
 # Consider increasing memory limits in docker-compose.yml
 ```
@@ -399,13 +399,13 @@ docker restart buildmystack-app
 
 ```bash
 # Check database query performance
-docker exec buildmystack-db psql -U buildmystack -c "SELECT * FROM pg_stat_statements ORDER BY total_time DESC LIMIT 10;"
+docker exec stapelwerk-db psql -U stapelwerk -c "SELECT * FROM pg_stat_statements ORDER BY total_time DESC LIMIT 10;"
 
 # Check nginx access logs
 tail -f /var/log/nginx/access.log
 
 # Monitor container resources
-docker stats buildmystack-app
+docker stats stapelwerk-app
 ```
 
 ## 📊 Success Metrics

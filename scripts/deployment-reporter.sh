@@ -31,7 +31,7 @@ OUTPUT_FORMAT="${OUTPUT_FORMAT:-html,json,pdf}" # comma-separated formats
 
 # Initialize reporting
 init_reporting() {
-    echo -e "${BOLD}${BLUE}=== BuildMyStack Deployment Reporter ===${NC}"
+    echo -e "${BOLD}${BLUE}=== Stapelwerk Deployment Reporter ===${NC}"
     echo -e "${CYAN}Report ID: $REPORT_ID${NC}"
     echo -e "${CYAN}Environment: $DEPLOYMENT_ENV${NC}"
     echo -e "${CYAN}Type: $REPORT_TYPE${NC}"
@@ -55,7 +55,7 @@ create_report_templates() {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>BuildMyStack Deployment Report - {{DEPLOYMENT_ID}}</title>
+    <title>Stapelwerk Deployment Report - {{DEPLOYMENT_ID}}</title>
     <style>
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
@@ -177,7 +177,7 @@ create_report_templates() {
 <body>
     <div class="container">
         <div class="header">
-            <h1>BuildMyStack Deployment Report</h1>
+            <h1>Stapelwerk Deployment Report</h1>
             <div class="subtitle">{{DEPLOYMENT_ID}} • {{ENVIRONMENT}} • {{DATE}}</div>
         </div>
         
@@ -224,7 +224,7 @@ create_report_templates() {
         </div>
         
         <div class="footer">
-            Generated on {{GENERATED_DATE}} by BuildMyStack Deployment Reporter
+            Generated on {{GENERATED_DATE}} by Stapelwerk Deployment Reporter
         </div>
     </div>
 </body>
@@ -252,7 +252,7 @@ EOF
 </head>
 <body>
     <div class="header">
-        <h1>BuildMyStack Deployment {{STATUS}}</h1>
+        <h1>Stapelwerk Deployment {{STATUS}}</h1>
         <p>{{DEPLOYMENT_ID}} • {{ENVIRONMENT}}</p>
     </div>
     <div class="content">
@@ -315,8 +315,8 @@ collect_system_metrics() {
     # Collect current system metrics
     if command -v kubectl &>/dev/null; then
         # Kubernetes metrics
-        local pods_ready=$(kubectl get pods -n "$DEPLOYMENT_ENV" -l app=buildmystack -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}' | wc -w 2>/dev/null || echo "0")
-        local pods_total=$(kubectl get pods -n "$DEPLOYMENT_ENV" -l app=buildmystack --no-headers 2>/dev/null | wc -l || echo "0")
+        local pods_ready=$(kubectl get pods -n "$DEPLOYMENT_ENV" -l app=stapelwerk -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}' | wc -w 2>/dev/null || echo "0")
+        local pods_total=$(kubectl get pods -n "$DEPLOYMENT_ENV" -l app=stapelwerk --no-headers 2>/dev/null | wc -l || echo "0")
         
         metrics=$(echo "$metrics" | jq --argjson ready "$pods_ready" --argjson total "$pods_total" '. + {pods_ready: $ready, pods_total: $total}')
     fi
@@ -542,7 +542,7 @@ send_slack_notification() {
         '{
             attachments: [{
                 color: $color,
-                title: ($emoji + " BuildMyStack Deployment Report"),
+                title: ($emoji + " Stapelwerk Deployment Report"),
                 text: ("Deployment " + $deployment_id + " " + $status),
                 fields: [
                     {title: "Environment", value: $environment, short: true},
@@ -607,7 +607,7 @@ send_email_notification() {
     if command -v sendmail &>/dev/null; then
         {
             echo "To: $email"
-            echo "Subject: BuildMyStack Deployment $deployment_id - $status"
+            echo "Subject: Stapelwerk Deployment $deployment_id - $status"
             echo "Content-Type: text/html; charset=UTF-8"
             echo
             echo "$email_content"
@@ -674,7 +674,7 @@ generate_comprehensive_report() {
 # Help function
 show_help() {
     cat << EOF
-BuildMyStack Deployment Reporting System
+Stapelwerk Deployment Reporting System
 
 Usage: $0 [options]
 

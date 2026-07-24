@@ -11,18 +11,18 @@ import './dashboard.css';
 
 // Page metadata
 export const metadata: Metadata = {
-  title: 'Dashboard - BuildMyStack',
+  title: 'Dashboard - Stapelwerk',
   description: 'Manage your personal stacks, monitor deployments, and track your self-hosted infrastructure. Your central hub for stack management.',
-  keywords: ['stack management', 'dashboard', 'infrastructure', 'docker stacks', 'deployment monitoring', 'BuildMyStack'],
+  keywords: ['stack management', 'dashboard', 'infrastructure', 'docker stacks', 'deployment monitoring', 'Stapelwerk'],
   openGraph: {
-    title: 'Dashboard - BuildMyStack',
+    title: 'Dashboard - Stapelwerk',
     description: 'Manage your personal stacks and monitor your self-hosted infrastructure',
     type: 'website',
     url: '/dashboard'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Dashboard - BuildMyStack',
+    title: 'Dashboard - Stapelwerk',
     description: 'Your central hub for stack management and infrastructure monitoring'
   }
 };
@@ -118,7 +118,7 @@ export default async function DashboardPage() {
       <StatsCardsLive />
 
       {/* Quick Actions and Recent Activity.
-          ResourceMonitor intentionally removed: BuildMyStack is a stack
+          ResourceMonitor intentionally removed: Stapelwerk is a stack
           builder, not a hosting platform — fake host metrics were misleading. */}
       <div className="grid gap-6 md:grid-cols-2">
         <QuickActions />

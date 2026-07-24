@@ -1,5 +1,5 @@
 /**
- * Utility functions for BuildMyStack application
+ * Utility functions for Stapelwerk application
  */
 
 /**

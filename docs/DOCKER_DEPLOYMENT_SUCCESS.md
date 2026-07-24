@@ -14,9 +14,9 @@ The **Modern UI/UX Transformation** has been successfully deployed to your local
 
 | Service | Container Name | Status | Port | Health |
 |---------|---------------|--------|------|--------|
-| **Next.js App** | build-my-stack-app | ✅ Running | 3000 | Starting |
-| **PostgreSQL** | build-my-stack-postgres | ✅ Running | 5432 | ✅ Healthy |
-| **Redis** | build-my-stack-redis | ✅ Running | 6379 | ✅ Healthy |
+| **Next.js App** | stapelwerk-app | ✅ Running | 3000 | Starting |
+| **PostgreSQL** | stapelwerk-postgres | ✅ Running | 5432 | ✅ Healthy |
+| **Redis** | stapelwerk-redis | ✅ Running | 6379 | ✅ Healthy |
 
 ---
 
@@ -88,7 +88,7 @@ docker compose up -d --build
 ## 📊 Container Details
 
 ### Build My Stack App
-- **Image:** build-my-stack-app
+- **Image:** stapelwerk-app
 - **Port:** 3000:3000
 - **Environment:** Development
 - **Features:**

@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   title: METADATA.title,
   description: METADATA.description,
   keywords: METADATA.keywords,
-  authors: [{ name: 'BuildMyStack Team' }],
+  authors: [{ name: 'Stapelwerk Team' }],
   generator: 'Next.js',
 }
 

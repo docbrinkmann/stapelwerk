@@ -13,7 +13,7 @@ CI_RESULTS="${PROJECT_ROOT}/logs/ci-results-$(date +%Y%m%d-%H%M%S).json"
 
 # CI/CD Configuration
 DEFAULT_BASE_URL="${DEPLOYMENT_URL:-http://localhost:8080}"
-DEFAULT_NAMESPACE="${K8S_NAMESPACE:-buildmystack}"
+DEFAULT_NAMESPACE="${K8S_NAMESPACE:-stapelwerk}"
 DEFAULT_TIMEOUT=30
 PIPELINE_ID="${CI_PIPELINE_ID:-local-$(date +%s)}"
 BUILD_ID="${CI_BUILD_ID:-local-build}"
@@ -337,7 +337,7 @@ show_usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-CI/CD integration script for BuildMyStack AI deployment validation.
+CI/CD integration script for Stapelwerk AI deployment validation.
 
 Environment Variables:
   DEPLOYMENT_URL        Base URL of the deployed application
@@ -365,7 +365,7 @@ Exit Codes:
 
 Examples:
   $0                                      # Run all checks
-  $0 --url https://staging.buildmystack.com # Check staging deployment
+  $0 --url https://staging.stapelwerk.com # Check staging deployment
   $0 --quick                             # Run essential checks only
   $0 --skip-performance                  # Skip performance tests
 

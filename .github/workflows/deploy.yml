@@ -31,7 +31,7 @@ jobs:
     if: github.ref == 'refs/heads/develop' || (github.event.inputs.environment == 'staging')
     environment:
       name: staging
-      url: https://build-my-stack-staging.vercel.app
+      url: https://stapelwerk-staging.vercel.app
 
     steps:
       - name: Checkout code
@@ -115,7 +115,7 @@ jobs:
     if: github.ref == 'refs/heads/main' || (github.event.inputs.environment == 'production')
     environment:
       name: production
-      url: https://build-my-stack.vercel.app
+      url: https://stapelwerk.vercel.app
 
     # Only deploy to production if CI passes (unless force deploy is enabled)
     needs: []
@@ -282,20 +282,20 @@ jobs:
       - name: Get previous deployment
         id: get-previous
         run: |
-          PREVIOUS_DEPLOYMENT=$(vercel ls --token=${{ secrets.VERCEL_TOKEN }} | grep "build-my-stack" | head -2 | tail -1 | awk '{print $2}')
+          PREVIOUS_DEPLOYMENT=$(vercel ls --token=${{ secrets.VERCEL_TOKEN }} | grep "stapelwerk" | head -2 | tail -1 | awk '{print $2}')
           echo "previous_url=$PREVIOUS_DEPLOYMENT" >> $GITHUB_OUTPUT
 
       - name: Initiate rollback
         if: steps.get-previous.outputs.previous_url != ''
         run: |
           echo "🔄 Rolling back to previous deployment: ${{ steps.get-previous.outputs.previous_url }}"
-          vercel alias ${{ steps.get-previous.outputs.previous_url }} build-my-stack.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
+          vercel alias ${{ steps.get-previous.outputs.previous_url }} stapelwerk.vercel.app --token=${{ secrets.VERCEL_TOKEN }}
 
       - name: Verify rollback
         if: steps.get-previous.outputs.previous_url != ''
         run: |
           sleep 30
-          curl -f https://build-my-stack.vercel.app/api/health || exit 1
+          curl -f https://stapelwerk.vercel.app/api/health || exit 1
           echo "✅ Rollback completed successfully"
 
       - name: Notify rollback

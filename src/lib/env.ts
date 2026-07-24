@@ -12,7 +12,7 @@ const envSchema = z.object({
   
   // Application
   NEXT_PUBLIC_APP_URL: z.string().url().optional(),
-  NEXT_PUBLIC_APP_NAME: z.string().default('BuildMyStack'),
+  NEXT_PUBLIC_APP_NAME: z.string().default('Stapelwerk'),
   NEXT_PUBLIC_APP_VERSION: z.string().default('0.1.0'),
   
   // Next.js

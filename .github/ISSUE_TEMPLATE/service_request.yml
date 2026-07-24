@@ -1,5 +1,5 @@
 name: Catalog service request
-description: Request a self-hosted service to add to the BuildMyStack catalog
+description: Request a self-hosted service to add to the Stapelwerk catalog
 labels: ["service-request"]
 body:
   - type: markdown

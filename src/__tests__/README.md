@@ -1,6 +1,6 @@
-# BuildMyStack Testing Guide
+# Stapelwerk Testing Guide
 
-This directory contains comprehensive test suites for the BuildMyStack application, including visual regression tests, accessibility audits, and performance benchmarks.
+This directory contains comprehensive test suites for the Stapelwerk application, including visual regression tests, accessibility audits, and performance benchmarks.
 
 ## Test Structure
 

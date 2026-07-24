@@ -21,7 +21,7 @@ export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
       defaultTheme="dark"
       enableSystem
       disableTransitionOnChange
-      storageKey="buildmystack-theme"
+      storageKey="stapelwerk-theme"
       {...props}
     >
       {children}

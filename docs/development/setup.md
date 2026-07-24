@@ -28,8 +28,8 @@ Before setting up the development environment, ensure you have:
 ### 1. Clone the Repository
 
 ```bash
-git clone https://gitlab.minilab.live/sebastian/build-my-stack.git
-cd build-my-stack
+git clone https://gitlab.minilab.live/sebastian/stapelwerk.git
+cd stapelwerk
 ```
 
 ### 2. Install Dependencies
@@ -50,7 +50,7 @@ Edit `.env` with your local configuration:
 
 ```bash
 # Required
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/buildmystack?schema=public"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/stapelwerk?schema=public"
 NEXTAUTH_SECRET="your-secret-key-here"
 NEXTAUTH_URL="http://localhost:3000"
 
@@ -87,7 +87,7 @@ The application will be available at `http://localhost:3000`.
 ## Project Structure
 
 ```
-build-my-stack/
+stapelwerk/
 ├── src/
 │   ├── app/                 # Next.js App Router pages
 │   ├── components/          # React components
@@ -218,7 +218,7 @@ docker-compose down
 ### Building Production Image
 
 ```bash
-docker build -t build-my-stack:latest .
+docker build -t stapelwerk:latest .
 ```
 
 ---
@@ -235,7 +235,7 @@ docker build -t build-my-stack:latest .
 | `ARGOCD_AUTH_TOKEN` | ArgoCD authentication token | No | - |
 | `PULUMI_ACCESS_TOKEN` | Pulumi Cloud access token | No | - |
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | OpenTelemetry endpoint | No | - |
-| `OTEL_SERVICE_NAME` | Service name for tracing | No | `build-my-stack` |
+| `OTEL_SERVICE_NAME` | Service name for tracing | No | `stapelwerk` |
 
 See `.env.example` for a complete list.
 

@@ -181,7 +181,7 @@ describe('runRemoteCompose', () => {
   it('refuses a non-bms project (infra guard) without spawning ssh', async () => {
     await expect(
       runRemoteCompose({
-        project: 'build-my-stack',
+        project: 'stapelwerk',
         composeYaml: '',
         action: 'up',
         host: 'h.example.com',
@@ -286,10 +286,10 @@ describe('resolveDeployPublicKey', () => {
   })
 
   it('returns the explicit DEPLOY_SSH_PUBKEY when set (public keys are not secret)', () => {
-    process.env.DEPLOY_SSH_PUBKEY = 'ssh-ed25519 AAAAC3NzaC1lZDI1 deploy@buildmystack'
+    process.env.DEPLOY_SSH_PUBKEY = 'ssh-ed25519 AAAAC3NzaC1lZDI1 deploy@stapelwerk'
     expect(resolveDeployPublicKey()).toEqual({
       configured: true,
-      publicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1 deploy@buildmystack',
+      publicKey: 'ssh-ed25519 AAAAC3NzaC1lZDI1 deploy@stapelwerk',
     })
   })
 

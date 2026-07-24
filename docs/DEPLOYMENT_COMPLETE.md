@@ -1,13 +1,13 @@
-# ✅ BuildMyStack Docker Deployment - Implementation Complete
+# ✅ Stapelwerk Docker Deployment - Implementation Complete
 
 ## 🎉 Overview
 
-All deployment tasks for BuildMyStack Docker and GitLab Pages deployment have been **successfully completed**!
+All deployment tasks for Stapelwerk Docker and GitLab Pages deployment have been **successfully completed**!
 
 **Deployment Date**: 2025-10-14  
 **Docker Host**: gitlab.minilab.live  
-**Production URL**: https://buildmystack.minilab.live  
-**GitLab Pages**: https://sebastian.gitlab.io/build-my-stack  
+**Production URL**: https://stapelwerk.minilab.live  
+**GitLab Pages**: https://sebastian.gitlab.io/stapelwerk  
 
 ---
 
@@ -106,7 +106,7 @@ All deployment tasks for BuildMyStack Docker and GitLab Pages deployment have be
 **Status**: COMPLETE
 
 **Deliverables**:
-- ✅ Nginx configuration (`buildmystack.conf`)
+- ✅ Nginx configuration (`stapelwerk.conf`)
 - ✅ SSL/TLS setup with Let's Encrypt
 - ✅ HTTP to HTTPS redirect
 - ✅ WebSocket support
@@ -116,7 +116,7 @@ All deployment tasks for BuildMyStack Docker and GitLab Pages deployment have be
 - ✅ Comprehensive SSL setup guide
 
 **Files Created**:
-- `config/nginx/buildmystack.conf` - Nginx reverse proxy config
+- `config/nginx/stapelwerk.conf` - Nginx reverse proxy config
 - `docs/SSL_SETUP.md` - SSL certificate setup guide
 
 ---
@@ -147,7 +147,7 @@ All deployment tasks for BuildMyStack Docker and GitLab Pages deployment have be
 #### Configuration Files: 3
 1. `Dockerfile`
 2. `docker-compose.yml`
-3. `config/nginx/buildmystack.conf`
+3. `config/nginx/stapelwerk.conf`
 
 #### Scripts: 6
 1. `scripts/deploy.sh`
@@ -174,7 +174,7 @@ All deployment tasks for BuildMyStack Docker and GitLab Pages deployment have be
 
 ## 🚀 Next Steps - Deployment Checklist
 
-To deploy BuildMyStack to production, follow these steps:
+To deploy Stapelwerk to production, follow these steps:
 
 ### 1. Server Preparation
 ```bash
@@ -190,7 +190,7 @@ ssh root@gitlab.minilab.live
 # Install certbot and get certificates
 # Follow: docs/SSL_SETUP.md
 
-sudo certbot certonly --nginx -d buildmystack.minilab.live
+sudo certbot certonly --nginx -d stapelwerk.minilab.live
 ```
 
 ### 3. Configure GitLab CI/CD
@@ -226,7 +226,7 @@ bash scripts/e2e-test.sh
 # Follow: docs/CRON_SETUP.md
 
 crontab -e
-# Add: 0 2 * * * /opt/buildmystack/scripts/backup-db.sh
+# Add: 0 2 * * * /opt/stapelwerk/scripts/backup-db.sh
 ```
 
 ---
@@ -378,8 +378,8 @@ Expected performance metrics after deployment:
 ## 📞 Support & Troubleshooting
 
 ### Quick Help
-- Check logs: `docker logs buildmystack-app`
-- Restart container: `docker restart buildmystack-app`
+- Check logs: `docker logs stapelwerk-app`
+- Restart container: `docker restart stapelwerk-app`
 - View status: `docker ps`
 - Emergency rollback: `bash scripts/rollback.sh <TAG>`
 
@@ -390,7 +390,7 @@ Expected performance metrics after deployment:
 
 ### Contact
 - Email: sebastian@minilab.live
-- GitLab: https://gitlab.com/sebastian/build-my-stack
+- GitLab: https://gitlab.com/sebastian/stapelwerk
 
 ---
 

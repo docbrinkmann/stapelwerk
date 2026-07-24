@@ -22,7 +22,7 @@ describe('containerBelongsToStack', () => {
 
   it("rejects another stack's containers and the app's own infra", () => {
     expect(containerBelongsToStack('bms-other-stack-nextcloud-1', stackId)).toBe(false)
-    expect(containerBelongsToStack('build-my-stack_postgres', stackId)).toBe(false)
+    expect(containerBelongsToStack('stapelwerk_postgres', stackId)).toBe(false)
     // Prefix tricks must not pass either.
     expect(containerBelongsToStack(`bms-${stackId}extra-svc-1`, stackId)).toBe(false)
   })

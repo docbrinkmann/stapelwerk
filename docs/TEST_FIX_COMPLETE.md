@@ -10,7 +10,7 @@
 
 ### Problem
 The final verification report identified 2 failing tests in `src/app/__tests__/page.test.tsx`:
-1. Test expecting "BuildMyStack" heading
+1. Test expecting "Stapelwerk" heading
 2. Test expecting old feature card titles
 
 ### Root Cause
@@ -18,7 +18,7 @@ Tests were written before the UI/UX transformation and expected the old homepage
 
 ### Solution
 Updated test expectations to match the new UI/UX transformation content:
-- **Old:** Expected "BuildMyStack" heading
+- **Old:** Expected "Stapelwerk" heading
 - **New:** Expects "Build Your Perfect" and "Docker Stack" headings
 - **Old:** Expected "Docker Made Simple", "Home & SME Focused", "Production Ready" feature cards
 - **New:** Expects CTA buttons ("Get Started", "View Examples") and feature highlights ("100+ Services", "5min Setup Time")
@@ -58,7 +58,7 @@ Duration  ~7.14 seconds
 #### Test 1: "renders the page with correct title and description"
 **Before:**
 ```typescript
-expect(screen.getByRole('heading', { name: 'BuildMyStack' })).toBeInTheDocument()
+expect(screen.getByRole('heading', { name: 'Stapelwerk' })).toBeInTheDocument()
 expect(screen.getByText(/helps home users, freelancers, and SMEs/i)).toBeInTheDocument()
 ```
 

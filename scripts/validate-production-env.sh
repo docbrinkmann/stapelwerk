@@ -94,11 +94,11 @@ validate_optional_vars() {
         "PROD_ADMIN_API_TOKEN:Admin API token (auto-generated if not provided)"
         "PROD_FEATURE_FLAG_TOKEN:Feature flag token (auto-generated if not provided)"
         "SMTP_PASSWORD:SMTP password (auto-generated if not provided)"
-        "SMTP_FROM:SMTP from address (defaults to alerts@buildmystack.com)"
-        "SMTP_TO:SMTP to addresses (defaults to devops@buildmystack.com)"
+        "SMTP_FROM:SMTP from address (defaults to alerts@stapelwerk.com)"
+        "SMTP_TO:SMTP to addresses (defaults to devops@stapelwerk.com)"
         "TLS_CERT_PATH:Path to TLS certificate file"
         "TLS_KEY_PATH:Path to TLS private key file"
-        "DOCKER_REGISTRY:Container registry for images (defaults to gcr.io/buildmystack-prod)"
+        "DOCKER_REGISTRY:Container registry for images (defaults to gcr.io/stapelwerk-prod)"
         "BUILD_VERSION:Build version for deployment (defaults to latest)"
     )
     
@@ -310,7 +310,7 @@ validate_tls_certificates() {
 validate_docker_registry() {
     echo -e "\n${BLUE}=== Validating Docker Registry Access ===${NC}"
     
-    local registry="${DOCKER_REGISTRY:-gcr.io/buildmystack-prod}"
+    local registry="${DOCKER_REGISTRY:-gcr.io/stapelwerk-prod}"
     
     add_info "Using Docker registry: $registry"
     
@@ -343,7 +343,7 @@ validate_kubernetes_access() {
             add_info "Kubernetes client version: $k8s_version"
             
             # Check if namespace exists
-            local namespace="${KUBERNETES_NAMESPACE:-buildmystack}"
+            local namespace="${KUBERNETES_NAMESPACE:-stapelwerk}"
             if kubectl get namespace "$namespace" &> /dev/null; then
                 add_success "Target namespace '$namespace' exists"
             else
@@ -490,7 +490,7 @@ show_usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-This script validates the production environment configuration for BuildMyStack AI Recommendations.
+This script validates the production environment configuration for Stapelwerk AI Recommendations.
 
 Options:
   --skip-connectivity    Skip external service connectivity tests
@@ -555,7 +555,7 @@ main() {
         esac
     done
     
-    echo -e "${BLUE}BuildMyStack AI Recommendations - Production Environment Validation${NC}"
+    echo -e "${BLUE}Stapelwerk AI Recommendations - Production Environment Validation${NC}"
     echo -e "${BLUE}=================================================================${NC}"
     
     # Run validations

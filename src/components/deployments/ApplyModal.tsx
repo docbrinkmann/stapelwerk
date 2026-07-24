@@ -408,7 +408,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                           data-testid="apply-target-risk-ack"
                         />
                         <span className="text-muted-foreground">
-                          I understand BuildMyStack will hold an SSH deploy key that can run Docker on this host, and I&apos;m
+                          I understand Stapelwerk will hold an SSH deploy key that can run Docker on this host, and I&apos;m
                           authorized to grant that access. Prefer to run it yourself? Use{' '}
                           <span className="font-medium">Export</span> instead — no key held.
                         </span>

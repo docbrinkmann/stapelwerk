@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Comprehensive Deployment Verification Script for BuildMyStack AI Recommendations
+# Comprehensive Deployment Verification Script for Stapelwerk AI Recommendations
 # Validates deployment health, performance, and readiness for production
 
 set -e
@@ -14,7 +14,7 @@ VERIFICATION_LOG="${PROJECT_ROOT}/logs/deployment-verification-$(date +%Y%m%d-%H
 DEFAULT_BASE_URL="http://localhost:8080"
 DEFAULT_TIMEOUT=30
 DEFAULT_MAX_RETRIES=3
-KUBERNETES_NAMESPACE="buildmystack"
+KUBERNETES_NAMESPACE="stapelwerk"
 
 # Verification Thresholds
 MAX_RESPONSE_TIME=2000  # 2 seconds in milliseconds
@@ -135,13 +135,13 @@ verify_kubernetes_infrastructure() {
     
     # Check deployment
     local deployment_status
-    deployment_status=$(kubectl get deployment buildmystack-ai -n "$KUBERNETES_NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null || echo "False")
+    deployment_status=$(kubectl get deployment stapelwerk-ai -n "$KUBERNETES_NAMESPACE" -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null || echo "False")
     
     if [[ "$deployment_status" == "True" ]]; then
         local replicas_ready
         local replicas_desired
-        replicas_ready=$(kubectl get deployment buildmystack-ai -n "$KUBERNETES_NAMESPACE" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
-        replicas_desired=$(kubectl get deployment buildmystack-ai -n "$KUBERNETES_NAMESPACE" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
+        replicas_ready=$(kubectl get deployment stapelwerk-ai -n "$KUBERNETES_NAMESPACE" -o jsonpath='{.status.readyReplicas}' 2>/dev/null || echo "0")
+        replicas_desired=$(kubectl get deployment stapelwerk-ai -n "$KUBERNETES_NAMESPACE" -o jsonpath='{.spec.replicas}' 2>/dev/null || echo "1")
         
         if [[ "$replicas_ready" == "$replicas_desired" ]]; then
             record_verification "Kubernetes Deployment" "PASS" "$replicas_ready/$replicas_desired replicas ready"
@@ -154,14 +154,14 @@ verify_kubernetes_infrastructure() {
     
     # Check pods
     local pod_count
-    pod_count=$(kubectl get pods -n "$KUBERNETES_NAMESPACE" -l app=buildmystack-ai --field-selector=status.phase=Running -o json | jq '.items | length' 2>/dev/null || echo "0")
+    pod_count=$(kubectl get pods -n "$KUBERNETES_NAMESPACE" -l app=stapelwerk-ai --field-selector=status.phase=Running -o json | jq '.items | length' 2>/dev/null || echo "0")
     
     if [[ "$pod_count" -gt 0 ]]; then
         record_verification "Kubernetes Pods" "PASS" "$pod_count pods running"
         
         # Check pod resource usage
         local pod_name
-        pod_name=$(kubectl get pods -n "$KUBERNETES_NAMESPACE" -l app=buildmystack-ai -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+        pod_name=$(kubectl get pods -n "$KUBERNETES_NAMESPACE" -l app=stapelwerk-ai -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
         
         if [[ -n "$pod_name" ]]; then
             local resource_usage
@@ -178,7 +178,7 @@ verify_kubernetes_infrastructure() {
     fi
     
     # Check services
-    if kubectl get service buildmystack-ai-service -n "$KUBERNETES_NAMESPACE" &> /dev/null; then
+    if kubectl get service stapelwerk-ai-service -n "$KUBERNETES_NAMESPACE" &> /dev/null; then
         record_verification "Kubernetes Service" "PASS" "service exists"
     else
         record_verification "Kubernetes Service" "FAIL" "service not found"
@@ -476,7 +476,7 @@ verify_security() {
     
     # CORS headers
     local cors_response
-    cors_response=$(curl -s -I -X OPTIONS "$BASE_URL/api/health" -H "Origin: https://buildmystack.com" 2>/dev/null || echo "")
+    cors_response=$(curl -s -I -X OPTIONS "$BASE_URL/api/health" -H "Origin: https://stapelwerk.com" 2>/dev/null || echo "")
     
     if [[ "$cors_response" == *"Access-Control-Allow-Origin"* ]]; then
         record_verification "CORS Headers" "PASS" "CORS properly configured"
@@ -540,7 +540,7 @@ verify_monitoring() {
             local metrics_body
             metrics_body=$(curl -s "$BASE_URL/metrics" 2>/dev/null || echo "")
             
-            if [[ "$metrics_body" == *"buildmystack_ai"* ]]; then
+            if [[ "$metrics_body" == *"stapelwerk_ai"* ]]; then
                 record_verification "Application Metrics" "PASS" "application-specific metrics found"
             else
                 record_verification "Application Metrics" "WARN" "application-specific metrics not found"
@@ -661,7 +661,7 @@ verify_rollback_readiness() {
     # Check if deployment has previous revision
     if command -v kubectl &> /dev/null; then
         local rollout_history
-        rollout_history=$(kubectl rollout history deployment/buildmystack-ai -n "$KUBERNETES_NAMESPACE" 2>/dev/null || echo "")
+        rollout_history=$(kubectl rollout history deployment/stapelwerk-ai -n "$KUBERNETES_NAMESPACE" 2>/dev/null || echo "")
         
         if [[ "$rollout_history" == *"REVISION"* ]]; then
             local revision_count
@@ -807,11 +807,11 @@ show_usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-Comprehensive deployment verification for BuildMyStack AI Recommendations.
+Comprehensive deployment verification for Stapelwerk AI Recommendations.
 
 Options:
   --url URL              Base URL of the deployed application (default: http://localhost:8080)
-  --namespace NAMESPACE  Kubernetes namespace (default: buildmystack)
+  --namespace NAMESPACE  Kubernetes namespace (default: stapelwerk)
   --timeout SECONDS      Request timeout in seconds (default: 30)
   --kubernetes           Verify Kubernetes deployment
   --skip-load-test      Skip load testing
@@ -821,7 +821,7 @@ Options:
 
 Examples:
   $0                                    # Full verification
-  $0 --url https://api.buildmystack.com # Verify production deployment
+  $0 --url https://api.stapelwerk.com # Verify production deployment
   $0 --kubernetes --namespace prod      # Verify specific Kubernetes deployment
   $0 --quick                           # Quick verification only
   $0 --check-rollback                  # Check if rollback is needed

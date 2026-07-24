@@ -68,8 +68,8 @@ export function getSecret(secretName: string, envVarName?: string): string {
 export const dbConfig = {
   get host() { return process.env.DB_HOST || 'localhost'; },
   get port() { return parseInt(process.env.DB_PORT || '5432', 10); },
-  get database() { return process.env.DB_NAME || 'buildmystack'; },
-  get user() { return process.env.DB_USER || 'buildmystack_user'; },
+  get database() { return process.env.DB_NAME || 'stapelwerk'; },
+  get user() { return process.env.DB_USER || 'stapelwerk_user'; },
   get password() { return getSecret('db_password', 'DB_PASSWORD'); },
 } as const;
 
@@ -118,7 +118,7 @@ export const appConfig = {
  *    docker secret create db_password_v2 secrets/db_password_new.txt
  * 
  * 3. Update service to use new secret:
- *    docker service update --secret-rm db_password --secret-add source=db_password_v2,target=db_password buildmystack-ai
+ *    docker service update --secret-rm db_password --secret-add source=db_password_v2,target=db_password stapelwerk-ai
  * 
  * 4. Remove old secret after verification:
  *    docker secret rm db_password_v1

@@ -15,7 +15,7 @@ import { type Context } from '../../server/trpc'
 /**
  * Get the active OpenTelemetry tracer
  */
-const tracer = trace.getTracer('build-my-stack-trpc')
+const tracer = trace.getTracer('stapelwerk-trpc')
 
 /**
  * Map tRPC error codes to OpenTelemetry span status codes
@@ -110,7 +110,7 @@ export function createOtelTracingMiddleware() {
         attributes: {
           // RPC semantic conventions
           'rpc.system': 'trpc',
-          'rpc.service': 'build-my-stack',
+          'rpc.service': 'stapelwerk',
           'rpc.method': path,
           'rpc.procedure_type': type,
 
@@ -125,7 +125,7 @@ export function createOtelTracingMiddleware() {
           }),
 
           // Custom attributes
-          'service.name': 'build-my-stack',
+          'service.name': 'stapelwerk',
           'service.version': process.env.npm_package_version || '1.0.0',
         },
       },

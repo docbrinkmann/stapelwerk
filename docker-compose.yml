@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile.dev
       args:
         - NODE_VERSION=22
-    container_name: build-my-stack-app
+    container_name: stapelwerk-app
     ports:
       - "3999:3000"
     environment:
@@ -62,7 +62,7 @@ services:
   # PostgreSQL Database Service
   postgres:
     image: postgres:18-alpine
-    container_name: build-my-stack-postgres
+    container_name: stapelwerk-postgres
     restart: unless-stopped
     ports:
       - "5432:5432"
@@ -96,7 +96,7 @@ services:
   # Redis Service for Caching (optional but useful for future scaling)
   redis:
     image: redis:7-alpine
-    container_name: build-my-stack-redis
+    container_name: stapelwerk-redis
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -118,7 +118,7 @@ services:
       dockerfile: Dockerfile.dev
       args:
         - NODE_VERSION=22
-    container_name: build-my-stack-websocket
+    container_name: stapelwerk-websocket
     # root so the startup command can `apk add` the docker CLI (image USER is nextjs)
     user: root
     ports:
@@ -169,7 +169,7 @@ services:
   # Development Tools Container (optional for development utilities)
   devtools:
     image: node:22-alpine
-    container_name: build-my-stack-devtools
+    container_name: stapelwerk-devtools
     working_dir: /app
     volumes:
       - .:/app:cached
@@ -185,14 +185,14 @@ services:
 # Named Volumes
 volumes:
   postgres_data:
-    name: build-my-stack-postgres-data
+    name: stapelwerk-postgres-data
   redis_data:
-    name: build-my-stack-redis-data
+    name: stapelwerk-redis-data
   node_modules:
-    name: build-my-stack-node-modules
+    name: stapelwerk-node-modules
 
 # Networks
 networks:
   app-network:
     driver: bridge
-    name: build-my-stack-network
+    name: stapelwerk-network

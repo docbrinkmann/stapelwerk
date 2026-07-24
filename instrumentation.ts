@@ -2,7 +2,7 @@
  * OpenTelemetry Instrumentation
  *
  * This file is automatically loaded by Next.js when the application starts.
- * It sets up distributed tracing, metrics, and logging for the BuildMyStack application.
+ * It sets up distributed tracing, metrics, and logging for the Stapelwerk application.
  *
  * @see https://nextjs.org/docs/app/building-your-application/optimizing/instrumentation
  * @see https://vercel.com/docs/observability/otel-overview
@@ -19,7 +19,7 @@ export async function register() {
   if (process.env.NEXT_RUNTIME === 'nodejs') {
     // Register OpenTelemetry with Vercel's configuration
     registerOTel({
-      serviceName: 'build-my-stack',
+      serviceName: 'stapelwerk',
     });
 
     // Import and register Prisma instrumentation

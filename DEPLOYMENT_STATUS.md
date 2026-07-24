@@ -23,9 +23,9 @@
 
 ```bash
 NAME                      IMAGE                STATUS              PORTS
-build-my-stack-app        build-my-stack-app   Up (healthy)        0.0.0.0:3000->3000/tcp
-build-my-stack-postgres   postgres:18-alpine   Up (healthy)        0.0.0.0:5432->5432/tcp
-build-my-stack-redis      redis:7-alpine       Up (healthy)        0.0.0.0:6379->6379/tcp
+stapelwerk-app        stapelwerk-app   Up (healthy)        0.0.0.0:3000->3000/tcp
+stapelwerk-postgres   postgres:18-alpine   Up (healthy)        0.0.0.0:5432->5432/tcp
+stapelwerk-redis      redis:7-alpine       Up (healthy)        0.0.0.0:6379->6379/tcp
 ```
 
 ### Versions

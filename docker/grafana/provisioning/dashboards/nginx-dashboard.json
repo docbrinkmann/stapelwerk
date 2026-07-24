@@ -33,11 +33,11 @@
   "refresh": "30s",
   "schemaVersion": 36,
   "style": "dark",
-  "tags": ["buildmystack", "nginx"],
+  "tags": ["stapelwerk", "nginx"],
   "templating": {"list": []},
   "time": {"from": "now-6h", "to": "now"},
   "timezone": "",
-  "title": "BuildMyStack - Nginx",
-  "uid": "buildmystack-nginx",
+  "title": "Stapelwerk - Nginx",
+  "uid": "stapelwerk-nginx",
   "version": 1
 }

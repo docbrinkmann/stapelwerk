@@ -5,20 +5,25 @@ import { trpc } from '@/trpc/react-client'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { ShieldCheck, ShieldAlert, Loader2, Download, BadgeCheck } from 'lucide-react'
+import { useT } from '@/lib/i18n/client'
+import type { Translate } from '@/lib/i18n/messages'
 import type { VerifiedDeployReport } from '@/lib/deploy/verified-deploy-report'
 
-function statusBadge(status: string) {
-  if (status === 'leak-proof') return <Badge className="bg-success/10 text-success">Kill-switch verified</Badge>
-  if (status === 'routed-no-killswitch') return <Badge className="bg-warning/10 text-warning">Routed · kill-switch unverified</Badge>
-  if (status === 'leak') return <Badge className="bg-destructive/10 text-destructive">Leak</Badge>
-  if (status === 'no-download-client') return <Badge className="bg-muted text-muted-foreground">No download client</Badge>
+// UI chrome is translated; the report CONTENT (summary, findings, property
+// titles) renders verbatim — it is the signed EN artifact and must not be
+// re-worded by the display locale.
+function statusBadge(status: string, t: Translate) {
+  if (status === 'leak-proof') return <Badge className="bg-success/10 text-success">{t('ops.vdBadgeKillSwitchVerified')}</Badge>
+  if (status === 'routed-no-killswitch') return <Badge className="bg-warning/10 text-warning">{t('ops.vdBadgeRouted')}</Badge>
+  if (status === 'leak') return <Badge className="bg-destructive/10 text-destructive">{t('ops.vdBadgeLeak')}</Badge>
+  if (status === 'no-download-client') return <Badge className="bg-muted text-muted-foreground">{t('ops.vdBadgeNoClient')}</Badge>
   return <Badge variant="outline">{status}</Badge>
 }
 
-function auditStatusBadge(status: string) {
-  if (status === 'pass') return <Badge className="bg-success/10 text-success">Safe</Badge>
-  if (status === 'warn') return <Badge className="bg-warning/10 text-warning">Advisories</Badge>
-  if (status === 'fail') return <Badge className="bg-destructive/10 text-destructive">Not deploy-safe</Badge>
+function auditStatusBadge(status: string, t: Translate) {
+  if (status === 'pass') return <Badge className="bg-success/10 text-success">{t('ops.vdAuditSafe')}</Badge>
+  if (status === 'warn') return <Badge className="bg-warning/10 text-warning">{t('ops.vdAuditAdvisories')}</Badge>
+  if (status === 'fail') return <Badge className="bg-destructive/10 text-destructive">{t('ops.vdAuditNotSafe')}</Badge>
   return <Badge variant="outline">{status}</Badge>
 }
 
@@ -30,12 +35,12 @@ function propertyClass(status: string): string {
   return 'text-muted-foreground'
 }
 
-function AuditSection({ audit }: { audit: NonNullable<VerifiedDeployReport['audit']> }) {
+function AuditSection({ audit, t }: { audit: NonNullable<VerifiedDeployReport['audit']>; t: Translate }) {
   return (
     <div className="mt-3 border-t border-border pt-3">
       <div className="flex items-center gap-2">
-        <span className="text-xs font-medium text-foreground">Deploy safety audit</span>
-        {auditStatusBadge(audit.status)}
+        <span className="text-xs font-medium text-foreground">{t('ops.vdAuditHeading')}</span>
+        {auditStatusBadge(audit.status, t)}
       </div>
       <ul className="mt-2 space-y-1.5 text-xs">
         {audit.properties.map((p) => (
@@ -78,6 +83,7 @@ function downloadReport(report: VerifiedDeployReport, signature: string | null) 
  * We never boot the stack or hold a key to produce it — the proof is structural + signed.
  */
 export function VerifiedDeployPanel({ stackId }: { stackId: string }) {
+  const t = useT()
   const checkout = trpc.verifiedDeploy.checkout.useQuery()
   const entitlement = trpc.verifiedDeploy.entitlement.useQuery()
   const list = trpc.verifiedDeploy.listForStack.useQuery({ stackId })
@@ -103,14 +109,9 @@ export function VerifiedDeployPanel({ stackId }: { stackId: string }) {
     <div className="rounded-xl border border-border bg-card p-5" data-testid="verified-deploy-panel">
       <div className="flex items-center gap-2">
         <ShieldCheck className="h-5 w-5 text-primary" aria-hidden="true" />
-        <h3 className="text-lg font-semibold text-foreground">Verified deploy report</h3>
+        <h3 className="text-lg font-semibold text-foreground">{t('ops.vdTitle')}</h3>
       </div>
-      <p className="mt-1 text-sm text-muted-foreground">
-        A provenance-signed proof that this stack is deploy-safe by construction — the VPN kill-switch confines the
-        download client (no real-IP leak if the tunnel drops), plus a safety audit: no datastore exposed on the
-        network, datastores keep their data, no default secrets, images pinned. You keep the compose; this is the
-        signed trust artifact, verifiable with our public key.
-      </p>
+      <p className="mt-1 text-sm text-muted-foreground">{t('ops.vdIntro')}</p>
 
       <div className="mt-4 flex flex-wrap items-center gap-3">
         {(canGenerateFree || hasCredit) && (
@@ -120,23 +121,21 @@ export function VerifiedDeployPanel({ stackId }: { stackId: string }) {
             ) : (
               <BadgeCheck className="mr-2 h-4 w-4" />
             )}
-            {canGenerateFree ? 'Generate signed report (free, self-host)' : 'Generate signed report (1 credit)'}
+            {canGenerateFree ? t('ops.vdGenerateFree') : t('ops.vdGenerateCredit')}
           </Button>
         )}
         {needsPurchase &&
           (checkout.data?.url ? (
             <Button asChild>
               <a href={checkout.data.url} target="_blank" rel="noreferrer">
-                Get a verified deploy — €{price}
+                {t('ops.vdBuy', { price })}
               </a>
             </Button>
           ) : (
-            <span className="text-sm text-muted-foreground">Checkout is not configured yet.</span>
+            <span className="text-sm text-muted-foreground">{t('ops.vdCheckoutUnconfigured')}</span>
           ))}
         {billingEnabled && credits != null && (
-          <span className="text-xs text-muted-foreground">
-            {credits} credit{credits === 1 ? '' : 's'} available
-          </span>
+          <span className="text-xs text-muted-foreground">{t('ops.vdCreditsAvailable', { count: credits })}</span>
         )}
       </div>
 
@@ -151,15 +150,15 @@ export function VerifiedDeployPanel({ stackId }: { stackId: string }) {
               ) : (
                 <ShieldCheck className="h-4 w-4 text-success" aria-hidden="true" />
               )}
-              {statusBadge(fresh.report.status)}
+              {statusBadge(fresh.report.status, t)}
               {fresh.signature ? (
-                <Badge className="bg-success/10 text-success">Signed</Badge>
+                <Badge className="bg-success/10 text-success">{t('ops.vdBadgeSigned')}</Badge>
               ) : (
-                <Badge variant="outline">Unsigned draft</Badge>
+                <Badge variant="outline">{t('ops.vdBadgeUnsigned')}</Badge>
               )}
             </div>
             <Button variant="outline" size="sm" onClick={() => downloadReport(fresh.report, fresh.signature)}>
-              <Download className="mr-1.5 h-3 w-3" /> Download
+              <Download className="mr-1.5 h-3 w-3" /> {t('ops.vdDownload')}
             </Button>
           </div>
           <p className="mt-2 text-sm text-foreground">{fresh.report.summary}</p>
@@ -170,7 +169,7 @@ export function VerifiedDeployPanel({ stackId }: { stackId: string }) {
               </li>
             ))}
           </ul>
-          {fresh.report.audit && <AuditSection audit={fresh.report.audit} />}
+          {fresh.report.audit && <AuditSection audit={fresh.report.audit} t={t} />}
           <p className="mt-2 text-[11px] text-muted-foreground">
             Report {fresh.report.reportId} · compose {fresh.report.composeSha256.slice(0, 12)}… · {fresh.report.issuedAt}
           </p>
@@ -179,11 +178,11 @@ export function VerifiedDeployPanel({ stackId }: { stackId: string }) {
 
       {(list.data?.length ?? 0) > 0 && (
         <div className="mt-4">
-          <h4 className="text-sm font-medium text-foreground">Past reports</h4>
+          <h4 className="text-sm font-medium text-foreground">{t('ops.vdPastReports')}</h4>
           <ul className="mt-1 space-y-1">
             {list.data!.map((r) => (
               <li key={r.id} className="flex items-center gap-2 text-sm">
-                {statusBadge(r.status)}
+                {statusBadge(r.status, t)}
                 {r.signed && <BadgeCheck className="h-3.5 w-3.5 text-success" aria-hidden="true" />}
                 <span className="text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleString()}</span>
               </li>

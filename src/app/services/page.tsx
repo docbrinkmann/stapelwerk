@@ -11,18 +11,18 @@ import './services.css';
 
 // Page metadata
 export const metadata: Metadata = {
-  title: 'Services - BuildMyStack',
+  title: 'Services - Stapelwerk',
   description: 'Discover and explore container services for your self-hosted stack. Browse through curated Docker services with instant search, filtering, and stack integration.',
-  keywords: ['docker services', 'container services', 'self-hosted', 'home lab', 'docker compose', 'BuildMyStack'],
+  keywords: ['docker services', 'container services', 'self-hosted', 'home lab', 'docker compose', 'Stapelwerk'],
   openGraph: {
-    title: 'Services - BuildMyStack',
+    title: 'Services - Stapelwerk',
     description: 'Discover and explore container services for your self-hosted stack',
     type: 'website',
     url: '/services'
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Services - BuildMyStack',
+    title: 'Services - Stapelwerk',
     description: 'Discover and explore container services for your self-hosted stack'
   }
 };

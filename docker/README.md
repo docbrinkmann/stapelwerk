@@ -1,6 +1,6 @@
 # Docker Development Environment
 
-This directory contains Docker configuration files for running the build-my-stack application in a containerized development environment.
+This directory contains Docker configuration files for running the stapelwerk application in a containerized development environment.
 
 ## Quick Start
 
@@ -22,13 +22,13 @@ This directory contains Docker configuration files for running the build-my-stac
 ## Services
 
 ### App Service
-- **Container**: `build-my-stack-app`
+- **Container**: `stapelwerk-app`
 - **Port**: 3000
 - **Hot Reloading**: Enabled with volume mounts
 - **Environment**: Development with all debugging features
 
 ### PostgreSQL Service
-- **Container**: `build-my-stack-postgres`
+- **Container**: `stapelwerk-postgres`
 - **Port**: 5432
 - **Database**: `build_my_stack_dev`
 - **Test Database**: `build_my_stack_test`
@@ -36,12 +36,12 @@ This directory contains Docker configuration files for running the build-my-stac
 - **Password**: `postgres_dev_password`
 
 ### Redis Service
-- **Container**: `build-my-stack-redis`
+- **Container**: `stapelwerk-redis`
 - **Port**: 6379
 - **Persistence**: Enabled with volume mounts
 
 ### DevTools Service (Optional)
-- **Container**: `build-my-stack-devtools`
+- **Container**: `stapelwerk-devtools`
 - **Purpose**: Development utilities and debugging
 - **Profile**: `tools` (start with `docker-compose --profile tools up`)
 

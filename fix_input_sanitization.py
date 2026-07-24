@@ -49,7 +49,7 @@ def fix_category_creation(content):
     return content
 
 def main():
-    file_path = '/Users/sebastian/projects/build-my-stack/src/__tests__/security/input-sanitization.test.ts'
+    file_path = '/Users/sebastian/projects/stapelwerk/src/__tests__/security/input-sanitization.test.ts'
     
     # Read the file
     with open(file_path, 'r', encoding='utf-8') as f:

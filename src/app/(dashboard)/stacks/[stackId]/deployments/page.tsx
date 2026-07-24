@@ -229,7 +229,7 @@ function AddRemoteTargetDialog({
           <label htmlFor="rt-risk-ack" className="flex cursor-pointer items-start gap-2 rounded-lg border border-warning/30 bg-warning/10 p-3 text-sm">
             <Checkbox id="rt-risk-ack" checked={riskAck} onCheckedChange={(c) => setRiskAck(c === true)} className="mt-0.5" />
             <span className="text-muted-foreground">
-              I understand BuildMyStack will store an SSH deploy key that can run Docker on this host, and I&apos;m
+              I understand Stapelwerk will store an SSH deploy key that can run Docker on this host, and I&apos;m
               authorized to grant that access.{' '}
               <span className="text-foreground">Rather run it yourself?</span> Close this and use{' '}
               <span className="font-medium">Export</span> instead — no key held for you.

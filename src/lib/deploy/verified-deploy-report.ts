@@ -35,7 +35,7 @@ export interface VerifiedDeployReport {
   audit?: SafetyAuditVerdict
   /** ISO timestamp the report was issued. */
   issuedAt: string
-  issuer: 'BuildMyStack'
+  issuer: 'Stapelwerk'
 }
 
 /**
@@ -122,7 +122,7 @@ export function buildReport(input: {
     summary: verdict.summary,
     audit: auditCompose(parsed),
     issuedAt: input.issuedAt,
-    issuer: 'BuildMyStack',
+    issuer: 'Stapelwerk',
   }
 }
 

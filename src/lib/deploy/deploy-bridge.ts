@@ -27,7 +27,7 @@ import type { ComposeAction, RunComposeResult } from './compose-executor'
  * own hosts** (their instance, their key). The hosted product's remote-deploy
  * story is instead **key-sovereign**: the export bundle's `deploy.sh`
  * (`handoff.ts` `buildDeployScript`) runs on the operator's own machine and
- * drives their server over their own SSH, so BuildMyStack never holds a
+ * drives their server over their own SSH, so Stapelwerk never holds a
  * stranger's key. See LAUNCH-RUNBOOK Gate G.
  */
 export interface BridgeRemoteTarget {

@@ -6,13 +6,13 @@ async function main() {
   // Build a simple sample stack for the generator
   const stackInput = {
     name: 'Sample Web Stack',
-    namespace: 'buildmystack',
+    namespace: 'stapelwerk',
     services: [
       {
         name: 'nginx',
         image: 'nginx:1.25-alpine',
         ports: [{ containerPort: 80, servicePort: 80 }],
-        env: { NGINX_HOST: 'buildmystack.local' },
+        env: { NGINX_HOST: 'stapelwerk.local' },
         resources: { requests: { cpu: '100m', memory: '128Mi' } },
       },
     ],

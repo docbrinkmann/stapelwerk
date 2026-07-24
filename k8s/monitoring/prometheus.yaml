@@ -7,7 +7,7 @@ metadata:
   name: monitoring
   labels:
     app.kubernetes.io/name: monitoring
-    app.kubernetes.io/part-of: build-my-stack
+    app.kubernetes.io/part-of: stapelwerk
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -23,7 +23,7 @@ data:
       scrape_interval: 15s
       evaluation_interval: 15s
       external_labels:
-        cluster: build-my-stack
+        cluster: stapelwerk
         environment: production
 
     alerting:
@@ -42,12 +42,12 @@ data:
           - targets: ['localhost:9090']
 
       # Build My Stack application metrics
-      - job_name: 'build-my-stack'
+      - job_name: 'stapelwerk'
         kubernetes_sd_configs:
           - role: pod
             namespaces:
               names:
-                - build-my-stack
+                - stapelwerk
         relabel_configs:
           - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
             action: keep
@@ -109,7 +109,7 @@ data:
 
   alerting-rules.yml: |
     groups:
-      - name: build-my-stack-alerts
+      - name: stapelwerk-alerts
         rules:
           - alert: HighErrorRate
             expr: |
@@ -136,7 +136,7 @@ data:
 
           - alert: PodNotReady
             expr: |
-              kube_pod_status_ready{condition="true", namespace="build-my-stack"} == 0
+              kube_pod_status_ready{condition="true", namespace="stapelwerk"} == 0
             for: 5m
             labels:
               severity: critical
@@ -146,8 +146,8 @@ data:
 
           - alert: HighMemoryUsage
             expr: |
-              container_memory_usage_bytes{namespace="build-my-stack"} /
-              container_spec_memory_limit_bytes{namespace="build-my-stack"} > 0.9
+              container_memory_usage_bytes{namespace="stapelwerk"} /
+              container_spec_memory_limit_bytes{namespace="stapelwerk"} > 0.9
             for: 5m
             labels:
               severity: warning

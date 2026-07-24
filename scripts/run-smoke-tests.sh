@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Production Smoke Tests for BuildMyStack AI Recommendations
+# Production Smoke Tests for Stapelwerk AI Recommendations
 # Comprehensive suite to verify deployment health and functionality
 
 set -e
@@ -214,7 +214,7 @@ test_metrics_endpoint() {
     local response_body="${response%|*|*}"
     
     if assert_status_code "200" "$status_code" "Metrics endpoint should return 200"; then
-        if assert_contains "$response_body" "buildmystack_ai" "Metrics should contain application metrics"; then
+        if assert_contains "$response_body" "stapelwerk_ai" "Metrics should contain application metrics"; then
             log "SUCCESS" "✓ $test_name passed"
             return 0
         fi
@@ -384,7 +384,7 @@ test_cors_headers() {
     log "INFO" "Running test: $test_name"
     
     local response
-    response=$(curl -s -I -X OPTIONS "$BASE_URL/api/health" -H "Origin: https://buildmystack.com")
+    response=$(curl -s -I -X OPTIONS "$BASE_URL/api/health" -H "Origin: https://stapelwerk.com")
     
     if assert_contains "$response" "Access-Control-Allow-Origin" "CORS headers should be present"; then
         log "SUCCESS" "✓ $test_name passed"
@@ -468,13 +468,13 @@ test_resource_usage() {
     log "INFO" "Running test: $test_name"
     
     # Check if running in Kubernetes
-    if command -v kubectl &> /dev/null && kubectl get pods -n buildmystack &> /dev/null; then
+    if command -v kubectl &> /dev/null && kubectl get pods -n stapelwerk &> /dev/null; then
         local pod_name
-        pod_name=$(kubectl get pods -n buildmystack -l app=buildmystack-ai -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
+        pod_name=$(kubectl get pods -n stapelwerk -l app=stapelwerk-ai -o jsonpath='{.items[0].metadata.name}' 2>/dev/null || echo "")
         
         if [[ -n "$pod_name" ]]; then
             local resource_usage
-            resource_usage=$(kubectl top pod "$pod_name" -n buildmystack 2>/dev/null || echo "")
+            resource_usage=$(kubectl top pod "$pod_name" -n stapelwerk 2>/dev/null || echo "")
             
             if [[ -n "$resource_usage" ]]; then
                 log "INFO" "Resource usage: $resource_usage"
@@ -574,21 +574,21 @@ test_kubernetes_deployment() {
     
     # Check deployment status
     local deployment_status
-    deployment_status=$(kubectl get deployment buildmystack-ai -n buildmystack -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null || echo "False")
+    deployment_status=$(kubectl get deployment stapelwerk-ai -n stapelwerk -o jsonpath='{.status.conditions[?(@.type=="Available")].status}' 2>/dev/null || echo "False")
     
     if [[ "$deployment_status" == "True" ]]; then
         log "SUCCESS" "Kubernetes deployment is available"
         
         # Get service URL
         local service_url
-        service_url=$(kubectl get service buildmystack-ai-service -n buildmystack -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
+        service_url=$(kubectl get service stapelwerk-ai-service -n stapelwerk -o jsonpath='{.status.loadBalancer.ingress[0].hostname}' 2>/dev/null || echo "")
         
         if [[ -n "$service_url" ]]; then
             BASE_URL="http://$service_url"
             log "INFO" "Using Kubernetes service URL: $BASE_URL"
         else
             # Use port-forward for testing
-            kubectl port-forward service/buildmystack-ai-service 8080:80 -n buildmystack &
+            kubectl port-forward service/stapelwerk-ai-service 8080:80 -n stapelwerk &
             local port_forward_pid=$!
             BASE_URL="http://localhost:8080"
             log "INFO" "Using port-forward URL: $BASE_URL"
@@ -608,7 +608,7 @@ test_kubernetes_deployment() {
 test_docker_compose_deployment() {
     log "INFO" "Testing Docker Compose deployment..."
     
-    if docker-compose -f "$PROJECT_ROOT/docker/docker-compose.prod.yml" ps buildmystack-ai | grep -q "Up"; then
+    if docker-compose -f "$PROJECT_ROOT/docker/docker-compose.prod.yml" ps stapelwerk-ai | grep -q "Up"; then
         log "SUCCESS" "Docker Compose deployment is running"
         BASE_URL="http://localhost:8080"
         return 0
@@ -623,7 +623,7 @@ show_usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-Run comprehensive smoke tests for BuildMyStack AI Recommendations deployment.
+Run comprehensive smoke tests for Stapelwerk AI Recommendations deployment.
 
 Options:
   --url URL              Base URL of the deployed application (default: http://localhost:8080)
@@ -636,7 +636,7 @@ Options:
 
 Examples:
   $0                                    # Test local deployment
-  $0 --url https://api.buildmystack.com # Test production deployment
+  $0 --url https://api.stapelwerk.com # Test production deployment
   $0 --kubernetes                       # Test Kubernetes deployment
   $0 --docker-compose                   # Test Docker Compose deployment
   $0 --quick                           # Run quick smoke tests only
@@ -697,9 +697,9 @@ main() {
     
     # Auto-detect deployment type if not specified
     if [[ "$run_kubernetes" == "false" && "$run_docker_compose" == "false" ]]; then
-        if command -v kubectl &> /dev/null && kubectl get deployment buildmystack-ai -n buildmystack &> /dev/null 2>&1; then
+        if command -v kubectl &> /dev/null && kubectl get deployment stapelwerk-ai -n stapelwerk &> /dev/null 2>&1; then
             run_kubernetes=true
-        elif docker-compose -f "$PROJECT_ROOT/docker/docker-compose.prod.yml" ps buildmystack-ai | grep -q "Up" 2>/dev/null; then
+        elif docker-compose -f "$PROJECT_ROOT/docker/docker-compose.prod.yml" ps stapelwerk-ai | grep -q "Up" 2>/dev/null; then
             run_docker_compose=true
         fi
     fi

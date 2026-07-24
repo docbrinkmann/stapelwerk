@@ -1,9 +1,9 @@
 #!/usr/bin/env tsx
 /**
- * BuildMyStack SLA Monitoring and Measurement System
+ * Stapelwerk SLA Monitoring and Measurement System
  * 
  * This system provides comprehensive SLA monitoring, measurement, and alerting
- * capabilities for the BuildMyStack AI-powered recommendations platform.
+ * capabilities for the Stapelwerk AI-powered recommendations platform.
  * 
  * Features:
  * - Real-time SLA metric collection and monitoring
@@ -707,7 +707,7 @@ export class SLAMonitoringSystem {
       await axios.post(this.config.alertingChannels.webhook, {
         alert: alert,
         timestamp: alert.timestamp.toISOString(),
-        system: 'BuildMyStack SLA Monitor'
+        system: 'Stapelwerk SLA Monitor'
       });
       console.log(`  🔗 Webhook alert sent for: ${alert.message}`);
     } catch (error) {
@@ -997,7 +997,7 @@ async function main() {
 
     default:
       console.log(`
-BuildMyStack SLA Monitoring System
+Stapelwerk SLA Monitoring System
 
 Usage: tsx sla-monitoring-system.ts [command] [options]
 

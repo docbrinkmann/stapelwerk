@@ -72,8 +72,8 @@ const deployMutation = api.gitops.deployStack.useMutation({
 | Environment | Base URL |
 |-------------|----------|
 | Development | `http://localhost:3000/api/trpc` |
-| Staging | `https://staging.build-my-stack.dev/api/trpc` |
-| Production | `https://build-my-stack.dev/api/trpc` |
+| Staging | `https://staging.stapelwerk.dev/api/trpc` |
+| Production | `https://stapelwerk.dev/api/trpc` |
 
 ### Router Structure
 

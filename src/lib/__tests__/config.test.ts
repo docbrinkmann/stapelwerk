@@ -183,8 +183,8 @@ describe('dbConfig', () => {
 
     expect(freshConfig.host).toBe('localhost');
     expect(freshConfig.port).toBe(5432);
-    expect(freshConfig.database).toBe('buildmystack');
-    expect(freshConfig.user).toBe('buildmystack_user');
+    expect(freshConfig.database).toBe('stapelwerk');
+    expect(freshConfig.user).toBe('stapelwerk_user');
   });
 
   it('should use getSecret for password', () => {

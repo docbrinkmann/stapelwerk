@@ -1,15 +1,15 @@
 #!/bin/bash
-# BuildMyStack Database Backup Script
+# Stapelwerk Database Backup Script
 # Creates compressed backups with automatic rotation
 
 set -e
 
 # Configuration
-BACKUP_DIR="/opt/build-my-stack/backups"
+BACKUP_DIR="/opt/stapelwerk/backups"
 DATE=$(date +%Y%m%d_%H%M%S)
 BACKUP_FILE="$BACKUP_DIR/postgres_backup_$DATE.sql.gz"
 RETENTION_DAYS=7
-LOG_FILE="/opt/build-my-stack/logs/backup.log"
+LOG_FILE="/opt/stapelwerk/logs/backup.log"
 
 # Colors
 GREEN='\033[0;32m'
@@ -28,8 +28,8 @@ mkdir -p "$BACKUP_DIR"
 mkdir -p "$(dirname "$LOG_FILE")"
 
 # Load environment variables
-if [ -f /opt/build-my-stack/.env.production ]; then
-    source /opt/build-my-stack/.env.production
+if [ -f /opt/stapelwerk/.env.production ]; then
+    source /opt/stapelwerk/.env.production
 else
     log "${RED}Error: .env.production not found${NC}"
     exit 1
@@ -42,7 +42,7 @@ DB_PASSWORD=$(echo "$DATABASE_URL" | sed -n 's/.*:\/\/[^:]*:\([^@]*\)@.*/\1/p')
 
 # Create backup
 log "Creating backup: $BACKUP_FILE"
-if docker exec build-my-stack_postgres pg_dump -U "$DB_USER" -d "$DB_NAME" | gzip > "$BACKUP_FILE"; then
+if docker exec stapelwerk_postgres pg_dump -U "$DB_USER" -d "$DB_NAME" | gzip > "$BACKUP_FILE"; then
     BACKUP_SIZE=$(du -h "$BACKUP_FILE" | cut -f1)
     log "${GREEN}✓ Backup created successfully ($BACKUP_SIZE)${NC}"
 else

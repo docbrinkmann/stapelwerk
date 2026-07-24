@@ -7,14 +7,14 @@ This guide explains how to set up automated database backups using cron.
 ### 1. Make Backup Script Executable
 
 ```bash
-chmod +x /opt/build-my-stack/scripts/backup-db.sh
+chmod +x /opt/stapelwerk/scripts/backup-db.sh
 ```
 
 ### 2. Test Backup Script
 
 ```bash
 # Test the backup script manually
-cd /opt/build-my-stack
+cd /opt/stapelwerk
 ./scripts/backup-db.sh
 
 # Check if backup was created
@@ -34,8 +34,8 @@ crontab -e
 Add this line to run backups daily at 2 AM:
 
 ```cron
-# BuildMyStack Daily Database Backup (2 AM)
-0 2 * * * /opt/build-my-stack/scripts/backup-db.sh >> /opt/build-my-stack/logs/backup.log 2>&1
+# Stapelwerk Daily Database Backup (2 AM)
+0 2 * * * /opt/stapelwerk/scripts/backup-db.sh >> /opt/stapelwerk/logs/backup.log 2>&1
 ```
 
 ### 4. Verify Cron Job
@@ -53,19 +53,19 @@ systemctl status crond  # CentOS/RHEL
 
 ```cron
 # Every 6 hours
-0 */6 * * * /opt/build-my-stack/scripts/backup-db.sh
+0 */6 * * * /opt/stapelwerk/scripts/backup-db.sh
 
 # Daily at 2 AM
-0 2 * * * /opt/build-my-stack/scripts/backup-db.sh
+0 2 * * * /opt/stapelwerk/scripts/backup-db.sh
 
 # Twice daily (2 AM and 2 PM)
-0 2,14 * * * /opt/build-my-stack/scripts/backup-db.sh
+0 2,14 * * * /opt/stapelwerk/scripts/backup-db.sh
 
 # Weekly on Sundays at 3 AM
-0 3 * * 0 /opt/build-my-stack/scripts/backup-db.sh
+0 3 * * 0 /opt/stapelwerk/scripts/backup-db.sh
 
 # Every day at midnight
-0 0 * * * /opt/build-my-stack/scripts/backup-db.sh
+0 0 * * * /opt/stapelwerk/scripts/backup-db.sh
 ```
 
 ## Backup Monitoring
@@ -74,23 +74,23 @@ systemctl status crond  # CentOS/RHEL
 
 ```bash
 # View recent backups
-ls -lth /opt/build-my-stack/backups/ | head -10
+ls -lth /opt/stapelwerk/backups/ | head -10
 
 # Check backup log
-tail -50 /opt/build-my-stack/logs/backup.log
+tail -50 /opt/stapelwerk/logs/backup.log
 
 # Check disk space
-df -h /opt/build-my-stack/backups/
+df -h /opt/stapelwerk/backups/
 ```
 
 ### Test Backup Restoration
 
 ```bash
 # Extract backup file
-gunzip -c /opt/build-my-stack/backups/postgres_backup_YYYYMMDD_HHMMSS.sql.gz > restore.sql
+gunzip -c /opt/stapelwerk/backups/postgres_backup_YYYYMMDD_HHMMSS.sql.gz > restore.sql
 
 # Restore to database (CAUTION: This will overwrite data!)
-docker exec -i build-my-stack_postgres psql -U buildmystack_user -d buildmystack < restore.sql
+docker exec -i stapelwerk_postgres psql -U stapelwerk_user -d stapelwerk < restore.sql
 
 # Clean up
 rm restore.sql
@@ -127,21 +127,21 @@ systemctl restart cron
 
 ```bash
 # Ensure scripts are executable
-chmod +x /opt/build-my-stack/scripts/*.sh
+chmod +x /opt/stapelwerk/scripts/*.sh
 
 # Ensure directories are writable
-chmod 755 /opt/build-my-stack/backups
-chmod 755 /opt/build-my-stack/logs
+chmod 755 /opt/stapelwerk/backups
+chmod 755 /opt/stapelwerk/logs
 ```
 
 ### Disk Space Issues
 
 ```bash
 # Check disk space
-df -h /opt/build-my-stack
+df -h /opt/stapelwerk
 
 # Manually clean old backups
-find /opt/build-my-stack/backups -name "*.sql.gz" -mtime +30 -delete
+find /opt/stapelwerk/backups -name "*.sql.gz" -mtime +30 -delete
 ```
 
 ## Email Notifications (Optional)
@@ -156,7 +156,7 @@ sudo apt-get install mailutils
 2. Update cron job:
 ```cron
 MAILTO=your-email@example.com
-0 2 * * * /opt/build-my-stack/scripts/backup-db.sh
+0 2 * * * /opt/stapelwerk/scripts/backup-db.sh
 ```
 
 3. Configure mail server (postfix, sendmail, etc.)
@@ -167,16 +167,16 @@ For additional safety, sync backups to remote storage:
 
 ```bash
 # Example: AWS S3
-aws s3 sync /opt/build-my-stack/backups/ s3://your-bucket/buildmystack-backups/
+aws s3 sync /opt/stapelwerk/backups/ s3://your-bucket/stapelwerk-backups/
 
 # Example: rsync to remote server
-rsync -avz /opt/build-my-stack/backups/ user@backup-server:/backups/buildmystack/
+rsync -avz /opt/stapelwerk/backups/ user@backup-server:/backups/stapelwerk/
 ```
 
 Add to crontab after backup job:
 ```cron
 # Backup to S3 daily at 3 AM (after local backup)
-0 3 * * * aws s3 sync /opt/build-my-stack/backups/ s3://your-bucket/buildmystack-backups/
+0 3 * * * aws s3 sync /opt/stapelwerk/backups/ s3://your-bucket/stapelwerk-backups/
 ```
 
 ## Verification Checklist
@@ -195,6 +195,6 @@ Add to crontab after backup job:
 ## Support
 
 For backup issues:
-- Check logs: `/opt/build-my-stack/logs/backup.log`
+- Check logs: `/opt/stapelwerk/logs/backup.log`
 - Verify container: `docker compose ps postgres`
 - Test manually: `./scripts/backup-db.sh`

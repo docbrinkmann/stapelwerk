@@ -31,7 +31,7 @@ MIN_SESSION_DURATION="${MIN_SESSION_DURATION:-60}" # seconds
 
 # Initialize pipeline
 init_pipeline() {
-    echo -e "${BOLD}${BLUE}=== BuildMyStack Analytics Pipeline ===${NC}"
+    echo -e "${BOLD}${BLUE}=== Stapelwerk Analytics Pipeline ===${NC}"
     echo -e "${CYAN}Pipeline ID: $PIPELINE_ID${NC}"
     echo -e "${CYAN}Batch Size: $BATCH_SIZE${NC}"
     echo -e "${CYAN}Lookback Days: $LOOKBACK_DAYS${NC}"
@@ -498,7 +498,7 @@ create_summary_report() {
     local summary_file="$INSIGHTS_DIR/adoption-summary-$(date +%Y%m%d).md"
     
     cat > "$summary_file" << EOF
-# BuildMyStack Adoption Analytics Report
+# Stapelwerk Adoption Analytics Report
 
 **Generated:** $(date)
 **Analysis Period:** $LOOKBACK_DAYS days
@@ -526,7 +526,7 @@ $(jq -r '.recommendations | map("- " + .) | join("\n")' "$insights_file")
 
 ---
 
-*This report was generated automatically by the BuildMyStack Analytics Pipeline.*
+*This report was generated automatically by the Stapelwerk Analytics Pipeline.*
 EOF
     
     echo "Summary report created: $summary_file"
@@ -558,7 +558,7 @@ run_pipeline() {
 # Help function
 show_help() {
     cat << EOF
-BuildMyStack Adoption Analytics Pipeline
+Stapelwerk Adoption Analytics Pipeline
 
 Usage: $0 <command> [options]
 

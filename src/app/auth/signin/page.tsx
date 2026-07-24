@@ -110,7 +110,7 @@ function SignInForm() {
             </Button>
           </form>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            {t('landing.signinDemo')} <span className="font-medium text-foreground">demo@buildmystack.dev</span> / <span className="font-medium text-foreground">demo1234</span>
+            {t('landing.signinDemo')} <span className="font-medium text-foreground">demo@stapelwerk.dev</span> / <span className="font-medium text-foreground">demo1234</span>
           </p>
         </CardContent>
       </Card>

@@ -33,7 +33,7 @@
 ```bash
 # 1. Repository klonen
 git clone <repo-url>
-cd build-my-stack
+cd stapelwerk
 
 # 2. Docker Setup
 ./docker/setup.sh

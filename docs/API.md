@@ -1,8 +1,8 @@
-# BuildMyStack API Documentation
+# Stapelwerk API Documentation
 
 **Version:** 1.0.0  
 **Last Updated:** 2025-10-27  
-**Base URL:** `https://build-my-stack.vercel.app`
+**Base URL:** `https://stapelwerk.vercel.app`
 
 ---
 
@@ -21,7 +21,7 @@
 
 ## Overview
 
-BuildMyStack provides a RESTful API and tRPC endpoints for managing technology stacks, services, and recommendations. The API uses JSON for request and response payloads.
+Stapelwerk provides a RESTful API and tRPC endpoints for managing technology stacks, services, and recommendations. The API uses JSON for request and response payloads.
 
 ### API Architecture
 
@@ -33,8 +33,8 @@ BuildMyStack provides a RESTful API and tRPC endpoints for managing technology s
 
 ### Base URLs
 
-- **Production:** `https://build-my-stack.vercel.app`
-- **Staging:** `https://build-my-stack-staging.vercel.app`
+- **Production:** `https://stapelwerk.vercel.app`
+- **Staging:** `https://stapelwerk-staging.vercel.app`
 - **Development:** `http://localhost:3000`
 
 ---
@@ -43,7 +43,7 @@ BuildMyStack provides a RESTful API and tRPC endpoints for managing technology s
 
 ### Overview
 
-BuildMyStack uses NextAuth.js for authentication with support for multiple providers.
+Stapelwerk uses NextAuth.js for authentication with support for multiple providers.
 
 ### Authentication Methods
 
@@ -550,9 +550,9 @@ Coming soon: Webhook support for real-time notifications on stack updates, servi
 ## Support
 
 For API support and questions:
-- **Documentation:** https://build-my-stack.vercel.app/docs
-- **GitHub Issues:** https://github.com/yourusername/build-my-stack/issues
-- **Email:** support@buildmystack.com
+- **Documentation:** https://stapelwerk.vercel.app/docs
+- **GitHub Issues:** https://github.com/yourusername/stapelwerk/issues
+- **Email:** support@stapelwerk.com
 
 ---
 

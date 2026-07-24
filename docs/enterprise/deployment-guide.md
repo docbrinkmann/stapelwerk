@@ -176,7 +176,7 @@ NEXTAUTH_URL=https://your-domain.com
 NEXTAUTH_SECRET=your-secure-random-secret-here
 
 # Database
-DATABASE_URL=postgresql://user:password@localhost:5432/buildmystack
+DATABASE_URL=postgresql://user:password@localhost:5432/stapelwerk
 DATABASE_POOL_SIZE=20
 
 # Redis
@@ -234,7 +234,7 @@ SMTP_PASSWORD=your-smtp-password
 AWS_REGION=us-east-1
 AWS_ACCESS_KEY_ID=your-access-key
 AWS_SECRET_ACCESS_KEY=your-secret-key
-S3_BUCKET=buildmystack-storage
+S3_BUCKET=stapelwerk-storage
 
 # Optional: Single Sign-On
 SSO_ENABLED=true
@@ -260,7 +260,7 @@ services:
       - "3001:3001"
     environment:
       - NODE_ENV=production
-      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/buildmystack
+      - DATABASE_URL=postgresql://postgres:${POSTGRES_PASSWORD}@db:5432/stapelwerk
       - REDIS_URL=redis://redis:6379
     volumes:
       - ./uploads:/app/uploads
@@ -284,7 +284,7 @@ services:
   db:
     image: postgres:15-alpine
     environment:
-      - POSTGRES_DB=buildmystack
+      - POSTGRES_DB=stapelwerk
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     volumes:
@@ -342,22 +342,22 @@ volumes:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: buildmystack-app
+  name: stapelwerk-app
   labels:
-    app: buildmystack
+    app: stapelwerk
 spec:
   replicas: 3
   selector:
     matchLabels:
-      app: buildmystack
+      app: stapelwerk
   template:
     metadata:
       labels:
-        app: buildmystack
+        app: stapelwerk
     spec:
       containers:
       - name: app
-        image: buildmystack:latest
+        image: stapelwerk:latest
         ports:
         - containerPort: 3000
         - containerPort: 3001
@@ -367,7 +367,7 @@ spec:
         - name: DATABASE_URL
           valueFrom:
             secretKeyRef:
-              name: buildmystack-secrets
+              name: stapelwerk-secrets
               key: database-url
         - name: REDIS_URL
           value: "redis://redis-service:6379"
@@ -394,10 +394,10 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: buildmystack-service
+  name: stapelwerk-service
 spec:
   selector:
-    app: buildmystack
+    app: stapelwerk
   ports:
   - name: http
     port: 80
@@ -734,16 +734,16 @@ jobs:
           export KUBECONFIG=kubeconfig
           
           # Update deployment image
-          kubectl set image deployment/buildmystack-app \
+          kubectl set image deployment/stapelwerk-app \
             app=${{ needs.build.outputs.image }}
           
           # Wait for rollout
-          kubectl rollout status deployment/buildmystack-app --timeout=300s
+          kubectl rollout status deployment/stapelwerk-app --timeout=300s
           
           # Run post-deployment health checks
           kubectl run health-check --rm -i --restart=Never \
             --image=curlimages/curl \
-            -- curl -f http://buildmystack-service/api/health
+            -- curl -f http://stapelwerk-service/api/health
 ```
 
 ### Deployment Strategies
@@ -754,7 +754,7 @@ jobs:
 # scripts/blue-green-deploy.sh
 
 NEW_VERSION=$1
-CURRENT_ENV=$(kubectl get service buildmystack-service -o jsonpath='{.spec.selector.version}')
+CURRENT_ENV=$(kubectl get service stapelwerk-service -o jsonpath='{.spec.selector.version}')
 
 # Determine target environment
 if [ "$CURRENT_ENV" = "blue" ]; then
@@ -766,24 +766,24 @@ fi
 echo "Deploying version $NEW_VERSION to $TARGET_ENV environment"
 
 # Update target environment
-kubectl set image deployment/buildmystack-$TARGET_ENV \
-  app=buildmystack:$NEW_VERSION
+kubectl set image deployment/stapelwerk-$TARGET_ENV \
+  app=stapelwerk:$NEW_VERSION
 
 # Wait for deployment
-kubectl rollout status deployment/buildmystack-$TARGET_ENV
+kubectl rollout status deployment/stapelwerk-$TARGET_ENV
 
 # Run health checks
-if curl -f http://buildmystack-$TARGET_ENV/api/health; then
+if curl -f http://stapelwerk-$TARGET_ENV/api/health; then
   echo "Health checks passed, switching traffic"
   
   # Switch traffic
-  kubectl patch service buildmystack-service \
+  kubectl patch service stapelwerk-service \
     -p '{"spec":{"selector":{"version":"'$TARGET_ENV'"}}}'
   
   echo "Deployment completed successfully"
 else
   echo "Health checks failed, rolling back"
-  kubectl rollout undo deployment/buildmystack-$TARGET_ENV
+  kubectl rollout undo deployment/stapelwerk-$TARGET_ENV
   exit 1
 fi
 ```
@@ -801,7 +801,7 @@ spec:
     spec:
       containers:
       - name: app
-        image: buildmystack:latest
+        image: stapelwerk:latest
         readinessProbe:
           httpGet:
             path: /api/ready
@@ -827,14 +827,14 @@ spec:
 #### Nginx Load Balancer
 ```nginx
 # nginx/nginx.conf
-upstream buildmystack_app {
+upstream stapelwerk_app {
     least_conn;
     server app1:3000 max_fails=3 fail_timeout=30s;
     server app2:3000 max_fails=3 fail_timeout=30s;
     server app3:3000 max_fails=3 fail_timeout=30s;
 }
 
-upstream buildmystack_ws {
+upstream stapelwerk_ws {
     ip_hash;  # Sticky sessions for WebSocket
     server app1:3001 max_fails=3 fail_timeout=30s;
     server app2:3001 max_fails=3 fail_timeout=30s;
@@ -865,7 +865,7 @@ server {
 
     # Application traffic
     location / {
-        proxy_pass http://buildmystack_app;
+        proxy_pass http://stapelwerk_app;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
@@ -877,7 +877,7 @@ server {
 
     # WebSocket traffic
     location /socket.io/ {
-        proxy_pass http://buildmystack_ws;
+        proxy_pass http://stapelwerk_ws;
         proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
@@ -890,7 +890,7 @@ server {
     # Health check endpoint
     location /health {
         access_log off;
-        proxy_pass http://buildmystack_app;
+        proxy_pass http://stapelwerk_app;
     }
 }
 ```
@@ -898,8 +898,8 @@ server {
 #### AWS Application Load Balancer
 ```yaml
 # terraform/alb.tf
-resource "aws_lb" "buildmystack" {
-  name               = "buildmystack-alb"
+resource "aws_lb" "stapelwerk" {
+  name               = "stapelwerk-alb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
@@ -913,7 +913,7 @@ resource "aws_lb" "buildmystack" {
 }
 
 resource "aws_lb_target_group" "app" {
-  name     = "buildmystack-app"
+  name     = "stapelwerk-app"
   port     = 3000
   protocol = "HTTP"
   vpc_id   = aws_vpc.main.id
@@ -936,7 +936,7 @@ resource "aws_lb_target_group" "app" {
 }
 
 resource "aws_lb_listener" "app" {
-  load_balancer_arn = aws_lb.buildmystack.arn
+  load_balancer_arn = aws_lb.stapelwerk.arn
   port              = "443"
   protocol          = "HTTPS"
   ssl_policy        = "ELBSecurityPolicy-TLS-1-2-2017-01"
@@ -999,7 +999,7 @@ EOF
 #### Automated Failover with Patroni
 ```yaml
 # patroni.yml
-scope: buildmystack-cluster
+scope: stapelwerk-cluster
 namespace: /service/
 name: postgres-1
 
@@ -1097,7 +1097,7 @@ resolver_timeout 5s;
 ```hcl
 # terraform/security-groups.tf
 resource "aws_security_group" "app" {
-  name_prefix = "buildmystack-app-"
+  name_prefix = "stapelwerk-app-"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -1122,12 +1122,12 @@ resource "aws_security_group" "app" {
   }
 
   tags = {
-    Name = "buildmystack-app-sg"
+    Name = "stapelwerk-app-sg"
   }
 }
 
 resource "aws_security_group" "db" {
-  name_prefix = "buildmystack-db-"
+  name_prefix = "stapelwerk-db-"
   vpc_id      = aws_vpc.main.id
 
   ingress {
@@ -1138,7 +1138,7 @@ resource "aws_security_group" "db" {
   }
 
   tags = {
-    Name = "buildmystack-db-sg"
+    Name = "stapelwerk-db-sg"
   }
 }
 ```
@@ -1163,8 +1163,8 @@ export async function getSecret(secretId: string): Promise<string> {
 }
 
 // Usage in application
-const dbPassword = await getSecret('buildmystack/db-password')
-const jwtSecret = await getSecret('buildmystack/jwt-secret')
+const dbPassword = await getSecret('stapelwerk/db-password')
+const jwtSecret = await getSecret('stapelwerk/jwt-secret')
 ```
 
 #### Security Headers Middleware
@@ -1216,7 +1216,7 @@ alerting:
           - alertmanager:9093
 
 scrape_configs:
-  - job_name: 'buildmystack'
+  - job_name: 'stapelwerk'
     static_configs:
       - targets: ['app:9090']
     scrape_interval: 5s
@@ -1298,7 +1298,7 @@ const logger = winston.createLogger({
     winston.format.json()
   ),
   defaultMeta: {
-    service: 'buildmystack',
+    service: 'stapelwerk',
     environment: process.env.NODE_ENV,
     version: process.env.APP_VERSION
   },
@@ -1318,7 +1318,7 @@ export const auditLogger = winston.createLogger({
   ),
   defaultMeta: {
     type: 'audit',
-    service: 'buildmystack'
+    service: 'stapelwerk'
   },
   transports: [
     new winston.transports.File({ filename: 'logs/audit.log' })
@@ -1370,9 +1370,9 @@ volumes:
 
 #### Prometheus Alerting Rules
 ```yaml
-# prometheus/rules/buildmystack.yml
+# prometheus/rules/stapelwerk.yml
 groups:
-  - name: buildmystack
+  - name: stapelwerk
     rules:
       - alert: HighResponseTime
         expr: http_request_duration_seconds{quantile="0.95"} > 2

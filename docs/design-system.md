@@ -2,7 +2,7 @@
 
 ## Overview
 
-BuildMyStack's design system has been modernized with 2025 best practices including fluid typography, responsive spacing, semantic colors, and comprehensive design tokens. All changes are **additive** and **backward-compatible** - existing code continues to work without modification.
+Stapelwerk's design system has been modernized with 2025 best practices including fluid typography, responsive spacing, semantic colors, and comprehensive design tokens. All changes are **additive** and **backward-compatible** - existing code continues to work without modification.
 
 ## Table of Contents
 

@@ -55,7 +55,7 @@ DEPLOYED_SERVICES=()
 
 # Initialize logging and directories
 init_deployment() {
-    echo -e "${BOLD}${BLUE}=== BuildMyStack Production Deployment ===${NC}"
+    echo -e "${BOLD}${BLUE}=== Stapelwerk Production Deployment ===${NC}"
     echo -e "${CYAN}Deployment ID: $DEPLOYMENT_ID${NC}"
     echo -e "${CYAN}Environment: $DEPLOYMENT_ENV${NC}"
     echo -e "${CYAN}Started: $(date)${NC}"
@@ -159,7 +159,7 @@ send_notification() {
             --data "{
                 \"attachments\": [{
                     \"color\": \"$color\",
-                    \"title\": \"BuildMyStack Deployment: $DEPLOYMENT_ID\",
+                    \"title\": \"Stapelwerk Deployment: $DEPLOYMENT_ID\",
                     \"text\": \"$message\",
                     \"fields\": [
                         {\"title\": \"Environment\", \"value\": \"$DEPLOYMENT_ENV\", \"short\": true},
@@ -176,10 +176,10 @@ send_notification() {
     if command -v sendmail &>/dev/null && [[ -n "${DEPLOYMENT_EMAIL:-}" ]]; then
         {
             echo "To: $DEPLOYMENT_EMAIL"
-            echo "Subject: BuildMyStack Deployment $DEPLOYMENT_ID - $status"
+            echo "Subject: Stapelwerk Deployment $DEPLOYMENT_ID - $status"
             echo "Content-Type: text/html"
             echo
-            echo "<h2>BuildMyStack Deployment Report</h2>"
+            echo "<h2>Stapelwerk Deployment Report</h2>"
             echo "<p><strong>Deployment ID:</strong> $DEPLOYMENT_ID</p>"
             echo "<p><strong>Environment:</strong> $DEPLOYMENT_ENV</p>"
             echo "<p><strong>Phase:</strong> $CURRENT_PHASE</p>"
@@ -255,26 +255,26 @@ phase_infrastructure_deployment() {
     log_info "Deploying infrastructure components..."
     
     # Deploy namespace if not exists
-    if ! kubectl get namespace buildmystack-prod &>/dev/null; then
+    if ! kubectl get namespace stapelwerk-prod &>/dev/null; then
         log_info "Creating production namespace..."
-        kubectl create namespace buildmystack-prod
+        kubectl create namespace stapelwerk-prod
     fi
     
     # Apply ConfigMaps and Secrets
     log_info "Applying configuration and secrets..."
     if [[ -f "$PROJECT_DIR/k8s/configmap.yaml" ]]; then
-        kubectl apply -f "$PROJECT_DIR/k8s/configmap.yaml" -n buildmystack-prod
+        kubectl apply -f "$PROJECT_DIR/k8s/configmap.yaml" -n stapelwerk-prod
     fi
     
     if [[ -f "$PROJECT_DIR/k8s/secrets.yaml" ]]; then
-        kubectl apply -f "$PROJECT_DIR/k8s/secrets.yaml" -n buildmystack-prod
+        kubectl apply -f "$PROJECT_DIR/k8s/secrets.yaml" -n stapelwerk-prod
     fi
     
     # Deploy Redis
     log_info "Deploying Redis..."
     if [[ -f "$PROJECT_DIR/k8s/redis.yaml" ]]; then
-        kubectl apply -f "$PROJECT_DIR/k8s/redis.yaml" -n buildmystack-prod
-        kubectl rollout status deployment/redis -n buildmystack-prod --timeout=300s
+        kubectl apply -f "$PROJECT_DIR/k8s/redis.yaml" -n stapelwerk-prod
+        kubectl rollout status deployment/redis -n stapelwerk-prod --timeout=300s
         DEPLOYED_SERVICES+=("redis")
     fi
     
@@ -282,8 +282,8 @@ phase_infrastructure_deployment() {
     if [[ "${USE_EXTERNAL_DB:-false}" != "true" ]]; then
         log_info "Deploying PostgreSQL..."
         if [[ -f "$PROJECT_DIR/k8s/postgres.yaml" ]]; then
-            kubectl apply -f "$PROJECT_DIR/k8s/postgres.yaml" -n buildmystack-prod
-            kubectl rollout status statefulset/postgres -n buildmystack-prod --timeout=300s
+            kubectl apply -f "$PROJECT_DIR/k8s/postgres.yaml" -n stapelwerk-prod
+            kubectl rollout status statefulset/postgres -n stapelwerk-prod --timeout=300s
             DEPLOYED_SERVICES+=("postgres")
         fi
     fi
@@ -344,7 +344,7 @@ phase_application_deployment() {
     log_info "Building and deploying application..."
     
     # Build Docker image
-    local image_tag="buildmystack:${DEPLOYMENT_ID}"
+    local image_tag="stapelwerk:${DEPLOYMENT_ID}"
     log_info "Building Docker image: $image_tag"
     
     if [[ "$DRY_RUN" != "true" ]]; then
@@ -369,27 +369,27 @@ phase_application_deployment() {
     if [[ -f "$PROJECT_DIR/k8s/deployment.yaml" ]]; then
         # Create temporary deployment file with new image
         local temp_deployment="$PROJECT_DIR/k8s/deployment-${DEPLOYMENT_ID}.yaml"
-        sed "s|image: buildmystack:.*|image: $image_tag|g" \
+        sed "s|image: stapelwerk:.*|image: $image_tag|g" \
             "$PROJECT_DIR/k8s/deployment.yaml" > "$temp_deployment"
         
-        kubectl apply -f "$temp_deployment" -n buildmystack-prod
+        kubectl apply -f "$temp_deployment" -n stapelwerk-prod
         rm -f "$temp_deployment"
         
         # Wait for rollout
-        kubectl rollout status deployment/buildmystack -n buildmystack-prod --timeout=600s
-        DEPLOYED_SERVICES+=("buildmystack")
+        kubectl rollout status deployment/stapelwerk -n stapelwerk-prod --timeout=600s
+        DEPLOYED_SERVICES+=("stapelwerk")
         
         log_success "Application deployment completed"
     fi
     
     # Deploy services
     if [[ -f "$PROJECT_DIR/k8s/service.yaml" ]]; then
-        kubectl apply -f "$PROJECT_DIR/k8s/service.yaml" -n buildmystack-prod
+        kubectl apply -f "$PROJECT_DIR/k8s/service.yaml" -n stapelwerk-prod
     fi
     
     # Deploy ingress
     if [[ -f "$PROJECT_DIR/k8s/ingress.yaml" ]]; then
-        kubectl apply -f "$PROJECT_DIR/k8s/ingress.yaml" -n buildmystack-prod
+        kubectl apply -f "$PROJECT_DIR/k8s/ingress.yaml" -n stapelwerk-prod
     fi
     
     return 0
@@ -444,8 +444,8 @@ phase_smoke_testing() {
     log_info "Performing additional health checks..."
     
     # Check application pods
-    local ready_pods=$(kubectl get pods -n buildmystack-prod -l app=buildmystack -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}' | wc -w)
-    local total_pods=$(kubectl get pods -n buildmystack-prod -l app=buildmystack --no-headers | wc -l)
+    local ready_pods=$(kubectl get pods -n stapelwerk-prod -l app=stapelwerk -o jsonpath='{.items[?(@.status.phase=="Running")].metadata.name}' | wc -w)
+    local total_pods=$(kubectl get pods -n stapelwerk-prod -l app=stapelwerk --no-headers | wc -l)
     
     if [[ $ready_pods -lt 1 ]]; then
         log_error "No application pods are ready ($ready_pods/$total_pods)"
@@ -567,8 +567,8 @@ initiate_rollback() {
     
     # Rollback Kubernetes deployment
     log_info "Rolling back Kubernetes deployment..."
-    kubectl rollout undo deployment/buildmystack -n buildmystack-prod &>/dev/null || true
-    kubectl rollout status deployment/buildmystack -n buildmystack-prod --timeout=300s &>/dev/null || true
+    kubectl rollout undo deployment/stapelwerk -n stapelwerk-prod &>/dev/null || true
+    kubectl rollout status deployment/stapelwerk -n stapelwerk-prod --timeout=300s &>/dev/null || true
     
     # Restore database backup if needed
     local restore_db="${ROLLBACK_DATABASE:-false}"
@@ -631,7 +631,7 @@ trap 'log_info "Deployment interrupted by user"; initiate_rollback; cleanup_depl
 # Help function
 show_help() {
     cat << EOF
-BuildMyStack Production Deployment Orchestrator
+Stapelwerk Production Deployment Orchestrator
 
 Usage: $0 [options]
 

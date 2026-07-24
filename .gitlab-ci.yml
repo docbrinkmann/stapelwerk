@@ -1,4 +1,4 @@
-# GitLab CI/CD Pipeline for BuildMyStack Platform
+# GitLab CI/CD Pipeline for Stapelwerk Platform
 # Comprehensive pipeline with quality checks, testing, security scanning, and deployment
 
 image: node:22
@@ -50,10 +50,10 @@ unit-tests:
   services:
     - postgres:15
   variables:
-    POSTGRES_DB: buildmystack_test
+    POSTGRES_DB: stapelwerk_test
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: postgres
-    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/buildmystack_test"
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/stapelwerk_test"
   script:
     - npm run test:setup
     - npx vitest run --coverage --reporter=default || true
@@ -75,10 +75,10 @@ integration-tests:
   services:
     - postgres:15
   variables:
-    POSTGRES_DB: buildmystack_test
+    POSTGRES_DB: stapelwerk_test
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: postgres
-    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/buildmystack_test"
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/stapelwerk_test"
   script:
     - npm run test:setup
     - npm run test:integration
@@ -99,10 +99,10 @@ e2e-tests:
   services:
     - postgres:15
   variables:
-    POSTGRES_DB: buildmystack_test
+    POSTGRES_DB: stapelwerk_test
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: postgres
-    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/buildmystack_test"
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/stapelwerk_test"
     CI: "true"
     SKIP_ENV_VALIDATION: "true"
   before_script:
@@ -314,9 +314,9 @@ ghcr-publish:
   cache: []
   script:
     - echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
-    - docker build -t "ghcr.io/$GHCR_USER/buildmystack:$CI_COMMIT_TAG" .
-    - docker build --target builder -t "ghcr.io/$GHCR_USER/buildmystack-ws:$CI_COMMIT_TAG" .
-    - docker push "ghcr.io/$GHCR_USER/buildmystack:$CI_COMMIT_TAG"
-    - docker push "ghcr.io/$GHCR_USER/buildmystack-ws:$CI_COMMIT_TAG"
+    - docker build -t "ghcr.io/$GHCR_USER/stapelwerk:$CI_COMMIT_TAG" .
+    - docker build --target builder -t "ghcr.io/$GHCR_USER/stapelwerk-ws:$CI_COMMIT_TAG" .
+    - docker push "ghcr.io/$GHCR_USER/stapelwerk:$CI_COMMIT_TAG"
+    - docker push "ghcr.io/$GHCR_USER/stapelwerk-ws:$CI_COMMIT_TAG"
   rules:
     - if: '$CI_COMMIT_TAG && $GHCR_TOKEN'

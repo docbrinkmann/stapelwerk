@@ -38,8 +38,8 @@ The database is configured in `docker/docker-compose.prod.yml`:
 postgres:
   image: postgres:18-alpine
   environment:
-    - POSTGRES_DB=buildmystack_prod
-    - POSTGRES_USER=buildmystack_user
+    - POSTGRES_DB=stapelwerk_prod
+    - POSTGRES_USER=stapelwerk_user
     - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
 ```
 
@@ -88,7 +88,7 @@ To rotate secrets in production:
 
 3. Update service:
    ```bash
-   docker service update --secret-rm db_password --secret-add source=db_password_v2,target=db_password buildmystack-ai
+   docker service update --secret-rm db_password --secret-add source=db_password_v2,target=db_password stapelwerk-ai
    ```
 
 4. Remove old secret:
@@ -120,8 +120,8 @@ For development, create `.env.local`:
 
 ```bash
 DB_HOST=localhost
-DB_NAME=buildmystack
-DB_USER=buildmystack_user
+DB_NAME=stapelwerk
+DB_USER=stapelwerk_user
 DB_PASSWORD=your_dev_password
 REDIS_HOST=localhost
 REDIS_PORT=6379
@@ -136,7 +136,7 @@ JWT_SECRET=your_jwt_secret
 ```bash
 # Clone repository
 git clone <repository-url>
-cd build-my-stack
+cd stapelwerk
 
 # Install dependencies
 npm install
@@ -173,10 +173,10 @@ docker-compose -f docker-compose.prod.yml ps
 curl http://localhost:8080/health
 
 # Check database connection
-docker exec buildmystack-postgres-prod pg_isready -U buildmystack_user
+docker exec stapelwerk-postgres-prod pg_isready -U stapelwerk_user
 
 # Check Redis connection
-docker exec buildmystack-redis-prod redis-cli ping
+docker exec stapelwerk-redis-prod redis-cli ping
 ```
 
 ## Monitoring
@@ -202,13 +202,13 @@ All services include health checks:
 
 ```bash
 # Check PostgreSQL logs
-docker logs buildmystack-postgres-prod
+docker logs stapelwerk-postgres-prod
 
 # Verify password secret
-docker exec buildmystack-ai-prod cat /run/secrets/db_password
+docker exec stapelwerk-ai-prod cat /run/secrets/db_password
 
 # Test connection
-docker exec buildmystack-postgres-prod psql -U buildmystack_user -d buildmystack_prod -c "SELECT version();"
+docker exec stapelwerk-postgres-prod psql -U stapelwerk_user -d stapelwerk_prod -c "SELECT version();"
 ```
 
 ### Secret Access Issues
@@ -218,7 +218,7 @@ docker exec buildmystack-postgres-prod psql -U buildmystack_user -d buildmystack
 docker secret ls
 
 # Inspect service secrets
-docker service inspect buildmystack-ai --format '{{json .Spec.TaskTemplate.ContainerSpec.Secrets}}'
+docker service inspect stapelwerk-ai --format '{{json .Spec.TaskTemplate.ContainerSpec.Secrets}}'
 ```
 
 ## Security

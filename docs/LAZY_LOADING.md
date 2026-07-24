@@ -23,7 +23,7 @@ This document describes the implementation of lazy loading for the `DockerStackP
 
 ### Dynamic Import with Loading Skeleton
 
-```typescript path=/Users/sebastian/projects/build-my-stack/src/app/page.tsx start=7
+```typescript path=/Users/sebastian/projects/stapelwerk/src/app/page.tsx start=7
 // Lazy load DockerStackPreview to reduce initial bundle size
 // Using dynamic import with loading skeleton for better UX
 const DockerStackPreview = dynamic(
@@ -37,7 +37,7 @@ const DockerStackPreview = dynamic(
 
 ### Skeleton Component Structure
 
-```typescript path=/Users/sebastian/projects/build-my-stack/src/components/DockerStackPreview.skeleton.tsx start=3
+```typescript path=/Users/sebastian/projects/stapelwerk/src/components/DockerStackPreview.skeleton.tsx start=3
 export function DockerStackPreviewSkeleton() {
   return (
     <div className="space-y-6 w-full max-w-6xl mx-auto">

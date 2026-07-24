@@ -1,20 +1,20 @@
-# BuildMyStack — self-host compose.
+# Stapelwerk — self-host compose.
 #
 #   1. cp .env.example .env          # then set POSTGRES_PASSWORD + NEXTAUTH_SECRET
 #   2. docker compose -f docker-compose.selfhost.yml up -d --build
 #   3. docker compose -f docker-compose.selfhost.yml --profile setup run --rm migrate
-#   4. open http://localhost:3000 — log in with demo@buildmystack.dev / $SEED_DEMO_PASSWORD
+#   4. open http://localhost:3000 — log in with demo@stapelwerk.dev / $SEED_DEMO_PASSWORD
 #
 # Derived from docker-compose.prod.yml, minus operator-specific machinery
 # (file-mounted secrets, Sentry, CI registry variables). Until a prebuilt
-# image is published, `--build` builds from this repo (BMS_IMAGE overrides).
+# image is published, `--build` builds from this repo (STAPELWERK_IMAGE overrides).
 
 services:
   postgres:
     image: postgres:18-alpine
     environment:
-      POSTGRES_DB: ${POSTGRES_DB:-buildmystack}
-      POSTGRES_USER: ${POSTGRES_USER:-buildmystack}
+      POSTGRES_DB: ${POSTGRES_DB:-stapelwerk}
+      POSTGRES_USER: ${POSTGRES_USER:-stapelwerk}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD is required — set it in .env}
     volumes:
       # postgres:18 moved its data dir; mount the parent, not .../data
@@ -23,7 +23,7 @@ services:
     networks: [bms]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-buildmystack} -d ${POSTGRES_DB:-buildmystack}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-stapelwerk} -d ${POSTGRES_DB:-stapelwerk}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -42,7 +42,7 @@ services:
       retries: 5
 
   app:
-    image: ${BMS_IMAGE:-buildmystack}:${BMS_TAG:-latest}
+    image: ${STAPELWERK_IMAGE:-stapelwerk}:${STAPELWERK_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -54,7 +54,7 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOSTNAME: "0.0.0.0"
-      DATABASE_URL: postgresql://${POSTGRES_USER:-buildmystack}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-buildmystack}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-stapelwerk}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-stapelwerk}
       REDIS_URL: redis://redis:6379
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required — openssl rand -base64 32}
       NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
@@ -87,7 +87,7 @@ services:
   # TERMINAL_EXECUTOR=echo) if you don't want direct deploys — export/handoff
   # keeps working without it.
   websocket:
-    image: ${BMS_IMAGE:-buildmystack}-ws:${BMS_TAG:-latest}
+    image: ${STAPELWERK_IMAGE:-stapelwerk}-ws:${STAPELWERK_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
@@ -99,7 +99,7 @@ services:
       NODE_ENV: production
       WS_PORT: 3001
       WS_HOST: "0.0.0.0"
-      DATABASE_URL: postgresql://${POSTGRES_USER:-buildmystack}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-buildmystack}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-stapelwerk}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-stapelwerk}
       DOCKER_HOST: unix:///var/run/docker.sock
       DEPLOY_BRIDGE_TOKEN: ${DEPLOY_BRIDGE_TOKEN:-}
       DEPLOY_SSH_KEY_FILE: ${DEPLOY_SSH_KEY_FILE:-/deploy-keys/id_ed25519}
@@ -126,14 +126,14 @@ services:
   #   docker compose -f docker-compose.selfhost.yml --profile setup run --rm migrate
   migrate:
     profiles: ["setup"]
-    image: ${BMS_IMAGE:-buildmystack}-ws:${BMS_TAG:-latest}
+    image: ${STAPELWERK_IMAGE:-stapelwerk}-ws:${STAPELWERK_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile
       target: builder
     command: sh -c "npx prisma db push --skip-generate && npx tsx prisma/seed.ts"
     environment:
-      DATABASE_URL: postgresql://${POSTGRES_USER:-buildmystack}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-buildmystack}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-stapelwerk}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-stapelwerk}
       SEED_DEMO_PASSWORD: ${SEED_DEMO_PASSWORD:-changeme}
     depends_on:
       postgres:

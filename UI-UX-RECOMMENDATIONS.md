@@ -1,4 +1,4 @@
-# BuildMyStack UI/UX Transformation Recommendations
+# Stapelwerk UI/UX Transformation Recommendations
 
 **Analysis Date:** 2025-10-29  
 **Current Version:** v0.1.0  
@@ -9,10 +9,10 @@
 ## Current State Analysis
 
 ### Screenshot Analysis
-![Current BuildMyStack Homepage](screenshot captured via Chrome DevTools)
+![Current Stapelwerk Homepage](screenshot captured via Chrome DevTools)
 
 **Current Layout:**
-- Simple white header with "BuildMyStack" logo
+- Simple white header with "Stapelwerk" logo
 - Centered hero section with heading and tagline
 - Three basic feature cards in a row
 - Footer with copyright info
@@ -131,7 +131,7 @@ export function HeroSection() {
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-6"
           >
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              BuildMyStack
+              Stapelwerk
             </span>
           </motion.h1>
 
@@ -282,7 +282,7 @@ export function Header() {
           className="flex items-center gap-2"
         >
           <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            BuildMyStack
+            Stapelwerk
           </span>
         </motion.div>
 

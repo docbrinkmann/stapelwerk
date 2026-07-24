@@ -45,11 +45,11 @@
   "refresh": "30s",
   "schemaVersion": 36,
   "style": "dark",
-  "tags": ["buildmystack", "redis"],
+  "tags": ["stapelwerk", "redis"],
   "templating": {"list": []},
   "time": {"from": "now-6h", "to": "now"},
   "timezone": "",
-  "title": "BuildMyStack - Redis",
-  "uid": "buildmystack-redis",
+  "title": "Stapelwerk - Redis",
+  "uid": "stapelwerk-redis",
   "version": 1
 }

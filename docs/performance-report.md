@@ -1,6 +1,6 @@
 # Performance Audit Report
 
-**Project:** BuildMyStack UI/UX Modernization
+**Project:** Stapelwerk UI/UX Modernization
 **Date:** 2025-11-13
 **Testing Framework:** Lighthouse CI, Playwright, Custom Scripts
 **Auditor:** Testing Engineer
@@ -10,7 +10,7 @@
 
 ## Executive Summary
 
-This document outlines the comprehensive performance testing strategy and benchmarks for the BuildMyStack UI/UX modernization. The testing infrastructure ensures adherence to Core Web Vitals thresholds and maintains optimal performance across all pages.
+This document outlines the comprehensive performance testing strategy and benchmarks for the Stapelwerk UI/UX modernization. The testing infrastructure ensures adherence to Core Web Vitals thresholds and maintains optimal performance across all pages.
 
 ### Performance Targets
 

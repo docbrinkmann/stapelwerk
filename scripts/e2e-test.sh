@@ -16,9 +16,9 @@ NC='\033[0m' # No Color
 
 # Configuration
 DOCKER_HOST="${DOCKER_HOST:-ssh://root@gitlab.minilab.live}"
-APP_URL="${APP_URL:-https://buildmystack.minilab.live}"
-PAGES_URL="${PAGES_URL:-https://sebastian.gitlab.io/build-my-stack}"
-CONTAINER_NAME="${CONTAINER_NAME:-buildmystack-app}"
+APP_URL="${APP_URL:-https://stapelwerk.minilab.live}"
+PAGES_URL="${PAGES_URL:-https://sebastian.gitlab.io/stapelwerk}"
+CONTAINER_NAME="${CONTAINER_NAME:-stapelwerk-app}"
 TIMEOUT=30
 
 # Test results
@@ -86,7 +86,7 @@ test_container_running() {
 test_database_connection() {
     log_info "Testing database connection..."
     
-    if ssh root@gitlab.minilab.live "docker exec buildmystack-db pg_isready -U buildmystack" > /dev/null 2>&1; then
+    if ssh root@gitlab.minilab.live "docker exec stapelwerk-db pg_isready -U stapelwerk" > /dev/null 2>&1; then
         test_passed "Database is accepting connections"
     else
         test_failed "Database is not accepting connections"
@@ -140,7 +140,7 @@ test_ssl_certificate() {
     if curl -s --insecure -v "$APP_URL" 2>&1 | grep -q "SSL certificate verify ok"; then
         test_passed "SSL certificate is valid"
     else
-        expiry=$(echo | openssl s_client -servername buildmystack.minilab.live -connect buildmystack.minilab.live:443 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+        expiry=$(echo | openssl s_client -servername stapelwerk.minilab.live -connect stapelwerk.minilab.live:443 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
         if [ -n "$expiry" ]; then
             test_passed "SSL certificate is valid (expires: $expiry)"
         else
@@ -154,7 +154,7 @@ test_websocket_support() {
     log_info "Testing WebSocket support..."
     
     # Check if nginx config has WebSocket headers
-    if ssh root@gitlab.minilab.live "grep -q 'Upgrade \$http_upgrade' /etc/nginx/sites-available/buildmystack.conf" 2>/dev/null; then
+    if ssh root@gitlab.minilab.live "grep -q 'Upgrade \$http_upgrade' /etc/nginx/sites-available/stapelwerk.conf" 2>/dev/null; then
         test_passed "WebSocket support is configured in nginx"
     else
         test_warning "WebSocket configuration not verified (may be configured elsewhere)"
@@ -224,7 +224,7 @@ test_database_migrations() {
 test_backup_script() {
     log_info "Testing backup script existence and permissions..."
     
-    if ssh root@gitlab.minilab.live "test -x /opt/buildmystack/scripts/backup-db.sh"; then
+    if ssh root@gitlab.minilab.live "test -x /opt/stapelwerk/scripts/backup-db.sh"; then
         test_passed "Backup script exists and is executable"
     else
         test_failed "Backup script is missing or not executable"
@@ -245,7 +245,7 @@ test_cron_jobs() {
 test_disk_space() {
     log_info "Testing available disk space..."
     
-    disk_usage=$(ssh root@gitlab.minilab.live "df -h /opt/buildmystack | tail -1 | awk '{print \$5}' | sed 's/%//'")
+    disk_usage=$(ssh root@gitlab.minilab.live "df -h /opt/stapelwerk | tail -1 | awk '{print \$5}' | sed 's/%//'")
     
     if [ "$disk_usage" -lt 80 ]; then
         test_passed "Disk space is adequate ($disk_usage% used)"
@@ -301,7 +301,7 @@ test_response_time() {
 main() {
     echo ""
     echo "================================================================"
-    echo "  BuildMyStack E2E Deployment Test Suite"
+    echo "  Stapelwerk E2E Deployment Test Suite"
     echo "================================================================"
     echo ""
     log_info "Starting E2E tests at $(date)"

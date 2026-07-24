@@ -2,7 +2,7 @@
 
 ## Overview
 
-This framework helps you track the adoption and impact of BuildMyStack's UI/UX modernization across 3 key dimensions: **Component Adoption**, **Performance Impact**, and **User Experience**.
+This framework helps you track the adoption and impact of Stapelwerk's UI/UX modernization across 3 key dimensions: **Component Adoption**, **Performance Impact**, and **User Experience**.
 
 ## Metrics Dashboard
 

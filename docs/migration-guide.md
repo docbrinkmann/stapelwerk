@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide helps you migrate from legacy UI patterns to BuildMyStack's modernized design system. All changes are **backward-compatible** and can be adopted incrementally across 3 phases.
+This guide helps you migrate from legacy UI patterns to Stapelwerk's modernized design system. All changes are **backward-compatible** and can be adopted incrementally across 3 phases.
 
 ## Migration Strategy
 

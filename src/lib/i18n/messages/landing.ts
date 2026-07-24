@@ -27,7 +27,7 @@ export const landingEn = {
     'A clean compose file you own — run it anywhere, or hand it straight to Coolify, Portainer, Dokploy or Openship.',
 
   // Landing footer
-  'landing.footerTagline': 'BuildMyStack — a guided composer for self-hosted Docker stacks.',
+  'landing.footerTagline': 'Stapelwerk — a guided composer for self-hosted Docker stacks.',
   'landing.footerServices': 'Services',
   'landing.footerDocs': 'Docs',
   'landing.signIn': 'Sign in',
@@ -35,7 +35,7 @@ export const landingEn = {
   // Docs / help page
   'landing.docsTitle': 'Help & Docs',
   'landing.docsIntroPre':
-    'BuildMyStack helps you compose a curated, compatibility-checked Docker stack and export a ready-to-run',
+    'Stapelwerk helps you compose a curated, compatibility-checked Docker stack and export a ready-to-run',
   'landing.docsIntroPost': '.',
   'landing.docsTocAria': 'On this page',
   'landing.docsNavGettingStarted': 'Getting started',
@@ -55,7 +55,7 @@ export const landingEn = {
     'Optionally deploy to a remote host with the bundled deploy.sh — it runs on your machine and drives your server over your own SSH (we never hold your key) — or deploy directly to a Docker host from the stack\'s Deploy tab and watch live logs.',
   'landing.docsCatalogTitle': 'Understanding the service catalog',
   'landing.docsCatalogIntro':
-    'The catalog is a curated set of self-hostable services grouped by category (databases, media, networking, monitoring, …). Each service ships with real image, environment and volume metadata so the exported compose file actually runs. When you add services, BuildMyStack checks:',
+    'The catalog is a curated set of self-hostable services grouped by category (databases, media, networking, monitoring, …). Each service ships with real image, environment and volume metadata so the exported compose file actually runs. When you add services, Stapelwerk checks:',
   'landing.docsCheckCompatTerm': 'Compatibility',
   'landing.docsCheckCompatBody':
     'warns about combinations that clash (e.g. two reverse proxies on the same port).',
@@ -78,7 +78,7 @@ export const landingEn = {
   'landing.forbiddenHome': 'Go home',
 
   // Sign-in page
-  'landing.signinTitle': 'Sign in to BuildMyStack',
+  'landing.signinTitle': 'Sign in to Stapelwerk',
   'landing.signinSubtitle': 'Compose, manage and export your Docker stacks',
   'landing.signinErrorMissing': 'Please enter your email and password.',
   'landing.signinErrorInvalid': 'Invalid email or password. Please try again.',
@@ -116,7 +116,7 @@ export const landingDe: Record<keyof typeof landingEn, string> = {
     'Eine saubere Compose-Datei, die dir gehört — starte sie, wo du willst, oder übergib sie direkt an Coolify, Portainer, Dokploy oder Openship.',
 
   // Landing footer
-  'landing.footerTagline': 'BuildMyStack — ein geführter Composer für self-hosted Docker-Stacks.',
+  'landing.footerTagline': 'Stapelwerk — ein geführter Composer für self-hosted Docker-Stacks.',
   'landing.footerServices': 'Services',
   'landing.footerDocs': 'Doku',
   'landing.signIn': 'Anmelden',
@@ -124,7 +124,7 @@ export const landingDe: Record<keyof typeof landingEn, string> = {
   // Docs / help page
   'landing.docsTitle': 'Hilfe & Doku',
   'landing.docsIntroPre':
-    'BuildMyStack hilft dir, einen kuratierten Docker-Stack mit Kompatibilitäts-Checks zusammenzustellen und eine startklare',
+    'Stapelwerk hilft dir, einen kuratierten Docker-Stack mit Kompatibilitäts-Checks zusammenzustellen und eine startklare',
   'landing.docsIntroPost': ' zu exportieren.',
   'landing.docsTocAria': 'Auf dieser Seite',
   'landing.docsNavGettingStarted': 'Erste Schritte',
@@ -144,7 +144,7 @@ export const landingDe: Record<keyof typeof landingEn, string> = {
     'Optional deployst du auf einen Remote-Host mit dem beigelegten deploy.sh — es läuft auf deinem Rechner und steuert deinen Server über dein eigenes SSH (wir halten nie deinen Key) — oder direkt vom Deploy-Tab auf einen Docker-Host, mit Live-Logs.',
   'landing.docsCatalogTitle': 'So funktioniert der Service-Katalog',
   'landing.docsCatalogIntro':
-    'Der Katalog ist eine kuratierte Sammlung self-hostbarer Services, gruppiert nach Kategorie (Datenbanken, Medien, Netzwerk, Monitoring, …). Jeder Service bringt echte Image-, Environment- und Volume-Metadaten mit, damit die exportierte Compose-Datei wirklich läuft. Wenn du Services hinzufügst, prüft BuildMyStack:',
+    'Der Katalog ist eine kuratierte Sammlung self-hostbarer Services, gruppiert nach Kategorie (Datenbanken, Medien, Netzwerk, Monitoring, …). Jeder Service bringt echte Image-, Environment- und Volume-Metadaten mit, damit die exportierte Compose-Datei wirklich läuft. Wenn du Services hinzufügst, prüft Stapelwerk:',
   'landing.docsCheckCompatTerm': 'Kompatibilität',
   'landing.docsCheckCompatBody':
     'warnt vor Kombinationen, die sich beißen (z. B. zwei Reverse Proxies auf demselben Port).',
@@ -167,7 +167,7 @@ export const landingDe: Record<keyof typeof landingEn, string> = {
   'landing.forbiddenHome': 'Zur Startseite',
 
   // Sign-in page
-  'landing.signinTitle': 'Anmelden bei BuildMyStack',
+  'landing.signinTitle': 'Anmelden bei Stapelwerk',
   'landing.signinSubtitle': 'Erstelle, verwalte und exportiere deine Docker-Stacks',
   'landing.signinErrorMissing': 'Bitte gib deine E-Mail-Adresse und dein Passwort ein.',
   'landing.signinErrorInvalid': 'E-Mail oder Passwort ist falsch. Bitte versuch es erneut.',

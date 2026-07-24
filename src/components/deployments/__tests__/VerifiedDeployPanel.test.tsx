@@ -35,7 +35,7 @@ const h = vi.hoisted(() => ({
         summary: 'Not deploy-safe: No datastore exposed on the host network.',
       },
       issuedAt: '2026-07-22T00:00:00.000Z',
-      issuer: 'BuildMyStack',
+      issuer: 'Stapelwerk',
     },
     signature: 'sig-abc',
   },

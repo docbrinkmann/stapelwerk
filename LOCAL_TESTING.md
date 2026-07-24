@@ -18,7 +18,7 @@ Test the complete Docker setup locally before deploying to production.
 ### Phase 1: Build Docker Image (3-5 minutes)
 ```bash
 # Build the production Docker image
-docker build -t build-my-stack:test .
+docker build -t stapelwerk:test .
 
 # Expected output: "Successfully built..." and "Successfully tagged..."
 ```
@@ -26,10 +26,10 @@ docker build -t build-my-stack:test .
 **Verify the build:**
 ```bash
 # Check image was created
-docker images | grep build-my-stack
+docker images | grep stapelwerk
 
 # Check image size (should be ~200MB)
-docker images build-my-stack:test --format "{{.Size}}"
+docker images stapelwerk:test --format "{{.Size}}"
 ```
 
 ---
@@ -43,7 +43,7 @@ cp .env.example .env.local
 
 # Generate test secrets
 echo "NEXTAUTH_SECRET=$(openssl rand -base64 32)" >> .env.local
-echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/buildmystack_test" >> .env.local
+echo "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/stapelwerk_test" >> .env.local
 ```
 
 ---
@@ -86,7 +86,7 @@ curl http://localhost:3000/api/health
 docker compose ps
 
 # Check specific health status
-docker inspect --format='{{.State.Health.Status}}' $(docker ps -q -f name=build-my-stack)
+docker inspect --format='{{.State.Health.Status}}' $(docker ps -q -f name=stapelwerk)
 ```
 
 ---
@@ -119,13 +119,13 @@ open http://localhost:3000
 **Verify PostgreSQL is accessible:**
 ```bash
 # Connect to PostgreSQL container
-docker compose exec postgres psql -U postgres -d buildmystack_test -c "SELECT version();"
+docker compose exec postgres psql -U postgres -d stapelwerk_test -c "SELECT version();"
 
 # Run Prisma migrations
 docker compose exec app npx prisma migrate deploy
 
 # Check tables were created
-docker compose exec postgres psql -U postgres -d buildmystack_test -c "\dt"
+docker compose exec postgres psql -U postgres -d stapelwerk_test -c "\dt"
 ```
 
 ---
@@ -152,7 +152,7 @@ curl http://localhost:3000/api/health
 **Simulate a rollback:**
 ```bash
 # Build another version
-docker build -t build-my-stack:test-v2 .
+docker build -t stapelwerk:test-v2 .
 
 # Stop current container
 docker compose down app
@@ -177,7 +177,7 @@ docker compose down
 docker compose down -v
 
 # Remove test images (optional)
-docker rmi build-my-stack:test build-my-stack:test-v2
+docker rmi stapelwerk:test stapelwerk:test-v2
 ```
 
 ---

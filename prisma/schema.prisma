@@ -123,14 +123,14 @@ model deployment_targets {
   type                        String
   provider                    String
   config                      String                        @default("{}")
-  // Direct-deploy location: null/"local" = the Docker host BuildMyStack runs on
+  // Direct-deploy location: null/"local" = the Docker host Stapelwerk runs on
   // (mounted socket); "remote" = a Docker host reached over SSH (key auth only).
   location                    String?                       @default("local")
   host                        String? // remote: hostname / IP
   sshUser                     String? // remote: SSH login user
   sshPort                     Int? // remote: SSH port (default 22)
   // remote: timestamp the operator acknowledged the SSH-key liability disclaimer
-  // (BuildMyStack holds a key that can run docker on their host). Required to
+  // (Stapelwerk holds a key that can run docker on their host). Required to
   // register a remote target; null for local targets.
   riskAcknowledgedAt          DateTime?
   userId                      String?

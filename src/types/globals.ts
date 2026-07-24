@@ -1,4 +1,4 @@
-// Global type definitions for BuildMyStack
+// Global type definitions for Stapelwerk
 
 export interface AppConfig {
   name: string

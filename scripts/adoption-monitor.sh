@@ -38,7 +38,7 @@ MAX_CHURN_RATE="${MAX_CHURN_RATE:-0.2}" # 20%
 
 # Initialize monitoring
 init_adoption_monitoring() {
-    echo -e "${BOLD}${BLUE}=== BuildMyStack Adoption Monitoring ===${NC}"
+    echo -e "${BOLD}${BLUE}=== Stapelwerk Adoption Monitoring ===${NC}"
     echo -e "${CYAN}Monitor ID: $MONITOR_ID${NC}"
     echo -e "${CYAN}Environment: $ENVIRONMENT${NC}"
     echo -e "${CYAN}Started: $(date)${NC}"
@@ -445,14 +445,14 @@ send_adoption_alerts() {
         
         local payload
         payload=$(jq -n \
-            --arg text "BuildMyStack Adoption Alerts" \
+            --arg text "Stapelwerk Adoption Alerts" \
             --arg alert_text "$alert_text" \
             --arg environment "$ENVIRONMENT" \
             --arg timestamp "$(date)" \
             '{
                 attachments: [{
                     color: "warning",
-                    title: "⚠️ BuildMyStack Adoption Alerts",
+                    title: "⚠️ Stapelwerk Adoption Alerts",
                     text: $alert_text,
                     fields: [
                         {title: "Environment", value: $environment, short: true},
@@ -567,7 +567,7 @@ send_adoption_report_summary() {
             '{
                 attachments: [{
                     color: $color,
-                    title: "📊 BuildMyStack Adoption Report",
+                    title: "📊 Stapelwerk Adoption Report",
                     text: ("Adoption Health: " + $health),
                     fields: [
                         {title: "Key Metrics", value: $insights, short: false},
@@ -585,7 +585,7 @@ send_adoption_report_summary() {
 
 # Show current adoption status
 show_adoption_status() {
-    echo -e "${BOLD}BuildMyStack Adoption Status${NC}"
+    echo -e "${BOLD}Stapelwerk Adoption Status${NC}"
     echo
     
     if [[ ! -f "$METRICS_DIR/current-state.json" ]]; then
@@ -650,7 +650,7 @@ show_adoption_status() {
 # Help function
 show_help() {
     cat << EOF
-BuildMyStack Adoption Monitoring System
+Stapelwerk Adoption Monitoring System
 
 Usage: $0 <command> [options]
 

@@ -9,7 +9,7 @@
 set -e
 
 # Configuration
-APP_URL="${APP_URL:-https://buildmystack.minilab.live}"
+APP_URL="${APP_URL:-https://stapelwerk.minilab.live}"
 TIMEOUT=10
 
 # Colors
@@ -18,7 +18,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m'
 
-echo "🔥 Running smoke tests for BuildMyStack..."
+echo "🔥 Running smoke tests for Stapelwerk..."
 echo ""
 
 # Test 1: Health Endpoint
@@ -43,7 +43,7 @@ fi
 
 # Test 3: SSL Certificate
 echo -n "Testing SSL certificate... "
-if echo | openssl s_client -servername buildmystack.minilab.live -connect buildmystack.minilab.live:443 2>/dev/null | grep -q "Verify return code: 0"; then
+if echo | openssl s_client -servername stapelwerk.minilab.live -connect stapelwerk.minilab.live:443 2>/dev/null | grep -q "Verify return code: 0"; then
     echo -e "${GREEN}✓${NC}"
 else
     echo -e "${YELLOW}⚠${NC} (Warning: Certificate verification issue)"

@@ -13,22 +13,22 @@ Before starting, ensure you have:
 
 ```bash
 # Generate a new ED25519 SSH key
-ssh-keygen -t ed25519 -C "gitlab-ci-deploy@build-my-stack" -f ~/.ssh/gitlab-ci-buildmystack
+ssh-keygen -t ed25519 -C "gitlab-ci-deploy@stapelwerk" -f ~/.ssh/gitlab-ci-stapelwerk
 
 # This creates two files:
-# - ~/.ssh/gitlab-ci-buildmystack (private key - for GitLab CI/CD)
-# - ~/.ssh/gitlab-ci-buildmystack.pub (public key - for server)
+# - ~/.ssh/gitlab-ci-stapelwerk (private key - for GitLab CI/CD)
+# - ~/.ssh/gitlab-ci-stapelwerk.pub (public key - for server)
 ```
 
 ### Copy public key to server:
 
 ```bash
 # Display the public key
-cat ~/.ssh/gitlab-ci-buildmystack.pub
+cat ~/.ssh/gitlab-ci-stapelwerk.pub
 
 # Add this to your server's authorized_keys:
 # ssh user@*************** "mkdir -p ~/.ssh && chmod 700 ~/.ssh"
-# ssh user@*************** "cat >> ~/.ssh/authorized_keys" < ~/.ssh/gitlab-ci-buildmystack.pub
+# ssh user@*************** "cat >> ~/.ssh/authorized_keys" < ~/.ssh/gitlab-ci-stapelwerk.pub
 ```
 
 ---
@@ -41,14 +41,14 @@ Go to: **GitLab Project → Settings → CI/CD → Variables → Expand → Add 
 
 | Variable Name | Type | Value | Protected | Masked | Expanded |
 |--------------|------|-------|-----------|--------|----------|
-| `SSH_PRIVATE_KEY` | File | Contents of `~/.ssh/gitlab-ci-buildmystack` | ✅ Yes | ✅ Yes | ❌ No |
+| `SSH_PRIVATE_KEY` | File | Contents of `~/.ssh/gitlab-ci-stapelwerk` | ✅ Yes | ✅ Yes | ❌ No |
 | `SERVER_HOST` | Variable | `***************` | ✅ Yes | ❌ No | ✅ Yes |
 | `SERVER_USER` | Variable | Your server username | ✅ Yes | ❌ No | ✅ Yes |
 | `DATABASE_URL` | Variable | From .env.production | ✅ Yes | ✅ Yes | ❌ No |
 | `NEXTAUTH_SECRET` | Variable | From .env.production | ✅ Yes | ✅ Yes | ❌ No |
-| `NEXTAUTH_URL` | Variable | `https://buildmystack.minilab.live` | ✅ Yes | ❌ No | ✅ Yes |
+| `NEXTAUTH_URL` | Variable | `https://stapelwerk.minilab.live` | ✅ Yes | ❌ No | ✅ Yes |
 | `CI_REGISTRY` | Variable | `registry.gitlab.minilab.live` | ✅ Yes | ❌ No | ✅ Yes |
-| `CI_REGISTRY_IMAGE` | Variable | `registry.gitlab.minilab.live/username/build-my-stack` | ✅ Yes | ❌ No | ✅ Yes |
+| `CI_REGISTRY_IMAGE` | Variable | `registry.gitlab.minilab.live/username/stapelwerk` | ✅ Yes | ❌ No | ✅ Yes |
 
 ### Optional Variables (if using):
 
@@ -64,7 +64,7 @@ Go to: **GitLab Project → Settings → CI/CD → Variables → Expand → Add 
 
 ### Display SSH Private Key:
 ```bash
-cat ~/.ssh/gitlab-ci-buildmystack
+cat ~/.ssh/gitlab-ci-stapelwerk
 ```
 
 ### Get values from .env.production:
@@ -107,7 +107,7 @@ Test SSH connection from your local machine:
 
 ```bash
 # Test SSH connection with the deployment key
-ssh -i ~/.ssh/gitlab-ci-buildmystack user@***************
+ssh -i ~/.ssh/gitlab-ci-stapelwerk user@***************
 
 # If successful, you should get a shell prompt
 # Exit with: exit

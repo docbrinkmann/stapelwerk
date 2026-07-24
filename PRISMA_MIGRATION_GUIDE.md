@@ -102,7 +102,7 @@ CREATE UNIQUE INDEX "user_sessions_sessionToken_key" ON "user_sessions"("session
 ### Schritt 1: Prisma Schema validieren
 
 ```bash
-cd /Users/sebastian/projects/build-my-stack
+cd /Users/sebastian/projects/stapelwerk
 
 # Schema validieren
 npx prisma validate

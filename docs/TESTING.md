@@ -1,6 +1,6 @@
-# Testing Guide for BuildMyStack Deployment
+# Testing Guide for Stapelwerk Deployment
 
-This document describes the testing strategy and available test scripts for verifying the BuildMyStack deployment.
+This document describes the testing strategy and available test scripts for verifying the Stapelwerk deployment.
 
 ## 🎯 Testing Overview
 
@@ -30,13 +30,13 @@ We have three levels of automated tests for deployment verification:
 bash scripts/smoke-test.sh
 
 # With custom URL
-APP_URL=https://buildmystack.minilab.live bash scripts/smoke-test.sh
+APP_URL=https://stapelwerk.minilab.live bash scripts/smoke-test.sh
 ```
 
 ### Example Output:
 
 ```
-🔥 Running smoke tests for BuildMyStack...
+🔥 Running smoke tests for Stapelwerk...
 
 Testing health endpoint... ✓
 Testing home page... ✓
@@ -143,9 +143,9 @@ All integration tests passed successfully! ✓
 bash scripts/e2e-test.sh
 
 # With custom configuration
-APP_URL=https://buildmystack.minilab.live \
-PAGES_URL=https://sebastian.gitlab.io/build-my-stack \
-CONTAINER_NAME=buildmystack-app \
+APP_URL=https://stapelwerk.minilab.live \
+PAGES_URL=https://sebastian.gitlab.io/stapelwerk \
+CONTAINER_NAME=stapelwerk-app \
 bash scripts/e2e-test.sh
 ```
 
@@ -153,7 +153,7 @@ bash scripts/e2e-test.sh
 
 ```
 ================================================================
-  BuildMyStack E2E Deployment Test Suite
+  Stapelwerk E2E Deployment Test Suite
 ================================================================
 
 [INFO] Starting E2E tests at Mon Jan 15 10:30:00 CET 2024
@@ -259,25 +259,25 @@ All tests must pass for deployment to be considered successful:
 #### Health Endpoint Fails
 ```bash
 # Check container logs
-docker logs buildmystack-app
+docker logs stapelwerk-app
 
 # Restart container
-docker restart buildmystack-app
+docker restart stapelwerk-app
 
 # Verify environment variables
-docker exec buildmystack-app env | grep DATABASE_URL
+docker exec stapelwerk-app env | grep DATABASE_URL
 ```
 
 #### Database Connection Fails
 ```bash
 # Check database container
-docker ps | grep buildmystack-db
+docker ps | grep stapelwerk-db
 
 # Test database directly
-docker exec buildmystack-db pg_isready -U buildmystack
+docker exec stapelwerk-db pg_isready -U stapelwerk
 
 # Verify network
-docker network inspect buildmystack_default
+docker network inspect stapelwerk_default
 ```
 
 #### SSL Certificate Issues
@@ -356,22 +356,22 @@ If tests fail:
 3. **Test components individually**:
    ```bash
    # Test health endpoint directly
-   curl -v https://buildmystack.minilab.live/api/health
+   curl -v https://stapelwerk.minilab.live/api/health
    
    # Check container status
    ssh root@gitlab.minilab.live "docker ps"
    
    # View container logs
-   ssh root@gitlab.minilab.live "docker logs --tail 50 buildmystack-app"
+   ssh root@gitlab.minilab.live "docker logs --tail 50 stapelwerk-app"
    ```
 
 4. **Review logs**:
    ```bash
    # Application logs
-   docker logs buildmystack-app
+   docker logs stapelwerk-app
    
    # Database logs
-   docker logs buildmystack-db
+   docker logs stapelwerk-db
    
    # Nginx logs
    sudo tail -f /var/log/nginx/error.log
@@ -423,6 +423,6 @@ To add new test cases to the E2E suite:
 
 If you encounter issues with tests:
 - Email: sebastian@minilab.live
-- Check logs: `docker logs buildmystack-app`
+- Check logs: `docker logs stapelwerk-app`
 - Review documentation: `docs/` directory
 - Emergency rollback: `bash scripts/rollback.sh <TAG>`

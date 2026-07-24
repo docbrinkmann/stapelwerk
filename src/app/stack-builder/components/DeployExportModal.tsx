@@ -75,7 +75,7 @@ const ENV_LABEL_KEYS: Record<DeploymentEnv, MessageKey> = {
  * The compose/env/secrets are passed in already-generated so the modal shows
  * the exact same passwords as the live preview (no re-randomization). The
  * deploy.sh runs on the user's own machine and drives their server over their
- * own SSH — BuildMyStack never sees the host or holds the key.
+ * own SSH — Stapelwerk never sees the host or holds the key.
  */
 export function DeployExportModal({
   isOpen,
@@ -226,6 +226,7 @@ function DownloadPanel({
   readme: string;
   deployScript: string;
 }) {
+  const t = useT();
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-2">
@@ -235,10 +236,9 @@ function DownloadPanel({
         <DownloadButton filename="deploy.sh" content={deployScript} mime="text/x-shellscript" />
       </div>
       <p className="text-xs text-muted-foreground">
-        <span className="font-medium text-foreground">deploy.sh</span> is optional: run{' '}
+        <span className="font-medium text-foreground">deploy.sh</span> {t('ops.deployShCaptionPre')}{' '}
         <code className="rounded bg-muted px-1 py-0.5 font-mono">./deploy.sh user@your-server</code>{' '}
-        to stand the stack up on a remote host over your own SSH. Your machine drives your
-        server — we never see the host or your key.
+        {t('ops.deployShCaptionPost')}
       </p>
       <CodeBox label="docker-compose.yml" value={composeYaml} icon={<FileCode2 className="h-4 w-4" />} />
       <CodeBox label=".env" value={envFile} icon={<KeyRound className="h-4 w-4" />} />

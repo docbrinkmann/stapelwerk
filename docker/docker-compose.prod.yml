@@ -1,24 +1,24 @@
-# Production-like Docker Compose for BuildMyStack AI Recommendations
+# Production-like Docker Compose for Stapelwerk AI Recommendations
 # Used for local testing of production configuration
 
 version: '3.8'
 
 services:
   # Main application
-  buildmystack-ai:
+  stapelwerk-ai:
     build:
       context: ..
       dockerfile: docker/production.Dockerfile
-    image: buildmystack-ai:latest
-    container_name: buildmystack-ai-prod
+    image: stapelwerk-ai:latest
+    container_name: stapelwerk-ai-prod
     restart: unless-stopped
     ports:
       - "8080:8080"
     environment:
       - NODE_ENV=production
       - DB_HOST=postgres
-      - DB_NAME=buildmystack_prod
-      - DB_USER=buildmystack_user
+      - DB_NAME=stapelwerk_prod
+      - DB_USER=stapelwerk_user
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - OPENAI_API_KEY=${OPENAI_API_KEY:-}
@@ -43,7 +43,7 @@ services:
       - redis_password
       - jwt_secret
     networks:
-      - buildmystack-network
+      - stapelwerk-network
     volumes:
       - app-logs:/usr/src/app/logs
     healthcheck:
@@ -56,13 +56,13 @@ services:
   # PostgreSQL Database
   postgres:
     image: postgres:18-alpine
-    container_name: buildmystack-postgres-prod
+    container_name: stapelwerk-postgres-prod
     restart: unless-stopped
     ports:
       - "5432:5432"
     environment:
-      - POSTGRES_DB=buildmystack_prod
-      - POSTGRES_USER=buildmystack_user
+      - POSTGRES_DB=stapelwerk_prod
+      - POSTGRES_USER=stapelwerk_user
       - POSTGRES_PASSWORD_FILE=/run/secrets/db_password
       - POSTGRES_INITDB_ARGS=--auth-host=scram-sha-256 --auth-local=scram-sha-256
     secrets:
@@ -71,9 +71,9 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ../database/migrations:/docker-entrypoint-initdb.d:ro
     networks:
-      - buildmystack-network
+      - stapelwerk-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U buildmystack_user -d buildmystack_prod"]
+      test: ["CMD-SHELL", "pg_isready -U stapelwerk_user -d stapelwerk_prod"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -91,7 +91,7 @@ services:
   # Redis Cache
   redis:
     image: redis:7-alpine
-    container_name: buildmystack-redis-prod
+    container_name: stapelwerk-redis-prod
     restart: unless-stopped
     ports:
       - "6379:6379"
@@ -111,7 +111,7 @@ services:
     volumes:
       - redis-data:/data
     networks:
-      - buildmystack-network
+      - stapelwerk-network
     healthcheck:
       test: ["CMD", "sh", "-c", "redis-cli -a $$(cat /run/secrets/redis_password) ping"]
       interval: 10s
@@ -122,7 +122,7 @@ services:
   # Prometheus for metrics collection
   prometheus:
     image: prom/prometheus:latest
-    container_name: buildmystack-prometheus-prod
+    container_name: stapelwerk-prometheus-prod
     restart: unless-stopped
     ports:
       - "9090:9090"
@@ -138,9 +138,9 @@ services:
       - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus-data:/prometheus
     networks:
-      - buildmystack-network
+      - stapelwerk-network
     depends_on:
-      - buildmystack-ai
+      - stapelwerk-ai
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9090/-/healthy"]
       interval: 30s
@@ -154,7 +154,7 @@ services:
   # Grafana for metrics visualization
   grafana:
     image: grafana/grafana:latest
-    container_name: buildmystack-grafana-prod
+    container_name: stapelwerk-grafana-prod
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -166,7 +166,7 @@ services:
       - grafana-data:/var/lib/grafana
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
     networks:
-      - buildmystack-network
+      - stapelwerk-network
     depends_on:
       - prometheus
     healthcheck:
@@ -182,7 +182,7 @@ services:
   # Nginx for load balancing and SSL termination
   nginx:
     image: nginx:alpine
-    container_name: buildmystack-nginx-prod
+    container_name: stapelwerk-nginx-prod
     restart: unless-stopped
     ports:
       - "80:80"
@@ -193,9 +193,9 @@ services:
       - nginx-logs:/var/log/nginx
       - ./certs:/etc/nginx/certs:ro
     networks:
-      - buildmystack-network
+      - stapelwerk-network
     depends_on:
-      - buildmystack-ai
+      - stapelwerk-ai
     healthcheck:
       test: ["CMD", "nginx", "-t"]
       interval: 30s
@@ -217,7 +217,7 @@ volumes:
     driver: local
 
 networks:
-  buildmystack-network:
+  stapelwerk-network:
     driver: bridge
     ipam:
       driver: default

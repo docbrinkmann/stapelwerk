@@ -13,7 +13,7 @@ VALIDATION_REPORT="${PROJECT_ROOT}/logs/validation-report-$(date +%Y%m%d-%H%M%S)
 
 # Default Configuration
 DEFAULT_BASE_URL="http://localhost:8080"
-DEFAULT_NAMESPACE="buildmystack"
+DEFAULT_NAMESPACE="stapelwerk"
 DEFAULT_TIMEOUT=30
 
 # Validation Results
@@ -245,7 +245,7 @@ run_monitoring_phase() {
     log "HEADER" "=== Phase 7: Monitoring and Observability ==="
     
     run_validation_phase "Metrics Endpoint Validation" \
-        "curl -f $BASE_URL/metrics -m 30 | grep -q 'buildmystack'" \
+        "curl -f $BASE_URL/metrics -m 30 | grep -q 'stapelwerk'" \
         60
     
     run_validation_phase "Health Endpoints Coverage" \
@@ -281,9 +281,9 @@ run_rollback_readiness_phase() {
         60
     
     # Check rollout history (if Kubernetes)
-    if command -v kubectl &> /dev/null && kubectl get deployment buildmystack-ai -n "$DEFAULT_NAMESPACE" &> /dev/null 2>&1; then
+    if command -v kubectl &> /dev/null && kubectl get deployment stapelwerk-ai -n "$DEFAULT_NAMESPACE" &> /dev/null 2>&1; then
         run_validation_phase "Kubernetes Rollout History" \
-            "kubectl rollout history deployment/buildmystack-ai -n $DEFAULT_NAMESPACE" \
+            "kubectl rollout history deployment/stapelwerk-ai -n $DEFAULT_NAMESPACE" \
             60
     fi
 }
@@ -437,11 +437,11 @@ show_usage() {
     cat << EOF
 Usage: $0 [OPTIONS]
 
-Comprehensive deployment validation orchestrator for BuildMyStack AI Recommendations.
+Comprehensive deployment validation orchestrator for Stapelwerk AI Recommendations.
 
 Options:
   --url URL              Base URL of the deployed application (default: http://localhost:8080)
-  --namespace NAMESPACE  Kubernetes namespace (default: buildmystack)
+  --namespace NAMESPACE  Kubernetes namespace (default: stapelwerk)
   --timeout SECONDS      Default timeout for validation phases (default: 30)
   --skip-pre-deployment Skip pre-deployment validation phase
   --skip-readiness      Skip deployment readiness phase
@@ -458,7 +458,7 @@ Options:
 
 Examples:
   $0                                    # Run complete validation
-  $0 --url https://api.buildmystack.com # Validate production deployment
+  $0 --url https://api.stapelwerk.com # Validate production deployment
   $0 --quick                           # Run essential validations only
   $0 --critical-only                   # Run critical phases only
   $0 --skip-performance                # Skip performance testing
@@ -566,7 +566,7 @@ main() {
         esac
     done
     
-    log "HEADER" "🚀 Starting BuildMyStack AI Deployment Validation"
+    log "HEADER" "🚀 Starting Stapelwerk AI Deployment Validation"
     log "INFO" "Base URL: $BASE_URL"
     log "INFO" "Namespace: $DEFAULT_NAMESPACE"
     log "INFO" "Validation log: $VALIDATION_LOG"

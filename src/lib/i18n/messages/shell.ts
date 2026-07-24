@@ -82,7 +82,7 @@ export const shellEn = {
   'shell.viewServices': 'View Services',
   'shell.viewServicesDesc': 'Manage your running services',
   'shell.documentation': 'Documentation',
-  'shell.documentationDesc': 'Learn how to use BuildMyStack',
+  'shell.documentationDesc': 'Learn how to use Stapelwerk',
   // Recent activity
   'shell.recentActivity': 'Recent Activity',
   'shell.recentActivityDesc': 'Latest actions and deployments across your stacks',
@@ -188,7 +188,7 @@ export const shellDe: Record<keyof typeof shellEn, string> = {
   'shell.viewServices': 'Services ansehen',
   'shell.viewServicesDesc': 'Verwalte deine laufenden Services',
   'shell.documentation': 'Dokumentation',
-  'shell.documentationDesc': 'Lerne, wie du BuildMyStack nutzt',
+  'shell.documentationDesc': 'Lerne, wie du Stapelwerk nutzt',
   // Recent activity
   'shell.recentActivity': 'Letzte Aktivität',
   'shell.recentActivityDesc': 'Neueste Aktionen und Deployments über deine Stacks hinweg',

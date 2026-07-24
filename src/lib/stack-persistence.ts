@@ -915,7 +915,7 @@ export class StackPersistenceService {
       version: '1.0',
       metadata: {
         exportedAt: new Date().toISOString(),
-        exportedBy: 'BuildMyStack',
+        exportedBy: 'Stapelwerk',
       },
       stack: {
         name: stack.name,

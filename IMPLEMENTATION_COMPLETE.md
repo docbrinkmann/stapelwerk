@@ -88,9 +88,9 @@
 
 ```bash
 Docker Containers:
-├─ build-my-stack-app       ✅ HEALTHY (Up 2+ hours)
-├─ build-my-stack-postgres  ✅ HEALTHY (Up 2+ hours)  
-└─ build-my-stack-redis     ✅ HEALTHY (Up 2+ hours)
+├─ stapelwerk-app       ✅ HEALTHY (Up 2+ hours)
+├─ stapelwerk-postgres  ✅ HEALTHY (Up 2+ hours)  
+└─ stapelwerk-redis     ✅ HEALTHY (Up 2+ hours)
 
 Ports:
 ├─ Application: localhost:3000

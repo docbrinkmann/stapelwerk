@@ -74,7 +74,7 @@ docker-compose down -v
 ### Next.js Application
 - **Port:** 3000
 - **URL:** http://localhost:3000
-- **Container:** build-my-stack-app
+- **Container:** stapelwerk-app
 - **Hot Reload:** ✅ Aktiviert
 
 ### PostgreSQL Database
@@ -83,13 +83,13 @@ docker-compose down -v
 - **Database:** build_my_stack_dev
 - **User:** postgres
 - **Password:** postgres_dev_password
-- **Container:** build-my-stack-postgres
+- **Container:** stapelwerk-postgres
 - **Status:** ✅ Tested & Working
 
 ### Redis Cache
 - **Port:** 6379
 - **Version:** 7-alpine
-- **Container:** build-my-stack-redis
+- **Container:** stapelwerk-redis
 - **Status:** ✅ Tested & Working
 
 ## Makefile Befehle
@@ -178,14 +178,14 @@ Development Dockerfile mit:
 
 ### Persistent Volumes
 ```bash
-build-my-stack-postgres-data    # PostgreSQL Daten
-build-my-stack-redis-data       # Redis Daten
-build-my-stack-node-modules     # NPM Packages
+stapelwerk-postgres-data    # PostgreSQL Daten
+stapelwerk-redis-data       # Redis Daten
+stapelwerk-node-modules     # NPM Packages
 ```
 
 Volumes anzeigen:
 ```bash
-docker volume ls | grep build-my-stack
+docker volume ls | grep stapelwerk
 ```
 
 Volumes löschen:
@@ -211,9 +211,9 @@ curl http://localhost:3000/api/health
 # Alle Services healthy
 docker-compose ps
 NAME                      STATUS
-build-my-stack-app        Up (healthy)
-build-my-stack-postgres   Up (healthy)  
-build-my-stack-redis      Up (healthy)
+stapelwerk-app        Up (healthy)
+stapelwerk-postgres   Up (healthy)  
+stapelwerk-redis      Up (healthy)
 
 # Migrationen erfolgreich
 npm run db:migrate

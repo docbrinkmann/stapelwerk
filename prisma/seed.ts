@@ -1227,12 +1227,12 @@ async function main() {
   // dashboard and /stacks show data right after signing in.
   const demoPassword = process.env.SEED_DEMO_PASSWORD || 'demo1234'
   const demoUser = await prisma.users.upsert({
-    where: { email: 'demo@buildmystack.dev' },
+    where: { email: 'demo@stapelwerk.dev' },
     // Single-user setup: the demo user is also the admin (reviews template submissions)
     update: { passwordHash: hashPassword(demoPassword), role: 'admin' },
     create: {
       id: crypto.randomUUID(),
-      email: 'demo@buildmystack.dev',
+      email: 'demo@stapelwerk.dev',
       name: 'Demo User',
       passwordHash: hashPassword(demoPassword),
       role: 'admin',
@@ -1243,7 +1243,7 @@ async function main() {
     where: { id: stack.id },
     data: { userId: demoUser.id },
   })
-  console.log(`👤 Demo user: demo@buildmystack.dev / ${demoPassword}`)
+  console.log(`👤 Demo user: demo@stapelwerk.dev / ${demoPassword}`)
 
   console.log('✅ Database seed completed successfully!')
   console.log('📊 Summary:')

@@ -799,14 +799,14 @@ services:
 #### Self-Service Resources
 
 1. **Documentation**: Start with relevant docs sections
-2. **Status Page**: Check https://status.buildmystack.com
+2. **Status Page**: Check https://status.stapelwerk.com
 3. **Community Forums**: Search existing discussions
 4. **Knowledge Base**: Browse common solutions
 
 #### Support Channels
 
 **Enterprise Support** (24/7):
-- **Email**: enterprise-support@buildmystack.com
+- **Email**: enterprise-support@stapelwerk.com
 - **Phone**: 1-800-BUILD-MY-STACK
 - **Slack**: Private support channel
 - **Dedicated Success Manager**: For Premium Enterprise
@@ -915,6 +915,6 @@ After mastering the basics:
 
 ---
 
-**Need help getting started?** Contact your dedicated success manager or reach out to enterprise-support@buildmystack.com.
+**Need help getting started?** Contact your dedicated success manager or reach out to enterprise-support@stapelwerk.com.
 
 *Last updated: January 2024*

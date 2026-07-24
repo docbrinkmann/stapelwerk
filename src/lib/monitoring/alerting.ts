@@ -290,7 +290,7 @@ class AlertingService {
 
     const payload = {
       text: `${severityEmojis[alert.severity]} Alert: ${alert.title}`,
-      username: config.username || 'BuildMyStack Monitor',
+      username: config.username || 'Stapelwerk Monitor',
       icon_emoji: config.iconEmoji || ':warning:',
       channel: config.channel,
       attachments: [

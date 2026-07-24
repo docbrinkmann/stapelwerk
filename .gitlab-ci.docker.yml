@@ -1,4 +1,4 @@
-# GitLab CI/CD Pipeline for BuildMyStack - Docker Deployment
+# GitLab CI/CD Pipeline for Stapelwerk - Docker Deployment
 # This pipeline deploys to Docker containers on gitlab.minilab.live + GitLab Pages
 
 image: node:22-alpine
@@ -53,10 +53,10 @@ test:
   services:
     - postgres:18-alpine
   variables:
-    POSTGRES_DB: buildmystack_test
+    POSTGRES_DB: stapelwerk_test
     POSTGRES_USER: postgres
     POSTGRES_PASSWORD: postgres
-    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/buildmystack_test"
+    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/stapelwerk_test"
   script:
     - corepack enable pnpm
     - pnpm prisma generate
@@ -100,7 +100,7 @@ build:static:
   script:
     - corepack enable pnpm
     - mkdir -p public/docs
-    - echo "<!DOCTYPE html><html><head><title>BuildMyStack Docs</title></head><body><h1>BuildMyStack Documentation</h1><p>Coming soon...</p></body></html>" > public/docs/index.html
+    - echo "<!DOCTYPE html><html><head><title>Stapelwerk Docs</title></head><body><h1>Stapelwerk Documentation</h1><p>Coming soon...</p></body></html>" > public/docs/index.html
   artifacts:
     paths:
       - public/
@@ -125,7 +125,7 @@ deploy:docker:
     - export IMAGE_TAG=$(cat image_tag.txt)
     - |
       ssh $SERVER_USER@$SERVER_HOST << 'EOF'
-        cd /opt/build-my-stack
+        cd /opt/stapelwerk
         export DOCKER_IMAGE_TAG='$IMAGE_TAG'
         docker pull $CI_REGISTRY_IMAGE:$IMAGE_TAG
         docker compose up -d --no-deps app
@@ -134,7 +134,7 @@ deploy:docker:
       EOF
   environment:
     name: production
-    url: https://buildmystack.minilab.live
+    url: https://stapelwerk.minilab.live
   only:
     - main
   when: manual

@@ -298,7 +298,7 @@ const BulkImportExportManager: React.FC<BulkImportExportManagerProps> = ({
               metadata: exportOptions.includeMetadata ? {
                 exportedAt: new Date().toISOString(),
                 version: '1.0.0',
-                source: 'build-my-stack'
+                source: 'stapelwerk'
               } : undefined,
               documentation: exportOptions.includeDocumentation ? stack.description : undefined
             };
@@ -330,7 +330,7 @@ const BulkImportExportManager: React.FC<BulkImportExportManagerProps> = ({
           metadata: exportOptions.includeMetadata ? {
             exportedAt: new Date().toISOString(),
             version: '1.0.0',
-            source: 'build-my-stack',
+            source: 'stapelwerk',
             totalStacks: stacks.length
           } : undefined,
           stacks: stacks.map(stack => ({
