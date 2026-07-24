@@ -64,4 +64,18 @@ describe('Dialog', () => {
     fireEvent.click(screen.getByText('Edit Stack'))
     expect(onOpenChange).not.toHaveBeenCalled()
   })
+
+  it('lets a caller width class win over the base max-w-md (was capped before)', () => {
+    render(
+      <Dialog open onOpenChange={vi.fn()}>
+        <DialogContent className="max-w-4xl">
+          <DialogTitle>Wide</DialogTitle>
+        </DialogContent>
+      </Dialog>,
+    )
+    const panel = screen.getByRole('dialog')
+    expect(panel.className).toContain('max-w-4xl')
+    // tailwind-merge must drop the base so it can't override the wider class.
+    expect(panel.className).not.toContain('max-w-md')
+  })
 })

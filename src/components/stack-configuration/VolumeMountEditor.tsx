@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Service } from '@/types/service';
+import { useT } from '@/lib/i18n/client';
 
 interface VolumeMount {
   id?: string;
@@ -21,6 +22,7 @@ export const VolumeMountEditor: React.FC<VolumeMountEditorProps> = ({
   volumeMounts,
   onChange,
 }) => {
+  const t = useT();
   const [showAddForm, setShowAddForm] = useState(false);
 const [newMount, setNewMount] = useState({
     hostPath: '',
@@ -62,19 +64,19 @@ const [newMount, setNewMount] = useState({
 
   const validatePath = (path: string, type: 'host' | 'container') => {
     if (!path) return null;
-    
-if (type === 'host') {
+
+    if (type === 'host') {
       // Host path validation
       if (path.includes('..')) {
-        return 'Invalid path format';
+        return t('builder.edInvalidPath');
       }
       if (!path.startsWith('/') && !path.match(/^[a-zA-Z]:/)) {
-        return 'Host path must be absolute';
+        return t('builder.edHostPathAbsolute');
       }
     } else {
       // Container path validation
       if (!path.startsWith('/')) {
-        return 'Container path must be absolute';
+        return t('builder.edContainerPathAbsolute');
       }
     }
     return null;
@@ -91,12 +93,12 @@ if (type === 'host') {
           <div key={`volume-${volume.containerPath}-${index}`} className="p-3 bg-info/10 rounded">
             <div className="flex items-center justify-between mb-2">
               <span className="font-medium text-sm">{volume.name}</span>
-              <span className="text-xs text-muted-foreground">Required Volume</span>
+              <span className="text-xs text-muted-foreground">{t('builder.edRequiredVolume')}</span>
             </div>
             <div className="space-y-2">
               <div>
                 <label className="block text-sm font-medium text-foreground">
-                  Host Path
+                  {t('builder.edHostPath')}
                 </label>
                 <input
                   type="text"
@@ -119,7 +121,7 @@ if (type === 'host') {
                     }
                   }}
                   className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring"
-                  placeholder={`e.g., ${volume.defaultHostPath || './data'}`}
+                  placeholder={t('builder.edPathExample', { path: volume.defaultHostPath || './data' })}
                 />
                 {validatePath(hostPath, 'host') && (
                   <p className="mt-1 text-sm text-destructive">{validatePath(hostPath, 'host')}</p>
@@ -127,7 +129,7 @@ if (type === 'host') {
               </div>
 <div>
                 <label htmlFor={`container-path-default-${index}`} className="block text-sm font-medium text-foreground">
-                  Container Path
+                  {t('builder.edContainerPath')}
                 </label>
                 <input
                   id={`container-path-default-${index}`}
@@ -147,13 +149,13 @@ if (type === 'host') {
 {volumeMounts.map((mount: any, idx: number) => (
 <div key={mount.id || `${mount.containerPath}-${idx}`} className="p-3 bg-muted rounded">
           <div className="flex items-center justify-between mb-2">
-            <span className="font-medium text-sm">Custom Volume</span>
+            <span className="font-medium text-sm">{t('builder.edCustomVolume')}</span>
             <button
               onClick={() => handleRemoveMount(mount.id)}
               className="text-destructive hover:text-destructive/80 text-sm"
               data-testid="remove-volume-mount"
             >
-              Remove
+              {t('common.remove')}
             </button>
           </div>
           <div className="space-y-2">
@@ -161,7 +163,7 @@ if (type === 'host') {
               <span className="font-medium">{mount.hostPath}</span>
               <span className="mx-2">→</span>
               <span className="font-medium">{mount.containerPath}</span>
-              {mount.readOnly && <span className="ml-2 text-muted-foreground">(read-only)</span>}
+              {mount.readOnly && <span className="ml-2 text-muted-foreground">{t('builder.edReadOnlySuffix')}</span>}
             </div>
 <div className="flex items-center justify-between">
             <label className="flex items-center">
@@ -171,12 +173,13 @@ if (type === 'host') {
                 onChange={() => handleToggleReadOnly(mount.id)}
                 className="rounded border-border text-primary shadow-sm focus:border-ring focus:ring focus:ring-ring focus:ring-opacity-50"
               />
-              <span className="ml-2 text-sm text-muted-foreground">Read-only</span>
+              <span className="ml-2 text-sm text-muted-foreground">{t('builder.edReadOnly')}</span>
 </label>
             <button
               type="button"
               className="text-sm text-primary hover:text-primary/80"
               data-testid="mount-options"
+              aria-label={t('builder.edOptions')}
               onClick={() => {
                 // Toggle read-only directly and emit change with expected shape
                 const updated = volumeMounts.map((m: any) => (
@@ -187,7 +190,7 @@ if (type === 'host') {
                 onChange(updated)
               }}
             >
-              Options
+              {t('builder.edOptions')}
             </button>
             </div>
           </div>
@@ -202,12 +205,12 @@ if (type === 'host') {
             className="text-sm text-primary hover:text-primary/80"
             data-testid="add-volume-mount"
           >
-            + Add custom volume mount
+            {t('builder.edAddCustomMount')}
           </button>
         ) : (
           <div className="space-y-3">
 <div>
-              <label htmlFor="mount-type" className="block text-sm font-medium text-foreground">Mount Type</label>
+              <label htmlFor="mount-type" className="block text-sm font-medium text-foreground">{t('builder.edMountType')}</label>
               <select
                 id="mount-type"
                 value={newMount.type}
@@ -221,7 +224,7 @@ if (type === 'host') {
             </div>
             <div>
               <label htmlFor="host-path" className="block text-sm font-medium text-foreground">
-                Host Path
+                {t('builder.edHostPath')}
               </label>
               <input
                 type="text"
@@ -237,7 +240,7 @@ if (type === 'host') {
             </div>
             <div>
               <label htmlFor="container-path" className="block text-sm font-medium text-foreground">
-                Container Path
+                {t('builder.edContainerPath')}
               </label>
               <input
                 type="text"
@@ -258,7 +261,7 @@ if (type === 'host') {
                 onChange={(e) => setNewMount(prev => ({ ...prev, readOnly: e.target.checked }))}
                 className="rounded border-border text-primary shadow-sm focus:border-ring focus:ring focus:ring-ring focus:ring-opacity-50"
               />
-              <span className="ml-2 text-sm text-muted-foreground">Read-only</span>
+              <span className="ml-2 text-sm text-muted-foreground">{t('builder.edReadOnly')}</span>
             </label>
             <div className="flex gap-2">
               <button
@@ -269,13 +272,13 @@ if (type === 'host') {
                 className="px-3 py-1 text-sm bg-primary text-white rounded hover:bg-primary/90 disabled:bg-muted"
                 data-testid="save-volume-mount"
               >
-                Add
+                {t('common.add')}
               </button>
               <button
                 onClick={() => setShowAddForm(false)}
                 className="px-3 py-1 text-sm bg-secondary text-secondary-foreground rounded hover:bg-secondary/80"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>

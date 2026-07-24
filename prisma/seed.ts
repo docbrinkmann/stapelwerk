@@ -602,6 +602,21 @@ async function main() {
 
   const securityServices = [
     {
+      // VPN gateway for the media stack: other containers route through it via
+      // network_mode: service:gluetun so their traffic dies if the tunnel drops.
+      name: 'Gluetun', slug: 'gluetun', image: 'qmcgaw/gluetun:latest', version: 'latest',
+      ports: [],
+      env: [
+        { name: 'VPN_SERVICE_PROVIDER', description: 'VPN provider (e.g. mullvad, protonvpn, nordvpn)', required: true, secret: false },
+        { name: 'VPN_TYPE', description: 'wireguard or openvpn', required: false, secret: false, default: 'wireguard' },
+        { name: 'WIREGUARD_PRIVATE_KEY', description: 'WireGuard private key from your provider', required: true, secret: true },
+        { name: 'WIREGUARD_ADDRESSES', description: 'WireGuard interface address, e.g. 10.64.0.2/32', required: false, secret: false },
+        { name: 'SERVER_COUNTRIES', description: 'Preferred exit countries, comma-separated', required: false, secret: false },
+      ],
+      volumes: [{ containerPath: '/gluetun', description: 'Gluetun state and server list cache', named: true }],
+      resources: { cpu: 0.25, memory: 128 },
+    },
+    {
       name: 'Vault', slug: 'vault', image: 'hashicorp/vault:latest',
       ports: [{ containerPort: 8200, protocol: 'tcp', description: 'HTTP' }],
       env: [
@@ -792,6 +807,7 @@ async function main() {
     n8n: 'Workflow automation that connects apps and APIs with a visual editor',
     // security
     crowdsec: 'Collaborative intrusion prevention that detects and blocks malicious IPs',
+    gluetun: 'VPN client with a built-in kill-switch — route a download client through it so its traffic dies if the tunnel drops',
     keycloak: 'Identity and access management with SSO, OIDC and SAML',
     trivy: 'Vulnerability and misconfiguration scanner for containers and code',
     vault: 'Secrets management for storing and tightly controlling tokens and keys',
@@ -860,6 +876,12 @@ async function main() {
     serviceIdBySlug[s.slug] = s.id
   }
 
+  type TemplateMemberConfig = {
+    networkMode?: string
+    volumeMounts?: Array<{ hostPath: string; containerPath: string; readOnly?: boolean }>
+    portMappings?: Array<{ containerPort: number; hostPort: number }>
+    environmentVariables?: Record<string, string>
+  }
   type TemplateSeed = {
     id: string
     name: string
@@ -871,6 +893,10 @@ async function main() {
     tags: string[]
     // slug → short "why it's included" note
     members: Record<string, string>
+    // slug → curated default config so the template ships CORRECT out of the box
+    // (e.g. qBittorrent routed through Gluetun; the *arr apps sharing one /data
+    // mount so hardlinks/atomic-moves work). Applied by applyTemplateToStack.
+    serviceConfigs?: Record<string, TemplateMemberConfig>
   }
 
   const templateSeeds: TemplateSeed[] = [
@@ -885,6 +911,7 @@ async function main() {
       featured: true,
       tags: ['media', 'streaming', 'jellyfin', 'arr', 'automation'],
       members: {
+        gluetun: 'VPN gateway — routes the download client so its traffic cannot leak',
         jellyfin: 'Streams your movies and shows to any device',
         sonarr: 'Automatically finds and organizes TV episodes',
         radarr: 'Automatically finds and organizes movies',
@@ -892,6 +919,22 @@ async function main() {
         qbittorrent: 'Download client the *arr apps hand releases to',
         bazarr: 'Fetches matching subtitles for your library',
         overseerr: 'Lets users request new movies and shows',
+      },
+      // Ships CORRECT out of the box: qBittorrent routes through Gluetun
+      // (leak-proof kill-switch) and every media app shares ONE /data mount so
+      // hardlinks/atomic-moves work (the classic split-mount mistake avoided).
+      serviceConfigs: {
+        qbittorrent: {
+          networkMode: 'service:gluetun',
+          // Its Web UI port rides on gluetun (a routed container can't publish
+          // ports itself) — declare it here so the generator moves it there.
+          portMappings: [{ containerPort: 8080, hostPort: 8080 }],
+          volumeMounts: [{ hostPath: '/srv/media', containerPath: '/data' }],
+        },
+        sonarr: { volumeMounts: [{ hostPath: '/srv/media', containerPath: '/data' }] },
+        radarr: { volumeMounts: [{ hostPath: '/srv/media', containerPath: '/data' }] },
+        jellyfin: { volumeMounts: [{ hostPath: '/srv/media', containerPath: '/data' }] },
+        bazarr: { volumeMounts: [{ hostPath: '/srv/media', containerPath: '/data' }] },
       },
     },
     {
@@ -993,7 +1036,15 @@ async function main() {
 
     const serviceNotes: Record<string, string> = {}
     for (const slug of resolved) serviceNotes[slug] = t.members[slug]
-    const metadata = JSON.stringify({ tags: t.tags, serviceNotes })
+    // Curated per-member config (only for members that actually seeded) so the
+    // template applies CORRECT defaults (VPN routing, shared /data mount).
+    const serviceConfigs: Record<string, unknown> = {}
+    if (t.serviceConfigs) {
+      for (const slug of resolved) {
+        if (t.serviceConfigs[slug]) serviceConfigs[slug] = t.serviceConfigs[slug]
+      }
+    }
+    const metadata = JSON.stringify({ tags: t.tags, serviceNotes, serviceConfigs })
     const serviceIds = JSON.stringify(ids)
 
     await prisma.use_case_templates.upsert({

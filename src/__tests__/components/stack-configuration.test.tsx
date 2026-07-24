@@ -165,11 +165,31 @@ describe('Stack Configuration Components', () => {
       it('should handle card click to open configuration', async () => {
         const user = userEvent.setup({ delay: null }) // Disable delay to prevent timeouts
         render(<StackCanvas />)
-        
+
         const card = screen.getByTestId('service-configuration-card')
         await user.click(card)
-        
+
         expect(screen.getByTestId('service-configuration-panel')).toBeInTheDocument()
+      })
+
+      it('removes a service via the card X without opening the config panel', async () => {
+        const removeService = vi.fn()
+        vi.mocked(useStackServices).mockReturnValue({
+          services: mockServices,
+          addService: vi.fn(),
+          removeService,
+          reorderServices: vi.fn(),
+          updateServiceConfiguration: vi.fn(),
+        } as any)
+
+        const user = userEvent.setup({ delay: null })
+        render(<StackCanvas />)
+
+        await user.click(screen.getByTestId('remove-service-card'))
+
+        expect(removeService).toHaveBeenCalledWith(mockServices[0].serviceId)
+        // stopPropagation: clicking X must NOT open the configuration panel.
+        expect(screen.queryByTestId('service-configuration-panel')).toBeNull()
       })
     })
 

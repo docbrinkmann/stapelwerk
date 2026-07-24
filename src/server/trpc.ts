@@ -45,12 +45,20 @@ const t = initTRPC.context<Context>().create({
   errorFormatter(opts) {
     const { shape, error } = opts
     const isZod = error.code === 'BAD_REQUEST' && error.cause instanceof z.ZodError
+    // Surface a plan-limit gate to the client so it can show the upgrade dialog
+    // instead of a generic error toast (see src/lib/billing/enforcement.ts).
+    const cause = error.cause as { code?: string; limit?: number; plan?: string | null } | undefined
+    const planLimit =
+      cause && typeof cause === 'object' && cause.code === 'PLAN_LIMIT'
+        ? { limit: cause.limit ?? null, plan: cause.plan ?? null }
+        : null
     return {
       ...shape,
       message: isZod ? 'VALIDATION_ERROR' : shape.message,
       data: {
         ...shape.data,
         zodError: isZod ? error.cause.flatten() : null,
+        planLimit,
       },
     }
   },

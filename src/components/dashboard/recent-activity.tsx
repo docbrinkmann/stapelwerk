@@ -14,6 +14,8 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { trpc } from "@/utils/trpc"
 import { formatDistanceToNow } from "date-fns"
+import { de as deDateLocale } from "date-fns/locale"
+import { useLocale, useT } from "@/lib/i18n/client"
 
 /**
  * Recent Activity Component
@@ -108,12 +110,13 @@ export function RecentActivity({
   activities = defaultActivities,
   isLoading = false,
 }: RecentActivityProps & { isLoading?: boolean }) {
+  const t = useT()
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Recent Activity</CardTitle>
+        <CardTitle>{t("shell.recentActivity")}</CardTitle>
         <CardDescription>
-          Latest actions and deployments across your stacks
+          {t("shell.recentActivityDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -126,7 +129,7 @@ export function RecentActivity({
             </div>
           ) : activities.length === 0 ? (
             <div className="flex h-full items-center justify-center py-12 text-sm text-muted-foreground">
-              No activity yet — deploy or update a stack to see it here.
+              {t("shell.noActivity")}
             </div>
           ) : (
           <div className="space-y-4">
@@ -165,6 +168,7 @@ export function RecentActivity({
  * shows the empty state when the query fails (e.g. unauthenticated in dev).
  */
 export function RecentActivityLive() {
+  const locale = useLocale()
   const { data, isLoading } = trpc.analytics.getRecentActivity.useQuery(
     { limit: 20 },
     { staleTime: 60 * 1000, retry: false }
@@ -183,7 +187,10 @@ export function RecentActivityLive() {
       title: entry.title,
       description: entry.description,
       timestamp: entry.timestamp
-        ? formatDistanceToNow(new Date(entry.timestamp), { addSuffix: true })
+        ? formatDistanceToNow(new Date(entry.timestamp), {
+            addSuffix: true,
+            locale: locale === "de" ? deDateLocale : undefined,
+          })
         : "",
       status,
     }

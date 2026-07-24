@@ -1,5 +1,5 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 
@@ -20,6 +20,14 @@ vi.mock('@/utils/trpc', () => ({
         useQuery: vi.fn(),
       },
     },
+    // Imperative utils used by the one-click optimization apply.
+    useUtils: () => ({
+      services: {
+        getBySlug: {
+          fetch: vi.fn().mockResolvedValue({ id: 42, name: 'Prometheus', slug: 'prometheus' }),
+        },
+      },
+    }),
   },
 }));
 
@@ -116,8 +124,9 @@ const emptyStack = { services: [] };
 
 const databaseStack = {
   services: [
-    stackService('1', 'PostgreSQL', 'database'),
-    stackService('2', 'Nginx', 'web-server'),
+    // Real seeded category slugs — the optimization heuristics match on these.
+    stackService('1', 'PostgreSQL', 'databases'),
+    stackService('2', 'Nginx', 'web-servers'),
   ],
 };
 
@@ -284,8 +293,11 @@ describe('RecommendationEngine', () => {
       await user.click(optimizeTab);
 
       expect(screen.getByText('Stack Analysis')).toBeInTheDocument();
-      expect(screen.getByText('Add Monitoring')).toBeInTheDocument();
-      expect(screen.getByText('Consider adding monitoring tools like Prometheus or Grafana')).toBeInTheDocument();
+      expect(screen.getByText('Add monitoring')).toBeInTheDocument();
+      expect(screen.getByText('Nothing in this stack watches health or metrics yet.')).toBeInTheDocument();
+      // Suggestions are applicable: concrete one-click add buttons.
+      expect(screen.getByTestId('apply-optimization-prometheus')).toBeInTheDocument();
+      expect(screen.getByTestId('apply-optimization-grafana')).toBeInTheDocument();
     });
 
     it('handles template selection callback', async () => {
@@ -358,28 +370,48 @@ describe('RecommendationEngine', () => {
 
       fireEvent.click(screen.getByText('Optimize'));
 
-      expect(screen.getByText('Add Monitoring')).toBeInTheDocument();
-      expect(screen.getByText('high')).toBeInTheDocument();
-      expect(screen.getByText('Improved observability and debugging')).toBeInTheDocument();
+      expect(screen.getByText('Add monitoring')).toBeInTheDocument();
+      // databaseStack yields two high-priority suggestions (monitoring + security).
+      expect(screen.getAllByText('high').length).toBeGreaterThan(0);
+      expect(screen.getByText('See problems before your services go down.')).toBeInTheDocument();
     });
 
-    it('suggests security for database stacks', () => {
+    it('applies a suggestion with one click — the fetched service reaches the builder', async () => {
+      mockUseStackServices.mockReturnValue(databaseStack as any);
+      const onServiceRecommend = vi.fn();
+      const user = userEvent.setup({ delay: null });
+      render(<RecommendationEngine onServiceRecommend={onServiceRecommend} />);
+
+      fireEvent.click(screen.getByText('Optimize'));
+      await user.click(screen.getByTestId('apply-optimization-prometheus'));
+
+      await waitFor(() =>
+        expect(onServiceRecommend).toHaveBeenCalledWith(
+          expect.objectContaining({ slug: 'prometheus' }),
+        ),
+      );
+    });
+
+    it('suggests security for database stacks by CATEGORY (name.includes never matched)', () => {
       mockUseStackServices.mockReturnValue({
-        services: [stackService('1', 'PostgreSQL database', 'database')],
+        // The old heuristic looked for name.includes('database') — "PostgreSQL"
+        // never matched. The category is what identifies a database.
+        services: [stackService('1', 'PostgreSQL', 'databases')],
       } as any);
 
       render(<RecommendationEngine />);
 
       fireEvent.click(screen.getByText('Optimize'));
 
-      expect(screen.getByText('Security Enhancement')).toBeInTheDocument();
-      expect(screen.getByText('Add security tools for database protection')).toBeInTheDocument();
+      expect(screen.getByText('Protect your database')).toBeInTheDocument();
+      expect(screen.getByText('The stack has a database but no security service.')).toBeInTheDocument();
+      expect(screen.getByTestId('apply-optimization-crowdsec')).toBeInTheDocument();
     });
 
-    it('suggests load balancing for large stacks', () => {
+    it('suggests a reverse proxy for large stacks without web-servers', () => {
       mockUseStackServices.mockReturnValue({
         services: Array.from({ length: 6 }, (_, i) =>
-          stackService(String(i + 1), `Service ${i}`, 'web')
+          stackService(String(i + 1), `Service ${i}`, 'media')
         ),
       } as any);
 
@@ -387,9 +419,9 @@ describe('RecommendationEngine', () => {
 
       fireEvent.click(screen.getByText('Optimize'));
 
-      expect(screen.getByText('Load Balancing')).toBeInTheDocument();
+      expect(screen.getByText('Add a reverse proxy')).toBeInTheDocument();
       expect(screen.getByText('medium')).toBeInTheDocument();
-      expect(screen.getByText('Improved performance and reliability')).toBeInTheDocument();
+      expect(screen.getByTestId('apply-optimization-caddy')).toBeInTheDocument();
     });
 
     it('shows well optimized message when no optimizations needed', () => {

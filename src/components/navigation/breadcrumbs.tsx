@@ -12,6 +12,8 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb'
 import { Fragment, useMemo } from 'react'
+import { useT } from '@/lib/i18n/client'
+import type { MessageKey } from '@/lib/i18n/messages'
 
 interface BreadcrumbSegment {
   label: string
@@ -19,24 +21,25 @@ interface BreadcrumbSegment {
   isLast: boolean
 }
 
-// Route label mappings
-const routeLabels: Record<string, string> = {
-  dashboard: 'Dashboard',
-  stacks: 'Stacks',
-  services: 'Services',
-  env: 'Environment',
-  deployments: 'Deployments',
-  logs: 'Logs',
-  terminal: 'Terminal',
-  settings: 'Settings',
-  templates: 'Templates',
-  analytics: 'Analytics',
-  recommendations: 'Recommendations',
-  profile: 'Profile',
+// Route label mappings (message keys, translated at render time)
+const routeLabels: Record<string, MessageKey> = {
+  dashboard: 'shell.navDashboard',
+  stacks: 'shell.navStacks',
+  services: 'shell.navServices',
+  env: 'shell.crumbEnvironment',
+  deployments: 'shell.crumbDeployments',
+  logs: 'shell.crumbLogs',
+  terminal: 'shell.crumbTerminal',
+  settings: 'common.settings',
+  templates: 'shell.crumbTemplates',
+  analytics: 'shell.crumbAnalytics',
+  recommendations: 'shell.crumbRecommendations',
+  profile: 'shell.profile',
 }
 
 export function Breadcrumbs({ className }: { className?: string }) {
   const pathname = usePathname()
+  const t = useT()
 
   const segments = useMemo(() => {
     if (!pathname || pathname === '/') return []
@@ -60,7 +63,8 @@ export function Breadcrumbs({ className }: { className?: string }) {
       const isLast = index === parts.length - 1
 
       // Get label - check if it's a known route or use the segment
-      let label = routeLabels[part] || part
+      const labelKey = routeLabels[part]
+      let label = labelKey ? t(labelKey) : part
 
       // Handle dynamic segments (UUIDs, IDs)
       const isUUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(part)
@@ -72,7 +76,7 @@ export function Breadcrumbs({ className }: { className?: string }) {
       }
 
       // Capitalize first letter if it's just a plain segment
-      if (!routeLabels[part] && !isUUID && !isNumeric) {
+      if (!labelKey && !isUUID && !isNumeric) {
         label = label.charAt(0).toUpperCase() + label.slice(1).replace(/-/g, ' ')
       }
 
@@ -84,12 +88,12 @@ export function Breadcrumbs({ className }: { className?: string }) {
     })
 
     return breadcrumbs
-  }, [pathname])
+  }, [pathname, t])
 
   const rootLabel = (
     <>
       <Home className="h-4 w-4" aria-hidden="true" />
-      Dashboard
+      {t('shell.navDashboard')}
     </>
   )
 

@@ -23,7 +23,8 @@ import { ApplyModal } from '@/components/deployments/ApplyModal';
 import { useServiceBrowserStore } from '@/store/service-browser';
 import { useStackServices } from '@/stores/stack-builder';
 import { useStackPersistence } from '@/stores/stack-builder';
-import { analyzeStack } from '@/lib/validation/stack-builder-checks';
+import { analyzeStack, translateConfigError, type ResolveTarget, type PanelSection } from '@/lib/validation/stack-builder-checks';
+import { useT } from '@/lib/i18n/client';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
@@ -61,6 +62,7 @@ import {
 import { ServiceDropZone } from '@/components/dnd/ServiceDropZone';
 
 export function StackBuilderClient() {
+  const t = useT();
   const router = useRouter();
   const queryClient = useQueryClient();
   const searchParams = useSearchParams();
@@ -80,6 +82,11 @@ export function StackBuilderClient() {
   const [showRecommendationPanel, setShowRecommendationPanel] = useState(true);
   const [isOnline, setIsOnline] = useState<boolean>(true);
   const [selectedService, setSelectedService] = useState<string | null>(null);
+  // Guided configuration: index into stackServices while the wizard is active.
+  const [guidedIndex, setGuidedIndex] = useState<number | null>(null);
+  // When a check/update jump opens the config panel: which section + optional
+  // suggested image tag to offer. Cleared on plain card opens and the wizard.
+  const [configTarget, setConfigTarget] = useState<{ section: PanelSection; suggestedTag?: string } | null>(null);
   const [stackViewMode, setStackViewMode] = useState<'visual' | 'list'>('visual');
   const [canvasTab, setCanvasTab] = useState<'canvas' | 'preview' | 'checks'>('canvas');
   
@@ -137,7 +144,7 @@ export function StackBuilderClient() {
 
   // Live build-time checks (port/volume conflicts, missing deps, incompatible
   // pairs) surfaced on the Checks tab and as a count badge on the tab button.
-  const builderChecks = useMemo(() => analyzeStack(stackServices), [stackServices]);
+  const builderChecks = useMemo(() => analyzeStack(stackServices, t), [stackServices, t]);
 
   // Initialize store from URL parameters on mount
   useEffect(() => {
@@ -175,7 +182,42 @@ export function StackBuilderClient() {
 
   // Handle service configuration
   const handleConfigureService = (serviceId: string) => {
+    setConfigTarget(null); // plain card open — no forced section
     setSelectedService(serviceId);
+  };
+
+  // Jump from a Checks/Image-update row straight to where the fix lives.
+  const handleResolve = (target: ResolveTarget) => {
+    if (target.kind === 'stack-name') {
+      setShowSaveModal(true); // the stack name is set in the Save Stack modal
+      return;
+    }
+    if (!stackServices.some(s => s.id === target.stackServiceId)) return;
+    setConfigTarget({ section: target.section, suggestedTag: target.suggestedTag });
+    setSelectedService(target.stackServiceId);
+  };
+
+  // Guided configuration wizard: walk every stack service in order, then land
+  // on the Checks tab so the user sees whether the stack is deployable.
+  const startGuidedConfiguration = () => {
+    if (stackServices.length === 0) return;
+    setConfigTarget(null);
+    setGuidedIndex(0);
+    setSelectedService(stackServices[0].id);
+  };
+
+  const goGuided = (next: number) => {
+    if (next < 0) return;
+    if (next >= stackServices.length) {
+      // Finished the walk — close the panel and show the stack-wide checks.
+      setGuidedIndex(null);
+      setSelectedService(null);
+      setCanvasTab('checks');
+      return;
+    }
+    setConfigTarget(null);
+    setGuidedIndex(next);
+    setSelectedService(stackServices[next].id);
   };
 
   // Handle recommendation actions
@@ -212,7 +254,7 @@ export function StackBuilderClient() {
       {!isOnline && (
         <div role="status" aria-live="polite" className="offline-banner">
           <div className="offline-banner__content">
-            <span>You’re offline. Check your connection and retry.</span>
+            <span>{t('builder.offline')}</span>
             <Button
               variant="outline"
               size="sm"
@@ -221,7 +263,7 @@ export function StackBuilderClient() {
               }}
               className="ml-3"
             >
-              Retry
+              {t('common.retry')}
             </Button>
           </div>
         </div>
@@ -241,7 +283,7 @@ export function StackBuilderClient() {
                   disabled={!isDirty}
                 >
                   <Save className="h-4 w-4 mr-1" />
-                  {isDirty ? 'Save Draft' : 'Saved'}
+                  {isDirty ? t('builder.saveDraft') : t('builder.saved')}
                 </Button>
                 <Button
                   variant="outline"
@@ -250,25 +292,25 @@ export function StackBuilderClient() {
                   className="mr-2"
                 >
                   <Cloud className="h-4 w-4 mr-1" />
-                  Save Stack
+                  {t('builder.saveStack')}
                 </Button>
                 <Button
-                  variant="outline"
+                  variant="default"
                   size="sm"
                   onClick={handleExportStack}
                   className="mr-2"
                 >
                   <Download className="h-4 w-4 mr-1" />
-                  Export
+                  {t('common.export')}
                 </Button>
                 <Button
-                  variant="default"
+                  variant="outline"
                   size="sm"
                   onClick={() => setShowApplyModal(true)}
                   className="mr-2"
                 >
                   <Play className="h-4 w-4 mr-1" />
-                  Deploy
+                  {t('common.deploy')}
                 </Button>
                 <Button
                   variant="outline"
@@ -277,7 +319,7 @@ export function StackBuilderClient() {
                   className="mr-2"
                 >
                   <Download className="h-4 w-4 mr-1" />
-                  Bulk Export
+                  {t('builder.bulkExport')}
                 </Button>
                 <Button
                   variant="outline"
@@ -286,7 +328,7 @@ export function StackBuilderClient() {
                   className="mr-2"
                 >
                   <Share2 className="h-4 w-4 mr-1" />
-                  Share
+                  {t('common.share')}
                 </Button>
                 <Button
                   variant="outline"
@@ -295,7 +337,7 @@ export function StackBuilderClient() {
                   className="mr-2"
                 >
                   <RefreshCw className="h-4 w-4 mr-1" />
-                  Clear
+                  {t('builder.clear')}
                 </Button>
               </>
             )}
@@ -307,7 +349,7 @@ export function StackBuilderClient() {
               className="mr-2"
             >
               <HardDrive className="h-4 w-4 mr-1" />
-              Storage
+              {t('builder.storage')}
             </Button>
             
             <Button
@@ -317,7 +359,7 @@ export function StackBuilderClient() {
               className="mr-2"
             >
               <Upload className="h-4 w-4 mr-1" />
-              Import
+              {t('common.import')}
             </Button>
             
             <Button
@@ -327,7 +369,7 @@ export function StackBuilderClient() {
               className="mr-2"
             >
               <Upload className="h-4 w-4 mr-1" />
-              Bulk Import
+              {t('builder.bulkImport')}
             </Button>
             
             <Button
@@ -337,7 +379,7 @@ export function StackBuilderClient() {
               className="mr-2"
             >
               <FileText className="h-4 w-4 mr-1" />
-              Browse Templates
+              {t('builder.browseTemplates')}
             </Button>
             
             {hasServicesInStack && (
@@ -347,7 +389,7 @@ export function StackBuilderClient() {
                 onClick={() => setShowSubmitTemplateModal(true)}
               >
                 <Upload className="h-4 w-4 mr-1" />
-                Submit Template
+                {t('builder.submitTemplate')}
               </Button>
             )}
           </div>
@@ -357,13 +399,13 @@ export function StackBuilderClient() {
           {/* Stack Status */}
           <div className="stack-status">
             <Badge variant={hasServicesInStack ? "default" : "secondary"}>
-              {stackServices.length} services
+              {t('builder.servicesCount', { count: stackServices.length })}
             </Badge>
             {hasStackErrors && (
               <Badge
                 variant="destructive"
                 className="ml-2 cursor-pointer"
-                title={`${stackErrors.join('\n')}\n\nClick to open the Checks tab.`}
+                title={`${stackErrors.map(e => translateConfigError(e, t)).join('\n')}\n\n${t('builder.checksTabTooltip')}`}
                 role="button"
                 tabIndex={0}
                 onClick={() => setCanvasTab('checks')}
@@ -374,7 +416,9 @@ export function StackBuilderClient() {
                   }
                 }}
               >
-                {stackErrors.length} {stackErrors.length === 1 ? 'error' : 'errors'}
+                {stackErrors.length === 1
+                  ? t('builder.errorCount', { count: stackErrors.length })
+                  : t('builder.errorsCount', { count: stackErrors.length })}
               </Badge>
             )}
           </div>
@@ -408,7 +452,7 @@ export function StackBuilderClient() {
               className="flex items-center gap-2"
             >
               <Lightbulb className="h-4 w-4" />
-              {showRecommendationPanel ? 'Hide' : 'Show'} Recommendations
+              {showRecommendationPanel ? t('builder.hideRecommendations') : t('builder.showRecommendations')}
             </Button>
           </div>
         </div>
@@ -422,11 +466,11 @@ export function StackBuilderClient() {
             <button 
               className="panel-toggle"
               onClick={() => setShowServicePanel(!showServicePanel)}
-              aria-label={showServicePanel ? 'Collapse service panel' : 'Expand service panel'}
+              aria-label={showServicePanel ? t('builder.collapseServicePanel') : t('builder.expandServicePanel')}
             >
               {showServicePanel ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
               <Package2 className="h-4 w-4 ml-1" />
-              <span>Available Services</span>
+              <span>{t('builder.availableServices')}</span>
             </button>
             
             {showServicePanel && (
@@ -455,7 +499,7 @@ export function StackBuilderClient() {
               {/* Search Bar */}
               <div className="search-section">
                 <SearchBar
-                  placeholder="Search services to add to your stack..."
+                  placeholder={t('builder.searchServicesPlaceholder')}
                   className="stack-builder__search-bar"
                 />
               </div>
@@ -486,7 +530,7 @@ export function StackBuilderClient() {
           <div className="panel-header">
             <div className="panel-title">
               <Layers3 className="h-4 w-4" />
-              <span>Your Stack</span>
+              <span>{t('builder.yourStack')}</span>
               {hasServicesInStack && (
                 <Badge variant="outline" className="ml-2">
                   {stackServices.length}
@@ -501,7 +545,7 @@ export function StackBuilderClient() {
                 onClick={() => setCanvasTab('canvas')}
               >
                 <Layers3 className="h-4 w-4 mr-1" />
-                Canvas
+                {t('builder.tabCanvas')}
               </Button>
               <Button
                 variant={canvasTab === 'preview' ? 'default' : 'outline'}
@@ -510,7 +554,7 @@ export function StackBuilderClient() {
                 className="ml-1"
               >
                 <FileText className="h-4 w-4 mr-1" />
-                Preview
+                {t('builder.preview')}
               </Button>
               <Button
                 variant={canvasTab === 'checks' ? 'default' : 'outline'}
@@ -519,7 +563,7 @@ export function StackBuilderClient() {
                 className="ml-1"
               >
                 <ShieldAlert className="h-4 w-4 mr-1" />
-                Checks
+                {t('builder.checks')}
                 {builderChecks.length > 0 && (
                   <span className="ml-1.5 inline-flex min-w-4 items-center justify-center rounded-full bg-warning/20 px-1.5 text-xs font-medium text-warning">
                     {builderChecks.length}
@@ -546,11 +590,12 @@ export function StackBuilderClient() {
                 className="stack-builder__stack-canvas"
                 viewMode={stackViewMode}
                 onConfigureService={handleConfigureService}
+                onStartGuided={startGuidedConfiguration}
               />
             ) : canvasTab === 'preview' ? (
               <StackComposePreview />
             ) : (
-              <StackChecksPanel />
+              <StackChecksPanel onResolve={handleResolve} />
             )}
           </div>
         </ServiceDropZone>
@@ -567,7 +612,23 @@ export function StackBuilderClient() {
                 configuration={stackService.configuration}
                 onConfigurationChange={updateServiceConfiguration}
                 isOpen={!!selectedService}
-                onClose={() => setSelectedService(null)}
+                initialSection={configTarget?.section}
+                suggestedImageTag={configTarget?.suggestedTag}
+                onClose={() => {
+                  setSelectedService(null);
+                  setGuidedIndex(null);
+                  setConfigTarget(null);
+                }}
+                wizard={
+                  guidedIndex !== null
+                    ? {
+                        position: guidedIndex + 1,
+                        total: stackServices.length,
+                        onPrev: () => goGuided(guidedIndex - 1),
+                        onNext: () => goGuided(guidedIndex + 1),
+                      }
+                    : undefined
+                }
               />
             </div>
           );
@@ -580,11 +641,11 @@ export function StackBuilderClient() {
               <button 
                 className="panel-toggle"
                 onClick={() => setShowRecommendationPanel(!showRecommendationPanel)}
-                aria-label={showRecommendationPanel ? 'Collapse recommendation panel' : 'Expand recommendation panel'}
+                aria-label={showRecommendationPanel ? t('builder.collapseRecommendationPanel') : t('builder.expandRecommendationPanel')}
               >
                 {showRecommendationPanel ? <ChevronDown className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
                 <Lightbulb className="h-4 w-4 ml-1" />
-                <span>Recommendations</span>
+                <span>{t('builder.recommendations')}</span>
               </button>
             </div>
             
@@ -688,9 +749,9 @@ export function StackBuilderClient() {
         className="sr-only"
         id="stack-builder-announcements"
       >
-        {hasServicesInStack && `Stack contains ${stackServices.length} services`}
-        {hasStackErrors && `${stackErrors.length} configuration errors found`}
-        {searchQuery && `Search results for "${searchQuery}"`}
+        {hasServicesInStack && t('builder.srStackContains', { count: stackServices.length })}
+        {hasStackErrors && t('builder.srConfigErrors', { count: stackErrors.length })}
+        {searchQuery && t('builder.srSearchResults', { query: searchQuery })}
       </div>
 
       {/* Page Analytics */}
@@ -714,7 +775,7 @@ export function StackBuilderClient() {
       <DragOverlay dropAnimation={null}>
         {draggedService ? (
           <div className="pointer-events-none rounded-lg border border-primary bg-card px-3 py-2 text-sm font-medium text-foreground shadow-lg">
-            {draggedService.name ?? draggedService.service?.name ?? 'Service'}
+            {draggedService.name ?? draggedService.service?.name ?? t('builder.dragServiceFallback')}
           </div>
         ) : null}
       </DragOverlay>

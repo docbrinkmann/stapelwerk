@@ -8,6 +8,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useT } from "@/lib/i18n/client"
 
 /**
  * Sidebar Header Component
@@ -17,6 +18,7 @@ import {
  * organizations to switch between.
  */
 export function SidebarHeader() {
+  const t = useT()
   return (
     <SidebarHeaderPrimitive>
       <SidebarMenu>
@@ -27,7 +29,7 @@ export function SidebarHeader() {
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-semibold">BuildMyStack</span>
-              <span className="truncate text-xs text-muted-foreground">Personal</span>
+              <span className="truncate text-xs text-muted-foreground">{t("shell.workspacePersonal")}</span>
             </div>
           </SidebarMenuButton>
         </SidebarMenuItem>

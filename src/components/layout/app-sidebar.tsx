@@ -23,6 +23,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { trpc } from "@/utils/trpc"
+import { useT } from "@/lib/i18n/client"
 
 /**
  * App Sidebar Component
@@ -45,52 +46,53 @@ import { trpc } from "@/utils/trpc"
  * ```
  */
 
-// Navigation items for main menu
-const mainNavItems = [
-  {
-    title: "Dashboard",
-    url: "/dashboard",
-    icon: LayoutDashboard,
-    isActive: true,
-  },
-  {
-    title: "Stacks",
-    url: "/stacks",
-    icon: Layers,
-  },
-  {
-    title: "Network",
-    url: "/network",
-    icon: Network,
-  },
-  {
-    title: "Stack Builder",
-    url: "/stack-builder",
-    icon: Rocket,
-  },
-  {
-    title: "Services",
-    url: "/services",
-    icon: Server,
-  },
-  {
-    title: "Settings",
-    url: "/settings",
-    icon: Settings,
-  },
-  {
-    title: "Admin",
-    url: "/admin/templates",
-    icon: ShieldCheck,
-  },
-]
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const t = useT()
   const { data: session } = useSession()
   const user = {
-    name: session?.user?.name ?? "User",
+    name: session?.user?.name ?? t("shell.userFallback"),
     email: session?.user?.email ?? "",
   }
+
+  // Navigation items for main menu
+  const mainNavItems = [
+    {
+      title: t("shell.navDashboard"),
+      url: "/dashboard",
+      icon: LayoutDashboard,
+      isActive: true,
+    },
+    {
+      title: t("shell.navStacks"),
+      url: "/stacks",
+      icon: Layers,
+    },
+    {
+      title: t("shell.navNetwork"),
+      url: "/network",
+      icon: Network,
+    },
+    {
+      title: t("shell.navStackBuilder"),
+      url: "/stack-builder",
+      icon: Rocket,
+    },
+    {
+      title: t("shell.navServices"),
+      url: "/services",
+      icon: Server,
+    },
+    {
+      title: t("common.settings"),
+      url: "/settings",
+      icon: Settings,
+    },
+    {
+      title: t("shell.navAdmin"),
+      url: "/admin/templates",
+      icon: ShieldCheck,
+    },
+  ]
 
   // Quick links to the user's most recent stacks
   const { data: stackList } = trpc.stacks.list.useQuery(

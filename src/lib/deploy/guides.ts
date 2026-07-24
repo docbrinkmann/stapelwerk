@@ -9,6 +9,7 @@
  */
 
 import type { PersistedStack } from '@/lib/stack-persistence';
+import { makeT, type Translate } from '@/lib/i18n/messages';
 
 export type DeploymentEnv = 'raspberry-pi' | 'home-server' | 'vps';
 
@@ -96,23 +97,17 @@ export function findAmd64OnlyServices(stack: PersistedStack): string[] {
   return flagged;
 }
 
-function raspberryPiGuide(stack: PersistedStack): DeploymentGuide {
+function raspberryPiGuide(stack: PersistedStack, t: Translate): DeploymentGuide {
   const amd64Only = findAmd64OnlyServices(stack);
   const archStep: GuideStep =
     amd64Only.length > 0
       ? {
-          title: 'Check CPU architecture (arm64)',
-          body:
-            `A Raspberry Pi (3/4/5, 64-bit OS) runs the arm64 architecture. ` +
-            `These services in your stack look amd64-only and may fail to start on a Pi: ${amd64Only.join(', ')}. ` +
-            `Find an arm64-compatible image/tag for them before deploying.`,
+          title: t('deploy.guide.pi.archTitle'),
+          body: t('deploy.guide.pi.archFlagged', { services: amd64Only.join(', ') }),
         }
       : {
-          title: 'Check CPU architecture (arm64)',
-          body:
-            'A Raspberry Pi (3/4/5, 64-bit OS) runs the arm64 architecture. Most popular ' +
-            'images publish arm64 variants, but verify each image supports arm64 (or arm32 ' +
-            'on 32-bit OS) before deploying — an amd64-only image will fail to start.',
+          title: t('deploy.guide.pi.archTitle'),
+          body: t('deploy.guide.pi.archGeneral'),
           code: 'docker run --rm mplatform/mquery <image>:<tag>   # list an image’s architectures',
         };
 
@@ -120,154 +115,128 @@ function raspberryPiGuide(stack: PersistedStack): DeploymentGuide {
 
   return {
     env: 'raspberry-pi',
-    title: 'Deploy to a Raspberry Pi',
-    intro:
-      'Run your stack on a Raspberry Pi at home. Mind the arm64 architecture, ' +
-      'run everything off an SSD if you can, and back the SD card up.',
+    title: t('deploy.guide.pi.title'),
+    intro: t('deploy.guide.pi.intro'),
     steps: [
       archStep,
       {
-        title: 'Install / verify Docker',
-        body: 'Install Docker Engine and add your user to the docker group, then verify it runs.',
+        title: t('deploy.guide.pi.dockerTitle'),
+        body: t('deploy.guide.pi.dockerBody'),
         code: 'curl -fsSL https://get.docker.com | sh\nsudo usermod -aG docker $USER   # log out/in after this\ndocker compose version',
       },
       {
-        title: 'Place the compose files',
-        body: 'Copy docker-compose.yml and .env into a folder on the Pi (e.g. ~/stacks/mystack).',
-        code: 'mkdir -p ~/stacks/mystack && cd ~/stacks/mystack\n# copy docker-compose.yml and .env here',
+        title: t('deploy.guide.pi.filesTitle'),
+        body: t('deploy.guide.pi.filesBody'),
+        code: 'mkdir -p ~/stacks/mystack && cd ~/stacks/mystack\n# copy docker-compose.yml and .env here\n# — or from your machine:  ./deploy.sh pi@raspberrypi.local',
       },
       {
-        title: 'Start the stack',
-        body: 'Bring it up in the background and confirm the containers are healthy.',
+        title: t('deploy.guide.pi.startTitle'),
+        body: t('deploy.guide.pi.startBody'),
         code: 'docker compose up -d\ndocker compose ps',
       },
       {
-        title: 'Reach your services / add TLS',
+        title: t('deploy.guide.pi.reachTitle'),
         body:
-          (portHints
-            ? `On your LAN the services will be at:\n${portHints}\n\n`
-            : '') +
-          'For clean hostnames and HTTPS, put a reverse proxy in front (Caddy or ' +
-          'Nginx Proxy Manager). Caddy gives you automatic HTTPS with a one-line config.',
+          (portHints ? `${t('deploy.guide.pi.reachPorts', { ports: portHints })}\n\n` : '') +
+          t('deploy.guide.pi.reachBody'),
       },
     ],
-    notes: [
-      'Prefer booting from an SSD/USB drive — SD cards wear out under database write load.',
-      'Back up your SD card / data volumes regularly (e.g. `dd` image, or copy the volume folders).',
-    ],
+    notes: [t('deploy.guide.pi.note1'), t('deploy.guide.pi.note2')],
   };
 }
 
-function homeServerGuide(stack: PersistedStack): DeploymentGuide {
+function homeServerGuide(stack: PersistedStack, t: Translate): DeploymentGuide {
   const portHints = renderPortHints(stack);
   return {
     env: 'home-server',
-    title: 'Deploy to a Home Server',
-    intro:
-      'Run your stack on an always-on machine on your LAN (NUC, old desktop, NAS). ' +
-      'Give it a stable address, put a reverse proxy in front, and back up your volumes.',
+    title: t('deploy.guide.home.title'),
+    intro: t('deploy.guide.home.intro'),
     steps: [
       {
-        title: 'Install Docker',
-        body: 'Install Docker Engine + the compose plugin for your distro.',
+        title: t('deploy.guide.home.dockerTitle'),
+        body: t('deploy.guide.home.dockerBody'),
         code: 'curl -fsSL https://get.docker.com | sh\ndocker compose version',
       },
       {
-        title: 'Give the server a stable address',
-        body:
-          'Assign a static IP (or a DHCP reservation on your router) and a hostname so ' +
-          'links keep working after reboots.',
+        title: t('deploy.guide.home.addressTitle'),
+        body: t('deploy.guide.home.addressBody'),
       },
       {
-        title: 'Place the compose files and start',
-        body: 'Copy docker-compose.yml and .env onto the server, then start the stack.',
-        code: 'docker compose up -d\ndocker compose ps',
+        title: t('deploy.guide.home.startTitle'),
+        body: t('deploy.guide.home.startBody'),
+        code: 'docker compose up -d\ndocker compose ps\n# — or from your machine:  ./deploy.sh user@home-server',
       },
       {
-        title: 'Reverse proxy + TLS on the LAN',
+        title: t('deploy.guide.home.proxyTitle'),
         body:
-          'Front the stack with Caddy or Nginx Proxy Manager for tidy hostnames like ' +
-          'https://app.home.lan. For trusted certificates on a LAN, use a real domain with ' +
-          'DNS-01 (Let’s Encrypt) so you don’t depend on public port 80/443.' +
-          (portHints ? `\n\nDirect (no proxy) the services are at:\n${portHints}` : ''),
+          t('deploy.guide.home.proxyBody') +
+          (portHints ? `\n\n${t('deploy.guide.home.proxyPorts', { ports: portHints })}` : ''),
       },
       {
-        title: 'Volumes & backups',
-        body:
-          'Your data lives in the named volumes / bind mounts from the compose. Snapshot or ' +
-          'copy them on a schedule (and test a restore). Databases: back up with a dump, not a ' +
-          'live file copy.',
+        title: t('deploy.guide.home.backupTitle'),
+        body: t('deploy.guide.home.backupBody'),
       },
     ],
-    notes: [
-      'Keep the host and images updated: `docker compose pull && docker compose up -d`.',
-      'Don’t expose the server directly to the internet unless you mean to — keep it LAN-only or behind a VPN.',
-    ],
+    notes: [t('deploy.guide.home.note1'), t('deploy.guide.home.note2')],
   };
 }
 
-function vpsGuide(stack: PersistedStack): DeploymentGuide {
+function vpsGuide(stack: PersistedStack, t: Translate): DeploymentGuide {
   const portHints = renderPortHints(stack);
   return {
     env: 'vps',
-    title: 'Deploy to a VPS',
-    intro:
-      'Run your stack on a public cloud VPS (Hetzner, DigitalOcean, …). Lock down the ' +
-      'firewall, terminate TLS at a reverse proxy, and never expose your database.',
+    title: t('deploy.guide.vps.title'),
+    intro: t('deploy.guide.vps.intro'),
     steps: [
       {
-        title: 'Install Docker & harden the firewall',
-        body:
-          'Install Docker, then allow only SSH + HTTP/HTTPS with ufw. Everything else stays closed; ' +
-          'containers talk to each other on the internal compose network.',
+        title: t('deploy.guide.vps.firewallTitle'),
+        body: t('deploy.guide.vps.firewallBody'),
         code: 'curl -fsSL https://get.docker.com | sh\nufw default deny incoming\nufw allow 22/tcp\nufw allow 80/tcp\nufw allow 443/tcp\nufw enable',
       },
       {
-        title: 'Place the compose files and start',
-        body: 'Copy docker-compose.yml and .env to the server, then start the stack.',
-        code: 'docker compose up -d\ndocker compose ps',
+        title: t('deploy.guide.vps.startTitle'),
+        body: t('deploy.guide.vps.startBody'),
+        code: 'docker compose up -d\ndocker compose ps\n# — or from your machine:  ./deploy.sh user@your-vps',
       },
       {
-        title: 'Reverse proxy + Let’s Encrypt (auto-HTTPS)',
-        body:
-          'Point your domain’s DNS at the VPS, then put Caddy in front — it fetches and renews ' +
-          'Let’s Encrypt certificates automatically. Only Caddy binds 80/443; your app stays internal.',
+        title: t('deploy.guide.vps.proxyTitle'),
+        body: t('deploy.guide.vps.proxyBody'),
         code:
           '# Caddyfile\napp.example.com {\n  reverse_proxy app:PORT\n}' +
           (portHints ? `\n\n# your services (proxy to these container ports):\n# ${servicePortHints(stack).map(h => `${h.name}:${h.hostPort}`).join('  ')}` : ''),
       },
       {
-        title: 'Do NOT expose your database',
-        body:
-          'Remove any published host port for databases/caches (Postgres 5432, Redis 6379, …) — ' +
-          'they only need to be reachable by other containers on the compose network, not the public ' +
-          'internet. Publish only the web/reverse-proxy port.',
+        title: t('deploy.guide.vps.dbTitle'),
+        body: t('deploy.guide.vps.dbBody'),
       },
       {
-        title: 'Keep it updated',
-        body: 'Apply OS security updates and refresh images regularly.',
+        title: t('deploy.guide.vps.updateTitle'),
+        body: t('deploy.guide.vps.updateBody'),
         code: 'sudo apt update && sudo apt upgrade -y\ndocker compose pull && docker compose up -d',
       },
     ],
-    notes: [
-      'Use SSH keys (not passwords) and consider disabling root SSH login.',
-      'A leaked database port is the most common self-hosting breach — double-check nothing but 22/80/443 is open.',
-    ],
+    notes: [t('deploy.guide.vps.note1'), t('deploy.guide.vps.note2')],
   };
 }
 
 /**
  * Return the structured guide for a target environment, with steps that
- * reference the stack's actual services/ports where useful.
+ * reference the stack's actual services/ports where useful. `t` localizes the
+ * guide text for on-screen display; the default (EN) is what goes into the
+ * downloadable README so the artifact stays English.
  */
-export function getDeploymentGuide(env: DeploymentEnv, stack: PersistedStack): DeploymentGuide {
+export function getDeploymentGuide(
+  env: DeploymentEnv,
+  stack: PersistedStack,
+  t: Translate = makeT('en'),
+): DeploymentGuide {
   switch (env) {
     case 'raspberry-pi':
-      return raspberryPiGuide(stack);
+      return raspberryPiGuide(stack, t);
     case 'home-server':
-      return homeServerGuide(stack);
+      return homeServerGuide(stack, t);
     case 'vps':
-      return vpsGuide(stack);
+      return vpsGuide(stack, t);
   }
 }
 

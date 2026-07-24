@@ -1,5 +1,7 @@
 import React, { useState, useMemo } from 'react';
+import { X } from 'lucide-react';
 import { useStackServices } from '@/stores/stack-builder';
+import { useT } from '@/lib/i18n/client';
 import { ServiceConfigurationPanel } from './ServiceConfigurationPanel';
 import type { Service } from '@/types/service';
 import type { StackService } from '@/types/stack';
@@ -7,9 +9,11 @@ import type { StackService } from '@/types/stack';
 interface ServiceConfigurationCardProps {
   service: StackService;
   onClick: () => void;
+  onRemove: () => void;
 }
 
-const ServiceConfigurationCard: React.FC<ServiceConfigurationCardProps> = ({ service, onClick }) => {
+const ServiceConfigurationCard: React.FC<ServiceConfigurationCardProps> = ({ service, onClick, onRemove }) => {
+  const t = useT();
   // Calculate configuration completeness
   const configurationScore = useMemo(() => {
     const config = service.configuration;
@@ -54,7 +58,7 @@ const ServiceConfigurationCard: React.FC<ServiceConfigurationCardProps> = ({ ser
       }}
       tabIndex={0}
       role="button"
-      aria-label={`Configure ${service.service?.name ?? 'service'} service`}
+      aria-label={t('builder.canvasConfigureAria', { name: service.service?.name ?? 'Service' })}
       data-testid="service-configuration-card"
     >
       {/* Service Header */}
@@ -64,16 +68,32 @@ const ServiceConfigurationCard: React.FC<ServiceConfigurationCardProps> = ({ ser
             {service.service?.name ?? 'Service'}
           </h3>
           <p className="text-sm text-muted-foreground">
-            {service.service?.category?.name ?? 'Uncategorized'}
+            {service.service?.category?.name ?? t('builder.uncategorized')}
           </p>
         </div>
         
-        {/* Configuration Status */}
-        <div 
-          className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(configurationScore)}`}
-          data-testid="configuration-status"
-        >
-          Ready
+        {/* Configuration Status + remove */}
+        <div className="flex items-center gap-1.5">
+          <div
+            className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(configurationScore)}`}
+            data-testid="configuration-status"
+          >
+            {t('builder.cardReady')}
+          </div>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onRemove();
+            }}
+            onKeyDown={(e) => e.stopPropagation()}
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive focus:outline-none focus:ring-2 focus:ring-ring"
+            aria-label={t('builder.cardRemoveAria', { name: service.service?.name ?? 'Service' })}
+            title={t('builder.cardRemoveAria', { name: service.service?.name ?? 'Service' })}
+            data-testid="remove-service-card"
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
       </div>
 
@@ -85,7 +105,7 @@ const ServiceConfigurationCard: React.FC<ServiceConfigurationCardProps> = ({ ser
       {/* Configuration Completeness */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-foreground">Configuration</span>
+          <span className="text-sm font-medium text-foreground">{t('builder.cardConfiguration')}</span>
           <span 
             className="text-sm text-muted-foreground"
             data-testid="configuration-completeness"
@@ -122,8 +142,10 @@ const ServiceConfigurationCard: React.FC<ServiceConfigurationCardProps> = ({ ser
   );
 };
 
-const EmptyStackCanvas: React.FC = () => (
-  <div 
+const EmptyStackCanvas: React.FC = () => {
+  const t = useT();
+  return (
+  <div
     className="col-span-full flex flex-col items-center justify-center py-12 text-center"
     data-testid="empty-stack-canvas"
   >
@@ -144,34 +166,39 @@ const EmptyStackCanvas: React.FC = () => (
     </div>
     
     <h3 className="text-lg font-medium text-foreground mb-2">
-      No Services in Stack
+      {t('builder.canvasEmptyTitle')}
     </h3>
-    
+
     <p className="text-muted-foreground mb-4 max-w-md">
-      Add services to your stack to configure them. Use the drag-and-drop interface to build your stack first.
+      {t('builder.canvasEmptyBody')}
     </p>
-    
+
     <div className="text-sm text-muted-foreground/80 space-y-1">
-      <p>• Environment variables configuration</p>
-      <p>• Port mapping and conflict detection</p>
-      <p>• Volume mounts and path validation</p>
-      <p>• Service dependency ordering</p>
+      <p>• {t('builder.canvasFeatureEnv')}</p>
+      <p>• {t('builder.canvasFeaturePorts')}</p>
+      <p>• {t('builder.canvasFeatureVolumes')}</p>
+      <p>• {t('builder.canvasFeatureDeps')}</p>
     </div>
   </div>
-);
+  );
+};
 
 interface StackCanvasProps {
   className?: string;
   viewMode?: 'visual' | 'list';
   onConfigureService?: (serviceId: string) => void;
+  /** Starts the guided configuration wizard (renders the header button when set). */
+  onStartGuided?: () => void;
 }
 
-export const StackCanvas: React.FC<StackCanvasProps> = ({ 
-  className = '', 
-  viewMode = 'visual', 
-  onConfigureService 
+export const StackCanvas: React.FC<StackCanvasProps> = ({
+  className = '',
+  viewMode = 'visual',
+  onConfigureService,
+  onStartGuided,
 }) => {
-  const { services } = useStackServices();
+  const { services, removeService } = useStackServices();
+  const t = useT();
   const [selectedService, setSelectedService] = useState<StackService | null>(null);
   const [configurationPanelOpen, setConfigurationPanelOpen] = useState(false);
 
@@ -213,20 +240,31 @@ export const StackCanvas: React.FC<StackCanvasProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-2xl font-bold text-foreground">
-            Service Configuration
+            {t('builder.canvasTitle')}
           </h2>
           <p className="text-muted-foreground mt-1">
-            Configure environment variables, ports, volumes, and dependencies for your stack services
+            {t('builder.canvasSubtitle')}
           </p>
         </div>
         
         {services.length > 0 && (
-          <div className="text-right">
-            <div className="text-sm text-muted-foreground">
-              Services: <span className="font-medium text-foreground">{services.length}</span>
-            </div>
-            <div className="text-xs text-muted-foreground/80 mt-1">
-              Click a service to configure
+          <div className="flex items-center gap-4">
+            {onStartGuided && (
+              <button
+                onClick={onStartGuided}
+                className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-ring"
+                data-testid="start-guided-config"
+              >
+                {t('builder.guidedStart')}
+              </button>
+            )}
+            <div className="text-right">
+              <div className="text-sm text-muted-foreground">
+                {t('builder.canvasServicesLabel')} <span className="font-medium text-foreground">{services.length}</span>
+              </div>
+              <div className="text-xs text-muted-foreground/80 mt-1">
+                {t('builder.canvasClickToConfigure')}
+              </div>
             </div>
           </div>
         )}
@@ -257,6 +295,7 @@ export const StackCanvas: React.FC<StackCanvasProps> = ({
               key={service.id}
               service={service}
               onClick={() => handleServiceClick(service)}
+              onRemove={() => removeService(service.serviceId)}
             />
           ))
         )}

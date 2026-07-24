@@ -288,3 +288,78 @@ describe('dbStackServicesToPersisted — DB rows → compose input', () => {
     expect(doc.services.app.depends_on).toEqual(['postgresql'])
   })
 })
+
+// --- VPN kill-switch routing (the media-authority thesis) -------------------
+const gluetunService: Service = {
+  id: 90, name: 'Gluetun', slug: 'gluetun', description: 'VPN client container',
+  dockerImage: 'qmcgaw/gluetun:latest', version: 'latest',
+  category: { id: 6, name: 'Security', slug: 'security' },
+  ports: [], environmentVariables: {},
+  env: [{ name: 'VPN_SERVICE_PROVIDER', description: 'provider', required: true, secret: false }],
+  volumes: [], resourceRequirements: { cpu: '0.25', memory: '128' },
+}
+const qbitService: Service = {
+  id: 91, name: 'qBittorrent', slug: 'qbittorrent', description: 'Torrent client',
+  dockerImage: 'lscr.io/linuxserver/qbittorrent:latest', version: 'latest',
+  category: { id: 3, name: 'Media', slug: 'media' },
+  ports: [8080], environmentVariables: {}, env: [],
+  volumes: [{ containerPath: '/config', description: 'cfg', named: true }],
+  resourceRequirements: { cpu: '0.25', memory: '256' },
+}
+
+function buildVpnStack(): PersistedStack {
+  const services: StackService[] = [
+    {
+      id: 'ss-gluetun', serviceId: gluetunService.id, order: 1, service: gluetunService,
+      configuration: { environmentVariables: { VPN_SERVICE_PROVIDER: 'mullvad' }, portMappings: [], volumeMounts: [], dependsOn: [] },
+    },
+    {
+      id: 'ss-qbit', serviceId: qbitService.id, order: 2, service: qbitService,
+      configuration: {
+        environmentVariables: {},
+        portMappings: [{ containerPort: 8080, hostPort: 8080 }],
+        volumeMounts: [], dependsOn: [],
+        networkMode: 'service:gluetun', // route through the VPN
+      },
+    },
+  ]
+  return { name: 'vpn media', description: '', isPublic: false, services }
+}
+
+describe('generateComposeWithSecrets — VPN kill-switch routing', () => {
+  it('routes qBittorrent through gluetun so its traffic cannot leak', () => {
+    const { yaml } = generateComposeWithSecrets(buildVpnStack())
+    const doc = yamlParse(yaml)
+
+    // qBittorrent inherits gluetun's netns and publishes NO ports / NO network.
+    expect(doc.services.qbittorrent.network_mode).toBe('service:gluetun')
+    expect(doc.services.qbittorrent.ports).toBeUndefined()
+    expect(doc.services.qbittorrent.networks).toBeUndefined()
+    // ...and starts after the tunnel is up.
+    expect(doc.services.qbittorrent.depends_on).toContain('gluetun')
+
+    // Gluetun is the gateway: NET_ADMIN + tun device, and it publishes the
+    // routed client's UI port so it stays reachable.
+    expect(doc.services.gluetun.cap_add).toEqual(['NET_ADMIN'])
+    expect(doc.services.gluetun.devices).toEqual(['/dev/net/tun:/dev/net/tun'])
+    expect(doc.services.gluetun.ports).toContain('8080:8080')
+    expect(doc.services.gluetun.networks).toEqual(['appnet'])
+
+describe('generateComposeWithSecrets — image tag override', () => {
+  it('honors configuration.imageTag over the catalog default tag', () => {
+    const stack = buildStack()
+    // User applied an "update available" (18-alpine -> 18.4-alpine) in the builder.
+    stack.services[0].configuration.imageTag = '18.4-alpine'
+    const { yaml } = generateComposeWithSecrets(stack)
+    const doc = yamlParse(yaml)
+    expect(doc.services.postgresql.image).toBe('postgres:18.4-alpine')
+    // Untouched services keep their catalog image.
+    expect(doc.services.nginx.image).toBe('nginx:1.25-alpine')
+  })
+
+  it('falls back to the catalog image when no override is set', () => {
+    const { yaml } = generateComposeWithSecrets(buildStack())
+    const doc = yamlParse(yaml)
+    expect(doc.services.postgresql.image).toBe('postgres:18-alpine')
+  })
+})

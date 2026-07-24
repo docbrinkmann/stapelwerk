@@ -5,7 +5,9 @@ import { createPortal } from 'react-dom'
 import { motion, useScroll, useMotionValueEvent } from 'framer-motion'
 import { Menu, X } from 'lucide-react'
 import ThemeToggle from '@/components/ui/theme-toggle'
+import LanguageToggle from '@/components/ui/language-toggle'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
+import { useT } from '@/lib/i18n/client'
 
 /**
  * Header Component
@@ -43,6 +45,7 @@ export default function Header() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { scrollY } = useScroll()
   const reducedMotion = useReducedMotion()
+  const t = useT()
   const menuButtonRef = useRef<HTMLButtonElement | null>(null)
   const menuWasOpenRef = useRef(false)
 
@@ -86,8 +89,11 @@ export default function Header() {
 
   return (
     <>
+      {/* initial={false}: the mount slide-in never fired (header stuck at
+          translateY(-100) on prod and dev alike), leaving the whole marketing
+          header invisible. Render it in place; scroll blur still animates. */}
       <motion.header
-        initial={{ y: -100 }}
+        initial={false}
         animate={{ y: 0 }}
         transition={{ duration: reducedMotion ? 0 : 0.5, ease: 'easeOut' }}
         className={`
@@ -98,7 +104,7 @@ export default function Header() {
           }
         `}
       >
-        <nav className="container mx-auto px-4 sm:px-6 lg:px-8" aria-label="Main navigation">
+        <nav className="container mx-auto px-4 sm:px-6 lg:px-8" aria-label={t('landing.mainNavAria')}>
           <div className="flex items-center justify-between h-16 md:h-20">
             {/* Logo */}
             <motion.a
@@ -133,13 +139,14 @@ export default function Header() {
               </ul>
 
               <div className="flex items-center gap-4">
+                <LanguageToggle />
                 <ThemeToggle />
 
                 <a
                   href="/auth/signin"
                   className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors duration-200"
                 >
-                  Sign In
+                  {t('landing.navSignIn')}
                 </a>
 
                 <motion.a
@@ -148,15 +155,16 @@ export default function Header() {
                   whileTap={reducedMotion ? {} : { scale: 0.95 }}
                   className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium text-sm shadow-md hover:shadow-lg transition-all duration-200"
                 >
-                  Get Started
+                  {t('landing.getStarted')}
                 </motion.a>
               </div>
             </div>
 
             {/* Mobile Menu Button & Theme Toggle */}
             <div className="flex md:hidden items-center gap-4">
+              <LanguageToggle />
               <ThemeToggle />
-              
+
               <motion.button
                 ref={menuButtonRef}
                 id="mobile-menu-button"
@@ -164,7 +172,7 @@ export default function Header() {
                 whileTap={reducedMotion ? {} : { scale: 0.95 }}
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
                 className="p-2 text-foreground hover:bg-accent rounded-lg transition-colors"
-                aria-label="Toggle mobile menu"
+                aria-label={t('landing.toggleMobileMenu')}
                 aria-expanded={isMobileMenuOpen}
               >
                 {isMobileMenuOpen ? (
@@ -222,7 +230,7 @@ export default function Header() {
                 <button autoFocus
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="p-2 text-foreground hover:bg-accent rounded-lg transition-colors"
-                  aria-label="Close mobile menu"
+                  aria-label={t('landing.closeMobileMenu')}
                 >
                   <X className="w-6 h-6" />
                 </button>
@@ -259,7 +267,7 @@ export default function Header() {
                 className="block w-full px-6 py-3 mb-3 text-center border border-border text-foreground rounded-lg font-semibold transition-all duration-200"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Sign In
+                {t('landing.navSignIn')}
               </motion.a>
               <motion.a
                 href="/stack-builder"
@@ -269,7 +277,7 @@ export default function Header() {
                 className="block w-full px-6 py-3 text-center bg-primary text-primary-foreground rounded-lg font-semibold shadow-lg hover:shadow-xl transition-all duration-200"
                 onClick={() => setIsMobileMenuOpen(false)}
               >
-                Get Started
+                {t('landing.getStarted')}
               </motion.a>
             </div>
           </motion.div>

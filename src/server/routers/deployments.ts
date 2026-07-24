@@ -20,7 +20,32 @@ import {
 // (client-flavoured) stack-persistence module isn't dragged into every request.
 import type { PersistedStack } from '@/lib/stack-persistence'
 import { dbStackServicesToPersisted } from '@/lib/deploy/persisted-stack'
+import { isBillingEnabled } from '@/lib/plans'
+import { effectivePlan, assertRemoteTargetLimit, assertDeployCapability } from '@/lib/billing/enforcement'
+import {
+  attestKillSwitch,
+  servicesFromCompose,
+  composeHasDownloadClient,
+  verifyComposeKillSwitch,
+  type DockerExec,
+} from '@/lib/deploy/kill-switch-attestation'
+import { parse as parseYaml } from 'yaml'
+import { spawn } from 'child_process'
+import { assertSafeBindMounts } from '@/lib/deploy/bind-mount-guard'
 import crypto from 'crypto'
+
+/** Runs `docker …` against the deploy host's socket; used for kill-switch attestation. */
+const dockerExec: DockerExec = (a) =>
+  new Promise((resolve) => {
+    const c = spawn('docker', a, {
+      env: { ...process.env, DOCKER_HOST: process.env.DOCKER_HOST ?? 'unix:///var/run/docker.sock' },
+    })
+    let stdout = ''
+    c.stdout.on('data', (d: Buffer) => { stdout += d.toString() })
+    c.stderr.on('data', () => {})
+    c.on('close', (code) => resolve({ stdout, exitCode: code ?? 1 }))
+    c.on('error', () => resolve({ stdout: '', exitCode: 127 }))
+  })
 
 // UUID regex (consistent with project-wide usage)
 const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
@@ -43,6 +68,10 @@ export const TargetSchema = z
     host: z.string().min(1).max(255).regex(SAFE_HOST, 'Invalid host').optional(),
     sshUser: z.string().min(1).max(64).regex(SAFE_USER, 'Invalid SSH user').optional(),
     sshPort: z.number().int().min(1).max(65535).optional(),
+    // Remote-only. The operator must explicitly acknowledge the SSH-key liability
+    // (we hold a key that can run docker on their host) before a remote target
+    // can be registered. Enforced in createTarget so the message is friendly.
+    riskAcknowledged: z.boolean().optional(),
   })
   .refine((v) => v.location !== 'remote' || (!!v.host && !!v.sshUser), {
     message: 'Remote targets require host and sshUser',
@@ -111,7 +140,11 @@ type PrismaLike = Context['prisma']
  * Load a stack from the DB and render its deployable compose YAML (container_name
  * stripped for project isolation). Throws if the stack has no services.
  */
-async function assembleStackCompose(prisma: PrismaLike, stackId: string): Promise<string> {
+export async function assembleStackCompose(
+  prisma: PrismaLike,
+  stackId: string,
+  opts?: { blockSensitiveBindMounts?: boolean },
+): Promise<string> {
   const stack = await prisma.stacks.findUnique({
     where: { id: stackId },
     include: {
@@ -126,12 +159,25 @@ async function assembleStackCompose(prisma: PrismaLike, stackId: string): Promis
     throw new TRPCError({ code: 'BAD_REQUEST', message: 'Stack has no services to deploy' })
   }
 
+  const services = dbStackServicesToPersisted(stack.stack_services)
+
+  // Deploying to THIS server runs against the host Docker socket; a user-set
+  // bind mount of a sensitive host path would escape the container. Enforce
+  // here (the save-time validator only warns and never runs on this path).
+  if (opts?.blockSensitiveBindMounts) {
+    try {
+      assertSafeBindMounts(services as ReadonlyArray<{ configuration?: { volumeMounts?: Array<{ hostPath?: unknown }> } }>)
+    } catch (err) {
+      throw new TRPCError({ code: 'BAD_REQUEST', message: (err as Error).message })
+    }
+  }
+
   const persisted = {
     id: stack.id,
     name: stack.name,
     description: stack.description ?? '',
     isPublic: stack.isPublic,
-    services: dbStackServicesToPersisted(stack.stack_services),
+    services,
   } as unknown as PersistedStack
 
   const { generateComposeWithSecrets } = await import('@/lib/stack-persistence')
@@ -227,11 +273,47 @@ async function runComposeJob(
         ? (args.action === 'up' ? '✓ Deployment succeeded' : '✓ Deployment stopped')
         : `✗ docker compose exited with code ${exitCode}`,
     )
+
+    // Verified deploy: after a successful local `up` of a stack with a download
+    // client, boot-probe the running containers and attest the VPN kill-switch
+    // actually holds — the thesis's runtime proof, not just a static check.
+    // Best-effort: needs the deploy host's Docker socket (this-server target);
+    // it degrades to a logged note when unavailable (e.g. remote/bridge deploys).
+    // A confirmed runtime LEAK is a hard failure: tear the stack down so it can
+    // never sit there running while leaking the real IP.
+    let leaked = false
+    if (ok && args.action === 'up' && !args.remote) {
+      try {
+        const parsed = parseYaml(args.composeYaml)
+        if (composeHasDownloadClient(parsed)) {
+          buffer.push('— Verifying the VPN kill-switch on the running stack…')
+          await flush()
+          const att = await attestKillSwitch({ project: args.project, services: servicesFromCompose(parsed), exec: dockerExec })
+          buffer.push(`🛡 Kill-switch: ${att.status.toUpperCase()} — ${att.summary}`)
+          for (const f of att.findings.filter((x) => x.verdict !== 'skip')) {
+            buffer.push(`   • ${f.service}: ${f.detail}`)
+          }
+          if (att.status === 'leak') {
+            leaked = true
+            buffer.push('✗ Leak detected — tearing the stack down so it cannot run while leaking your IP.')
+            await flush()
+            try {
+              await runComposeDispatch({ ...args, action: 'down', onLog: (line) => { buffer.push(line) } })
+            } catch (e) {
+              buffer.push(`(teardown error: ${(e as Error).message})`)
+            }
+          }
+        }
+      } catch (e) {
+        buffer.push(`🛡 Kill-switch attestation skipped: ${(e as Error).message}`)
+      }
+    }
+
     clearInterval(timer)
     await flush()
     await prisma.deployment_jobs.update({
       where: { id: jobId },
-      data: { status: ok ? 'succeeded' : 'failed', updatedAt: new Date() },
+      data: { status: leaked ? 'failed' : ok ? 'succeeded' : 'failed', updatedAt: new Date() },
     })
   } catch (err) {
     clearInterval(timer)
@@ -299,6 +381,38 @@ export const deploymentsRouter = createTRPCRouter({
   createTarget: protectedProcedure
     .input(TargetSchema)
     .mutation(async ({ ctx, input }) => {
+      const location = input.location ?? 'local'
+      // Cloud profile: on the hosted instance, only admins may register a local
+      // (Docker-socket-of-our-host) target — free/pro users must never schedule
+      // containers on our infrastructure. Self-host (billing off) is unaffected.
+      if (
+        isBillingEnabled() &&
+        location === 'local' &&
+        (ctx.user as { role?: string } | undefined)?.role !== 'admin'
+      ) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Local (this-server) targets are not available on the hosted plan. Add a remote host instead.',
+        })
+      }
+      // Plan gate: remote targets are the priced axis (free 0, pro 2, fleet 10).
+      if (location === 'remote') {
+        // Liability gate: registering a remote target hands BuildMyStack an SSH
+        // key that can run docker on the operator's host. They must explicitly
+        // acknowledge that before we store it — Export/handoff is the safe default.
+        if (!input.riskAcknowledged) {
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message:
+              'To add a remote SSH target you must acknowledge the deploy-key liability. Prefer Export / handoff if you would rather run the stack yourself.',
+          })
+        }
+        const ep = await effectivePlan(ctx.prisma, ctx.userId!)
+        const remoteCount = await ctx.prisma.deployment_targets.count({
+          where: { userId: ctx.userId, location: 'remote' },
+        })
+        assertRemoteTargetLimit(ep, remoteCount)
+      }
       const created = await ctx.prisma.deployment_targets.create({
         data: {
           id: crypto.randomUUID(),
@@ -310,6 +424,7 @@ export const deploymentsRouter = createTRPCRouter({
           host: input.location === 'remote' ? input.host : null,
           sshUser: input.location === 'remote' ? input.sshUser : null,
           sshPort: input.location === 'remote' ? input.sshPort ?? 22 : null,
+          riskAcknowledgedAt: input.location === 'remote' ? new Date() : null,
           userId: ctx.userId,
           updatedAt: new Date(),
         },
@@ -329,7 +444,14 @@ export const deploymentsRouter = createTRPCRouter({
   // the public key to authorize on target hosts. `force` rotates an existing key.
   generateDeployKey: protectedProcedure
     .input(z.object({ force: z.boolean().optional() }).optional())
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
+      // The deploy key is a single server-wide secret. First-time generation is
+      // idempotent and harmless, but `force` ROTATES it — invalidating the
+      // public key every other user placed in their hosts' authorized_keys
+      // (platform-wide deploy DoS). Restrict rotation to admins.
+      if (input?.force && (ctx.user as { role?: string } | undefined)?.role !== 'admin') {
+        throw new TRPCError({ code: 'FORBIDDEN', message: 'Rotating the deploy key requires admin' })
+      }
       try {
         return ensureDeployKeyPair({ force: input?.force })
       } catch (err) {
@@ -465,7 +587,9 @@ export const deploymentsRouter = createTRPCRouter({
   createArtifact: protectedProcedure
     .input(ArtifactCreateSchema)
     .mutation(async ({ ctx, input }) => {
-      // Optional: validate ownership of target
+      // The stack the artifact attaches to must belong to the caller (was an
+      // IDOR: any user could attach artifacts to another user's stack).
+      await requireStackOwner(ctx.prisma, input.stackId, ctx.userId!)
       if (input.targetId) {
         const target = await ctx.prisma.deployment_targets.findFirst({ where: { id: input.targetId, userId: ctx.userId } })
         if (!target) throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' })
@@ -488,6 +612,9 @@ export const deploymentsRouter = createTRPCRouter({
   listArtifacts: protectedProcedure
     .input(ListArtifactsSchema)
     .query(async ({ ctx, input }) => {
+      // Owner-gate the stack (was an IDOR: any user could list another user's
+      // artifacts — type/checksum/location/metadata — by supplying a stackId).
+      await requireStackOwner(ctx.prisma, input.stackId, ctx.userId!)
       const items = await ctx.prisma.deployment_artifacts.findMany({
         where: { stackId: input.stackId },
         orderBy: { createdAt: 'desc' },
@@ -501,7 +628,9 @@ export const deploymentsRouter = createTRPCRouter({
       const found = await ctx.prisma.deployment_artifacts.findUnique({ where: { id: input.id } })
       if (!found) throw new TRPCError({ code: 'NOT_FOUND', message: 'Deployment artifact not found' })
       // Owner-gate via the artifact's stack (was an IDOR by artifact UUID).
-      if (found.stackId) await requireStackOwner(ctx.prisma, found.stackId, ctx.userId!)
+      // Fail closed on a stack-less artifact rather than returning it to anyone.
+      if (!found.stackId) throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' })
+      await requireStackOwner(ctx.prisma, found.stackId, ctx.userId!)
       return found
     }),
 
@@ -522,7 +651,10 @@ export const deploymentsRouter = createTRPCRouter({
   createJob: protectedProcedure
     .input(JobCreateSchema)
     .mutation(async ({ ctx, input }) => {
-      // Optional ownership checks
+      // A stack-bound job's stack must belong to the caller (was an IDOR: any
+      // user could create jobs against another user's stack, polluting its
+      // history). Stackless jobs have no cross-tenant target to attack.
+      if (input.stackId) await requireStackOwner(ctx.prisma, input.stackId, ctx.userId!)
       if (input.targetId) {
         const target = await ctx.prisma.deployment_targets.findFirst({ where: { id: input.targetId, userId: ctx.userId } })
         if (!target) throw new TRPCError({ code: 'FORBIDDEN', message: 'Access denied' })
@@ -644,8 +776,26 @@ export const deploymentsRouter = createTRPCRouter({
     }))
     .mutation(async ({ ctx, input }) => {
       const { name } = await requireStackOwner(ctx.prisma, input.stackId, ctx.userId)
+      // Plan gate: direct deploy is a Pro capability (self-host ⇒ allowed).
+      assertDeployCapability(await effectivePlan(ctx.prisma, ctx.userId!))
       const target = await resolveDeployTarget(ctx.prisma, input.targetId, ctx.userId)
-      const composeYaml = await assembleStackCompose(ctx.prisma, input.stackId)
+      // Local socket = shared host: block sensitive host bind mounts. Remote
+      // targets are the user's own host, so their bind mounts are their call.
+      const composeYaml = await assembleStackCompose(ctx.prisma, input.stackId, {
+        blockSensitiveBindMounts: !target.remote,
+      })
+      // Liability gate: never let BuildMyStack deploy a download client that
+      // isn't confined to a VPN. Deterministic, pre-flight, covers local AND
+      // remote (no Docker needed) — a leak-by-construction is refused before
+      // anything starts, so a leaking torrent client is never brought up in
+      // our name. The runtime attestation in runComposeJob is the second line.
+      const structural = verifyComposeKillSwitch(parseYaml(composeYaml))
+      if (structural.status === 'leak') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: `Deploy blocked — the VPN kill-switch would leak. ${structural.summary} Route the download client through your VPN (network_mode: service:gluetun) before deploying.`,
+        })
+      }
       const project = sanitizeProjectName(input.stackId)
       const now = new Date()
       const job = await ctx.prisma.deployment_jobs.create({

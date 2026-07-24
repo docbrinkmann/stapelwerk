@@ -5,6 +5,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import ThemeToggle from "@/components/ui/theme-toggle"
+import LanguageToggle from "@/components/ui/language-toggle"
 import { Breadcrumbs } from "@/components/navigation/breadcrumbs"
 import { getPageSession } from "@/lib/auth"
 
@@ -33,6 +34,7 @@ export async function DashboardShell({
           <Separator orientation="vertical" className="mr-2 h-4" />
           <Breadcrumbs />
           <div className="ml-auto flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
           </div>
         </header>

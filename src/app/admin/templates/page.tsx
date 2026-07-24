@@ -5,6 +5,7 @@ import TemplateApprovalSystem from './components/TemplateApprovalSystem';
 import TemplateApprovalSkeleton from './components/TemplateApprovalSkeleton';
 import { getPageSession } from '@/lib/auth';
 import { trpc } from '@/lib/trpc/server';
+import { getT } from '@/lib/i18n/server';
 
 // Force dynamic rendering to avoid data fetching during build in CI
 export const dynamic = 'force-dynamic';
@@ -37,13 +38,14 @@ export default async function TemplateApprovalPage() {
 
   const approvalStats = await trpc.admin.getTemplateApprovalStats();
 
+  const t = await getT();
   return (
     <div className="min-h-screen bg-muted">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground">Template Approval System</h1>
+          <h1 className="text-3xl font-bold text-foreground">{t('catalog.adminApprovalTitle')}</h1>
           <p className="mt-2 text-muted-foreground">
-            Review and manage community template submissions
+            {t('catalog.adminApprovalSubtitle')}
           </p>
         </div>
 

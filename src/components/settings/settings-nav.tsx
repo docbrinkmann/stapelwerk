@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation"
 import {
   User,
   Palette,
+  CreditCard,
   type LucideIcon
 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -29,6 +30,12 @@ const navItems: NavItem[] = [
     href: "/settings/appearance",
     icon: Palette,
     description: "Customize the app appearance",
+  },
+  {
+    title: "Billing",
+    href: "/settings/billing",
+    icon: CreditCard,
+    description: "Your plan and subscription",
   },
 ]
 

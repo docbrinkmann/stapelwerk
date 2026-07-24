@@ -6,6 +6,7 @@ import { useServiceBrowserStore } from '@/store/service-browser'
 import { useStackServices } from '@/stores/stack-builder'
 import type { Service } from '@/types/service-browser'
 import type { Service as CatalogService } from '@/types/service'
+import { useT } from '@/lib/i18n/client'
 import './ServicePreviewModal.css'
 
 interface ServicePreviewModalProps {
@@ -25,16 +26,18 @@ interface ServiceActionsProps {
   onClose: () => void
 }
 
-const ServiceMetrics = ({ metrics }: ServiceMetricsProps) => (
+const ServiceMetrics = ({ metrics }: ServiceMetricsProps) => {
+  const t = useT()
+  return (
   <div className="service-metrics">
     <div className="metrics-grid">
       {metrics.popularity && (
         <div className="metric-item">
           <Star className="metric-icon h-4 w-4" aria-hidden="true" />
-          <span className="metric-label">Popularity</span>
-          <span 
-            className="metric-value" 
-            aria-label={`Popularity rating: ${metrics.popularity}`}
+          <span className="metric-label">{t('catalog.popularity')}</span>
+          <span
+            className="metric-value"
+            aria-label={t('catalog.popularityRatingValue', { value: metrics.popularity })}
           >
             {metrics.popularity}
           </span>
@@ -43,10 +46,10 @@ const ServiceMetrics = ({ metrics }: ServiceMetricsProps) => (
       {metrics.reliability && (
         <div className="metric-item">
           <Shield className="metric-icon h-4 w-4" aria-hidden="true" />
-          <span className="metric-label">Reliability</span>
-          <span 
+          <span className="metric-label">{t('catalog.reliability')}</span>
+          <span
             className="metric-value"
-            aria-label={`Reliability rating: ${metrics.reliability}`}
+            aria-label={t('catalog.reliabilityRatingValue', { value: metrics.reliability })}
           >
             {metrics.reliability}
           </span>
@@ -55,10 +58,10 @@ const ServiceMetrics = ({ metrics }: ServiceMetricsProps) => (
       {metrics.performance && (
         <div className="metric-item">
           <Zap className="metric-icon h-4 w-4" aria-hidden="true" />
-          <span className="metric-label">Performance</span>
-          <span 
+          <span className="metric-label">{t('catalog.performance')}</span>
+          <span
             className="metric-value"
-            aria-label={`Performance rating: ${metrics.performance}`}
+            aria-label={t('catalog.performanceRatingValue', { value: metrics.performance })}
           >
             {metrics.performance}
           </span>
@@ -66,9 +69,11 @@ const ServiceMetrics = ({ metrics }: ServiceMetricsProps) => (
       )}
     </div>
   </div>
-)
+  )
+}
 
 const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
+  const t = useT()
   return (
     <div className="service-info-section" data-testid="service-info-section">
       {/* Basic Information */}
@@ -108,7 +113,7 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
       {/* Tags */}
       {service.tags && service.tags.length > 0 && (
         <div className="service-tags">
-          <h3 className="section-title">Tags</h3>
+          <h3 className="section-title">{t('catalog.tags')}</h3>
           <div className="tags-list">
             {service.tags.map((tag, index) => (
               <span key={index} className="tag">
@@ -122,7 +127,7 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
       {/* Features */}
       {service.features && service.features.length > 0 && (
         <div className="service-features">
-          <h3 className="section-title">Key Features</h3>
+          <h3 className="section-title">{t('catalog.keyFeatures')}</h3>
           <ul className="features-list">
             {service.features.map((feature, index) => (
               <li key={index} className="feature-item">
@@ -136,7 +141,7 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
       {/* Integrations */}
       {service.integrations && service.integrations.length > 0 && (
         <div className="service-integrations">
-          <h3 className="section-title">Integrations</h3>
+          <h3 className="section-title">{t('catalog.integrations')}</h3>
           <div className="integrations-list">
             {service.integrations.slice(0, 5).map((integration, index) => (
               <span key={index} className="integration-item">
@@ -145,12 +150,14 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
             ))}
             {service.integrations.length > 5 && (
               <span className="integration-count">
-                +{service.integrations.length - 5} more
+                {t('catalog.moreCount', { count: service.integrations.length - 5 })}
               </span>
             )}
           </div>
           <p className="integrations-summary">
-            {service.integrations.length} integration{service.integrations.length !== 1 ? 's' : ''}
+            {service.integrations.length === 1
+              ? t('catalog.integrationCountOne', { count: service.integrations.length })
+              : t('catalog.integrationsCount', { count: service.integrations.length })}
           </p>
         </div>
       )}
@@ -158,7 +165,7 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
       {/* Metrics */}
       {service.metrics && (
         <div className="service-metrics-section">
-          <h3 className="section-title">Metrics</h3>
+          <h3 className="section-title">{t('catalog.metrics')}</h3>
           <ServiceMetrics metrics={service.metrics} />
         </div>
       )}
@@ -166,15 +173,15 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
       {/* Company Information */}
       {service.company && (
         <div className="service-company">
-          <h3 className="section-title">Company</h3>
+          <h3 className="section-title">{t('catalog.company')}</h3>
           <div className="company-info">
             <h4 className="company-name">{service.company.name}</h4>
             <div className="company-details">
               {service.company.founded && (
-                <p>Founded: {service.company.founded}</p>
+                <p>{t('catalog.foundedValue', { value: service.company.founded })}</p>
               )}
               {service.company.headquarters && (
-                <p>Headquarters: {service.company.headquarters}</p>
+                <p>{t('catalog.headquartersValue', { value: service.company.headquarters })}</p>
               )}
             </div>
             {service.company.website && (
@@ -183,9 +190,9 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="company-website-link"
-                aria-label="Visit company website"
+                aria-label={t('catalog.visitCompanyWebsiteAria')}
               >
-                Visit Website
+                {t('catalog.visitWebsite')}
               </a>
             )}
           </div>
@@ -195,7 +202,7 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
       {/* Documentation */}
       {service.documentation && (
         <div className="service-documentation">
-          <h3 className="section-title">Documentation</h3>
+          <h3 className="section-title">{t('catalog.documentation')}</h3>
           <div className="documentation-links">
             <a
               href={service.documentation.quickStart}
@@ -203,7 +210,7 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
               rel="noopener noreferrer"
               className="documentation-link"
             >
-              Quick Start Guide
+              {t('catalog.quickStartGuide')}
             </a>
             <a
               href={service.documentation.apiReference}
@@ -211,11 +218,11 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
               rel="noopener noreferrer"
               className="documentation-link"
             >
-              API Reference
+              {t('catalog.apiReference')}
             </a>
             {service.documentation.examples && service.documentation.examples.length > 0 && (
               <div className="examples-section">
-                <h4>Examples</h4>
+                <h4>{t('catalog.examples')}</h4>
                 <ul>
                   {service.documentation.examples.map((example, index) => (
                     <li key={index}>{example}</li>
@@ -231,6 +238,7 @@ const ServiceInfoSection = ({ service }: ServiceInfoSectionProps) => {
 }
 
 const ServiceActions = ({ service, onClose }: ServiceActionsProps) => {
+  const t = useT()
   const router = useRouter()
   // Add to the stack-builder store — the same store the builder canvas reads from
   const { services: stackServices, addService } = useStackServices()
@@ -256,9 +264,9 @@ const ServiceActions = ({ service, onClose }: ServiceActionsProps) => {
           onClick={handleAddToStack}
           disabled={isInStack}
           data-testid="modal-add-to-stack"
-          aria-label={isInStack ? 'Added to stack successfully' : 'Add service to stack'}
+          aria-label={isInStack ? t('catalog.addedToStackAria') : t('catalog.addServiceToStackAria')}
         >
-          {isInStack ? 'Added to Stack!' : 'Add to Stack'}
+          {isInStack ? t('catalog.addedToStack') : t('catalog.addToStack')}
         </button>
 
         <a
@@ -268,44 +276,54 @@ const ServiceActions = ({ service, onClose }: ServiceActionsProps) => {
             e.preventDefault()
             handleViewDetails()
           }}
-          aria-label="View full service details"
+          aria-label={t('catalog.viewFullDetailsAria')}
         >
-          View Full Details
+          {t('catalog.viewFullDetails')}
         </a>
       </div>
     </div>
   )
 }
 
-const LoadingState = () => (
-  <div className="modal-loading" data-testid="modal-loading-spinner">
-    <div className="loading-spinner" aria-hidden="true"></div>
-    <p className="loading-text">Loading service details...</p>
-  </div>
-)
+const LoadingState = () => {
+  const t = useT()
+  return (
+    <div className="modal-loading" data-testid="modal-loading-spinner">
+      <div className="loading-spinner" aria-hidden="true"></div>
+      <p className="loading-text">{t('catalog.loadingServiceDetails')}</p>
+    </div>
+  )
+}
 
-const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => (
-  <div className="modal-error" role="alert">
-    <h3 className="error-title">Error loading service</h3>
-    <p className="error-message">{error}</p>
-    <button
-      type="button"
-      className="action-button action-button--primary"
-      onClick={onRetry}
-      aria-label="Try loading service again"
-    >
-      Try Again
-    </button>
-  </div>
-)
+const ErrorState = ({ error, onRetry }: { error: string; onRetry: () => void }) => {
+  const t = useT()
+  return (
+    <div className="modal-error" role="alert">
+      <h3 className="error-title">{t('catalog.errorLoadingService')}</h3>
+      <p className="error-message">{error}</p>
+      <button
+        type="button"
+        className="action-button action-button--primary"
+        onClick={onRetry}
+        aria-label={t('catalog.tryLoadingServiceAgainAria')}
+      >
+        {t('catalog.tryAgainCaps')}
+      </button>
+    </div>
+  )
+}
 
-const EmptyState = () => (
-  <div className="modal-empty">
-    <p className="empty-message">No service data available</p>
-  </div>
-)
+const EmptyState = () => {
+  const t = useT()
+  return (
+    <div className="modal-empty">
+      <p className="empty-message">{t('catalog.noServiceData')}</p>
+    </div>
+  )
+}
 
 export const ServicePreviewModal = ({ className }: ServicePreviewModalProps) => {
+  const t = useT()
   const modalRef = useRef<HTMLDivElement>(null)
   const previousFocusRef = useRef<HTMLElement | null>(null)
   const [windowWidth, setWindowWidth] = useState(
@@ -462,7 +480,7 @@ export const ServicePreviewModal = ({ className }: ServicePreviewModalProps) => 
         aria-modal="true"
         aria-labelledby="modal-title"
         aria-describedby="modal-description"
-        aria-label="Service preview modal"
+        aria-label={t('catalog.servicePreviewModalAria')}
       >
         <div 
           className="modal-content"
@@ -474,14 +492,14 @@ export const ServicePreviewModal = ({ className }: ServicePreviewModalProps) => 
             type="button"
             className="modal-close-button"
             onClick={closeServiceModal}
-            aria-label="Close modal"
+            aria-label={t('catalog.closeModalAria')}
           >
             <span aria-hidden="true">×</span>
           </button>
 
           {/* Modal Header */}
           <div className="modal-header">
-            <h1 className="modal-title">Service Details</h1>
+            <h1 className="modal-title">{t('catalog.serviceDetails')}</h1>
           </div>
 
           {/* Modal Body */}
@@ -508,7 +526,7 @@ export const ServicePreviewModal = ({ className }: ServicePreviewModalProps) => 
           className="sr-only"
           aria-hidden="true"
         >
-          {isOpen && 'Service preview modal opened'}
+          {isOpen && t('catalog.modalOpenedAnnouncement')}
         </div>
       </div>
     </div>

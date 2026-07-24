@@ -15,6 +15,7 @@ import { createWSServer, handleUpgrade, shutdownWSServer } from '../src/server/w
 import { attachTerminalExecutor, authenticateUpgrade, executorMode } from './terminal-executor';
 import { runCompose } from '../src/lib/deploy/compose-executor';
 import { runRemoteCompose, resolveDeployKeyFile } from '../src/lib/deploy/remote-compose-executor';
+import { bridgeTokenAuthorized } from '../src/lib/deploy/bridge-auth';
 
 /**
  * Direct-deploy bridge: the app container has no Docker socket, so the tRPC
@@ -30,7 +31,9 @@ async function handleDeploy(req: IncomingMessage, res: ServerResponse): Promise<
     res.end(JSON.stringify({ error: 'DEPLOY_BRIDGE_TOKEN is not configured' }));
     return;
   }
-  if (req.headers.authorization !== `Bearer ${token}`) {
+  // Constant-time bearer check — this token is the bridge's entire security
+  // boundary (it can run docker compose against the host socket).
+  if (!bridgeTokenAuthorized(req.headers.authorization, token)) {
     res.writeHead(401, { 'Content-Type': 'application/json' });
     res.end(JSON.stringify({ error: 'Unauthorized' }));
     return;

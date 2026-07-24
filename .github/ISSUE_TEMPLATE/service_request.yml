@@ -1,0 +1,57 @@
+name: Catalog service request
+description: Request a self-hosted service to add to the BuildMyStack catalog
+labels: ["service-request"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Want a service in the catalog? Tell us about it. Adding a service is also
+        the easiest first PR — see [CONTRIBUTING.md](../../CONTRIBUTING.md) if
+        you'd like to submit it yourself.
+  - type: input
+    id: name
+    attributes:
+      label: Service name
+      placeholder: Immich
+    validations:
+      required: true
+  - type: input
+    id: image
+    attributes:
+      label: Docker image
+      description: The official/recommended image and a pinned tag.
+      placeholder: ghcr.io/immich-app/immich-server:v1.106.4
+    validations:
+      required: true
+  - type: dropdown
+    id: category
+    attributes:
+      label: Category
+      options:
+        - Databases
+        - Web Servers
+        - Media
+        - Development Tools
+        - Monitoring
+        - Security
+        - Productivity
+    validations:
+      required: true
+  - type: textarea
+    id: why
+    attributes:
+      label: Why this service?
+      description: What does it do, and what does it typically pair with in a stack?
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Key configuration (optional)
+      description: Required env vars (mark secrets), ports, and data volumes if you know them.
+      placeholder: |
+        env: DB_PASSWORD (secret, required), UPLOAD_LOCATION (required)
+        ports: 2283
+        volumes: /usr/src/app/upload
+    validations:
+      required: false

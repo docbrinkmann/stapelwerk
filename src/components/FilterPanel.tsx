@@ -1,6 +1,8 @@
 import React, { useState, useCallback, useEffect, useMemo } from 'react'
 import { useServiceBrowserStore } from '@/stores/service-browser'
 import { api } from '@/trpc/client'
+import { useT } from '@/lib/i18n/client'
+import type { MessageKey } from '@/lib/i18n/messages'
 import './FilterPanel.css'
 
 interface FilterPanelProps {
@@ -27,11 +29,11 @@ const CATEGORIES = [
 
 // Sort options backed by real service data. No fake "rating" — services carry
 // Docker-Hub popularity, a name, and a created-at date; nothing more to sort on.
-const SORT_OPTIONS = [
-  { id: 'popularity', label: 'Most Popular' },
-  { id: 'alphabetical', label: 'A-Z' },
-  { id: 'alphabetical_desc', label: 'Z-A' },
-  { id: 'recently_added', label: 'Recently Added' },
+const SORT_OPTIONS: { id: string; labelKey: MessageKey }[] = [
+  { id: 'popularity', labelKey: 'catalog.sortMostPopular' },
+  { id: 'alphabetical', labelKey: 'catalog.sortAZ' },
+  { id: 'alphabetical_desc', labelKey: 'catalog.sortZA' },
+  { id: 'recently_added', labelKey: 'catalog.sortRecentlyAdded' },
 ]
 
 export const FilterPanel: React.FC<FilterPanelProps> = ({
@@ -40,6 +42,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
   defaultExpanded = true,
   categories: categoryCounts = [],
 }) => {
+  const t = useT()
   const {
     activeFilters,
     sortBy,
@@ -118,20 +121,20 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
   // Announce filter updates with result count
   React.useEffect(() => {
-    setAnnouncement(`Filters updated`)
-  }, [activeFilters, sortBy])
+    setAnnouncement(t('catalog.filtersUpdated'))
+  }, [activeFilters, sortBy, t])
 
   return (
-    <div className={`filter-panel ${className}`} role="region" aria-label="Service filters">
+    <div className={`filter-panel ${className}`} role="region" aria-label={t('catalog.serviceFiltersAria')}>
       {/* Loading state */}
       {disabled && (
-        <div className="filter-panel__loading" aria-label="Loading filters...">Loading filters...</div>
+        <div className="filter-panel__loading" aria-label={t('catalog.loadingFilters')}>{t('catalog.loadingFilters')}</div>
       )}
 
       {/* Error state */}
       {uiState?.error != null && (
         <div className="filter-panel__error" role="alert">
-          Unable to load filters. Please refresh the page.
+          {t('catalog.filtersError')}
         </div>
       )}
 
@@ -142,9 +145,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
       <div className="filter-panel__header">
         <div className="filter-panel__title-section">
-          <h2 className="filter-panel__title">Filters</h2>
+          <h2 className="filter-panel__title">{t('catalog.filters')}</h2>
           {activeFilterCount > 0 && (
-            <span className="filter-panel__count" aria-label={`${activeFilterCount} active filters`}>
+            <span className="filter-panel__count" aria-label={t('catalog.activeFiltersAria', { count: activeFilterCount })}>
               {activeFilterCount}
             </span>
           )}
@@ -156,9 +159,9 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
               type="button"
               className="filter-panel__reset-button"
               onClick={handleResetFilters}
-              aria-label="Clear all filters"
+              aria-label={t('catalog.clearAllFilters')}
             >
-              Clear all filters
+              {t('catalog.clearAllFilters')}
             </button>
           )}
 
@@ -167,7 +170,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
             type="button"
             className={`filter-panel__toggle ${isExpanded ? 'filter-panel__toggle--expanded' : ''}`}
             onClick={toggleExpanded}
-            aria-label="Toggle filters"
+            aria-label={t('catalog.toggleFiltersAria')}
             aria-expanded={isExpanded}
           >
             <svg
@@ -194,19 +197,19 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
         {/* Sort Options */}
         <div className="filter-panel__section">
           <label htmlFor="sort-select" className="filter-panel__section-title">
-            Sort by
+            {t('catalog.sortBy')}
           </label>
           <select
             id="sort-select"
             className="filter-panel__sort-select"
             value={sortBy}
             onChange={handleSortChange}
-            aria-label="Sort services by"
+            aria-label={t('catalog.sortServicesByAria')}
             disabled={disabled}
           >
             {SORT_OPTIONS.map(option => (
               <option key={option.id} value={option.id}>
-                {option.label}
+                {t(option.labelKey)}
               </option>
             ))}
           </select>
@@ -214,7 +217,7 @@ export const FilterPanel: React.FC<FilterPanelProps> = ({
 
         {/* Categories */}
         <fieldset className="filter-panel__section">
-          <legend id="categories-title" className="filter-panel__section-title">Categories</legend>
+          <legend id="categories-title" className="filter-panel__section-title">{t('catalog.categories')}</legend>
           <div className="filter-panel__checkbox-group" aria-labelledby="categories-title">
             {categoryList.map(category => (
               <label key={category.id} className="filter-panel__checkbox-label">

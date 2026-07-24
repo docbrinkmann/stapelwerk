@@ -31,6 +31,18 @@ export interface StackServiceConfiguration {
   portMappings: PortMapping[];
   volumeMounts: VolumeMount[];
   dependsOn: ServiceDependency[];
+  // Optional docker `network_mode`, e.g. "service:gluetun" — routes this
+  // service's traffic through another container (a VPN kill-switch). When set,
+  // the compose generator publishes this service's ports on the target instead
+  // and drops its own network membership. Undefined = the default app-network.
+  networkMode?: string;
+  /**
+   * Optional per-stack image tag override (e.g. "18.4-alpine"). Honored by the
+   * compose generator so what you export/deploy from the builder uses this tag
+   * instead of the catalog default. Session/export-time only — not yet
+   * persisted to the saved-stack library (that needs a DB column).
+   */
+  imageTag?: string;
 }
 
 // A service within a stack

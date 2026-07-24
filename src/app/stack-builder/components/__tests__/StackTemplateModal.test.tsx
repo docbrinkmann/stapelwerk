@@ -24,7 +24,21 @@ const harness = vi.hoisted(() => ({
         { id: 4, name: 'Prowlarr' },
         { id: 5, name: 'qBittorrent' },
       ],
-      metadata: { tags: ['media', 'streaming', 'automation'] },
+      // Curated per-service config (slug → config). The service.get mock below
+      // returns slug `svc-<id>`, so svc-5 is qBittorrent: routed through the VPN
+      // kill-switch, sharing the media volume. This is what applying the
+      // template MUST carry into the builder store — the regression this file
+      // guards is the apply path silently dropping it.
+      metadata: {
+        tags: ['media', 'streaming', 'automation'],
+        serviceConfigs: {
+          'svc-5': {
+            networkMode: 'service:gluetun',
+            portMappings: [{ containerPort: 8080, hostPort: 8080 }],
+            volumeMounts: [{ hostPath: '/srv/media', containerPath: '/data' }],
+          },
+        },
+      },
       usageCount: 42,
     },
     {
@@ -61,11 +75,15 @@ const harness = vi.hoisted(() => ({
   ],
   fetchCalls: [] as number[],
   added: [] as any[],
+  // Minimal builder-store stand-in: addService seeds a default config, the
+  // apply handler reads it back via getState() and overlays the curated config.
+  storeServices: [] as Array<{ serviceId: number; configuration: any }>,
   failFetch: false,
   pending: false,
   reset() {
     harness.fetchCalls.length = 0;
     harness.added.length = 0;
+    harness.storeServices.length = 0;
     harness.failFetch = false;
     harness.pending = false;
   },
@@ -113,8 +131,19 @@ vi.mock('@/stores/stack-builder', () => ({
   useStackServices: () => ({
     addService: (s: any) => {
       harness.added.push(s);
+      harness.storeServices.push({
+        serviceId: s.id,
+        configuration: { environmentVariables: {}, portMappings: [], volumeMounts: [], dependsOn: [] },
+      });
+    },
+    updateServiceConfiguration: (id: number, configuration: any) => {
+      const svc = harness.storeServices.find((x) => x.serviceId === id);
+      if (svc) svc.configuration = configuration;
     },
   }),
+  useStackBuilderStore: {
+    getState: () => ({ services: harness.storeServices }),
+  },
 }));
 
 vi.mock('@/lib/analytics/recommendation-analytics', () => ({
@@ -344,6 +373,34 @@ describe('StackTemplateModal', () => {
       expect(harness.added).toHaveLength(5);
       // Services are reshaped for the store: category becomes an object.
       expect(harness.added[0].category).toEqual({ id: 1, name: 'cat', slug: 'cat' });
+    });
+
+    it('carries the curated per-service config (VPN kill-switch, shared volume) into the store', async () => {
+      const user = userEvent.setup();
+      render(<StackTemplateModal {...defaultProps} />);
+
+      // Apply the Media Server template (first card).
+      await user.click(screen.getAllByText('Apply')[0]);
+
+      await waitFor(() => {
+        expect(harness.storeServices).toHaveLength(5);
+      });
+
+      // qBittorrent (svc id 5) must be routed through the VPN — a template that
+      // drops this ships a stack that leaks the real IP (the builder's VPN-leak
+      // check fires). This assertion is the regression guard for that bug.
+      const qbit = harness.storeServices.find((s) => s.serviceId === 5);
+      expect(qbit?.configuration.networkMode).toBe('service:gluetun');
+      expect(qbit?.configuration.volumeMounts).toEqual([
+        { hostPath: '/srv/media', containerPath: '/data' },
+      ]);
+      expect(qbit?.configuration.portMappings).toEqual([
+        { containerPort: 8080, hostPort: 8080 },
+      ]);
+
+      // Members without a curated entry keep their default config untouched.
+      const jellyfin = harness.storeServices.find((s) => s.serviceId === 1);
+      expect(jellyfin?.configuration.networkMode).toBeUndefined();
     });
 
     it('shows a loading state and disables apply while resolving', async () => {

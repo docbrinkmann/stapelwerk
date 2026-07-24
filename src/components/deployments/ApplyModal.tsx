@@ -5,6 +5,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { ApplyPanel } from './ApplyPanel';
 import { api } from '@/trpc/client';
+import { useT } from '@/lib/i18n/client';
 
 interface ApplyModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
   targetId: initialTargetId,
   artifactId,
 }) => {
+  const t = useT();
   const [selectedTargetId, setSelectedTargetId] = useState<string | undefined>(initialTargetId);
   const [selectedStackId, setSelectedStackId] = useState<string | undefined>(initialStackId);
 
@@ -35,6 +37,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
   const [newTargetHost, setNewTargetHost] = useState('');
   const [newTargetSshUser, setNewTargetSshUser] = useState('');
   const [newTargetSshPort, setNewTargetSshPort] = useState('22');
+  const [newTargetRiskAck, setNewTargetRiskAck] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
 
@@ -67,7 +70,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
       await api.deployments.generateDeployKey.mutate({});
       await queryClient.invalidateQueries({ queryKey: ['deployments', 'deployPublicKey'] });
     } catch (err: any) {
-      setGenKeyError(err?.message || 'Failed to generate deploy key');
+      setGenKeyError(err?.message || t('ops.generateKeyFailed'));
     } finally {
       setGenKeyLoading(false);
     }
@@ -100,17 +103,21 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
     setCreateError(null);
     // Basic validation
     if (!newTargetName.trim()) {
-      setCreateError('Target name is required');
+      setCreateError(t('ops.targetNameRequired'));
       return;
     }
     const isRemote = newTargetLocation === 'remote';
     if (isRemote && (!newTargetHost.trim() || !newTargetSshUser.trim())) {
-      setCreateError('Remote targets need a host and SSH user');
+      setCreateError(t('ops.remoteNeedsHostUser'));
       return;
     }
     const sshPort = Number(newTargetSshPort);
     if (isRemote && (!Number.isInteger(sshPort) || sshPort < 1 || sshPort > 65535)) {
-      setCreateError('SSH port must be a number between 1 and 65535');
+      setCreateError(t('ops.sshPortRange'));
+      return;
+    }
+    if (isRemote && !newTargetRiskAck) {
+      setCreateError('Please acknowledge the SSH deploy-key liability, or use Export instead.');
       return;
     }
     try {
@@ -120,7 +127,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
         try {
           config = JSON.parse(newTargetConfig);
         } catch (err) {
-          setCreateError('Config must be valid JSON');
+          setCreateError(t('ops.configInvalidJson'));
           setIsCreating(false);
           return;
         }
@@ -133,7 +140,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
         config,
         location: newTargetLocation,
         ...(isRemote
-          ? { host: newTargetHost.trim(), sshUser: newTargetSshUser.trim(), sshPort }
+          ? { host: newTargetHost.trim(), sshUser: newTargetSshUser.trim(), sshPort, riskAcknowledged: newTargetRiskAck }
           : {}),
       });
       // Refresh targets and select the new one
@@ -148,8 +155,9 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
       setNewTargetHost('');
       setNewTargetSshUser('');
       setNewTargetSshPort('22');
+      setNewTargetRiskAck(false);
     } catch (err: any) {
-      setCreateError(err?.message || 'Failed to create target');
+      setCreateError(err?.message || t('ops.createTargetFailed'));
     } finally {
       setIsCreating(false);
     }
@@ -171,11 +179,11 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
     setCiError(null);
     setCiYaml(null);
     if (!selectedTargetId) {
-      setCiError('Select a target to render CI YAML.');
+      setCiError(t('ops.selectTargetForCi'));
       return;
     }
     if (!ciManifestPath.trim()) {
-      setCiError('Manifest path is required.');
+      setCiError(t('ops.manifestPathRequired'));
       return;
     }
     try {
@@ -186,7 +194,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
       });
       setCiYaml(res.yaml);
     } catch (err: any) {
-      setCiError(err?.message || 'Failed to render CI YAML');
+      setCiError(err?.message || t('ops.renderCiFailed'));
     } finally {
       setCiLoading(false);
     }
@@ -199,19 +207,19 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-3xl" data-testid="apply-modal">
         <DialogHeader>
-          <DialogTitle>Direct Apply</DialogTitle>
+          <DialogTitle>{t('ops.directApply')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           {/* Empty-state and quick target creation */}
           {targetsLoading ? (
-            <div className="p-3 text-sm text-muted-foreground">Loading deployment targets…</div>
+            <div className="p-3 text-sm text-muted-foreground">{t('ops.loadingTargets')}</div>
           ) : targets.length === 0 ? (
             <div className="p-4 border rounded border-border bg-muted/40">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <div className="font-medium text-warning">No deployment targets found</div>
-                  <div className="text-sm text-muted-foreground mt-1">Create a target to enable Direct Apply.</div>
+                  <div className="font-medium text-warning">{t('ops.noTargetsFound')}</div>
+                  <div className="text-sm text-muted-foreground mt-1">{t('ops.createTargetHint')}</div>
                 </div>
                 <button
                   type="button"
@@ -219,14 +227,14 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                   onClick={() => setShowCreateTarget(!showCreateTarget)}
                   data-testid="apply-create-target-toggle"
                 >
-                  {showCreateTarget ? 'Hide' : 'Create Target'}
+                  {showCreateTarget ? t('ops.hide') : t('ops.createTarget')}
                 </button>
               </div>
               {showCreateTarget && (
                 <form onSubmit={handleCreateTarget} className="mt-3 space-y-3" data-testid="apply-create-target-form">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                     <div className="space-y-1">
-<label className="text-sm font-medium" htmlFor="apply-target-name">Name</label>
+<label className="text-sm font-medium" htmlFor="apply-target-name">{t('common.name')}</label>
                       <input
                         id="apply-target-name"
                         name="apply-target-name"
@@ -234,11 +242,11 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                         className="border border-input bg-background text-foreground rounded px-3 py-2 w-full"
                         value={newTargetName}
                         onChange={(e) => setNewTargetName(e.target.value)}
-                        placeholder="e.g., Local K3s"
+                        placeholder={t('ops.targetNamePlaceholder')}
                       />
                     </div>
                     <div className="space-y-1">
-<label className="text-sm font-medium" htmlFor="apply-target-provider">Provider</label>
+<label className="text-sm font-medium" htmlFor="apply-target-provider">{t('ops.provider')}</label>
                       <input
                         id="apply-target-provider"
                         name="apply-target-provider"
@@ -246,11 +254,11 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                         className="border border-input bg-background text-foreground rounded px-3 py-2 w-full"
                         value={newTargetProvider}
                         onChange={(e) => setNewTargetProvider(e.target.value)}
-                        placeholder="e.g., self-managed, EKS, GKE"
+                        placeholder={t('ops.providerPlaceholder')}
                       />
                     </div>
                     <div className="space-y-1">
-<label className="text-sm font-medium" htmlFor="apply-target-type">Type</label>
+<label className="text-sm font-medium" htmlFor="apply-target-type">{t('ops.typeLabel')}</label>
                       <select
                         id="apply-target-type"
                         name="apply-target-type"
@@ -263,7 +271,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                       </select>
                     </div>
                     <div className="space-y-1">
-<label className="text-sm font-medium" htmlFor="apply-target-location">Deploy location</label>
+<label className="text-sm font-medium" htmlFor="apply-target-location">{t('ops.deployLocation')}</label>
                       <select
                         id="apply-target-location"
                         name="apply-target-location"
@@ -272,13 +280,13 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                         value={newTargetLocation}
                         onChange={(e) => setNewTargetLocation(e.target.value as 'local' | 'remote')}
                       >
-                        <option value="local">This server (local Docker socket)</option>
-                        <option value="remote">Remote host (SSH, key-based)</option>
+                        <option value="local">{t('ops.thisServerLocalSocket')}</option>
+                        <option value="remote">{t('ops.remoteHostSsh')}</option>
                       </select>
                     </div>
                     {newTargetLocation === 'local' && (
                     <div className="space-y-1 md:col-span-1">
-<label className="text-sm font-medium" htmlFor="apply-target-config">Config (JSON, optional)</label>
+<label className="text-sm font-medium" htmlFor="apply-target-config">{t('ops.configJsonOptional')}</label>
                       <textarea
                         id="apply-target-config"
                         name="apply-target-config"
@@ -295,7 +303,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                     <div className="space-y-3 border rounded p-3 bg-muted/40" data-testid="apply-remote-fields">
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                         <div className="space-y-1 md:col-span-2">
-                          <label className="text-sm font-medium" htmlFor="apply-target-host">Host</label>
+                          <label className="text-sm font-medium" htmlFor="apply-target-host">{t('ops.hostLabel')}</label>
                           <input
                             id="apply-target-host"
                             name="apply-target-host"
@@ -303,11 +311,11 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                             className="border border-input bg-background text-foreground rounded px-3 py-2 w-full"
                             value={newTargetHost}
                             onChange={(e) => setNewTargetHost(e.target.value)}
-                            placeholder="e.g., 192.168.1.20 or server.example.com"
+                            placeholder={t('ops.hostPlaceholderExample')}
                           />
                         </div>
                         <div className="space-y-1">
-                          <label className="text-sm font-medium" htmlFor="apply-target-ssh-port">SSH port</label>
+                          <label className="text-sm font-medium" htmlFor="apply-target-ssh-port">{t('ops.sshPort')}</label>
                           <input
                             id="apply-target-ssh-port"
                             name="apply-target-ssh-port"
@@ -319,7 +327,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                           />
                         </div>
                         <div className="space-y-1 md:col-span-2">
-                          <label className="text-sm font-medium" htmlFor="apply-target-ssh-user">SSH user</label>
+                          <label className="text-sm font-medium" htmlFor="apply-target-ssh-user">{t('ops.sshUser')}</label>
                           <input
                             id="apply-target-ssh-user"
                             name="apply-target-ssh-user"
@@ -327,17 +335,17 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                             className="border border-input bg-background text-foreground rounded px-3 py-2 w-full"
                             value={newTargetSshUser}
                             onChange={(e) => setNewTargetSshUser(e.target.value)}
-                            placeholder="e.g., deploy"
+                            placeholder={t('ops.sshUserPlaceholder')}
                           />
                         </div>
                       </div>
 
                       {/* Authorize the deploy server's public key on the target host. */}
                       <div className="text-sm">
-                        <div className="font-medium">Authorize BuildMyStack on your host</div>
+                        <div className="font-medium">{t('ops.authorizeHeading')}</div>
                         <p className="text-muted-foreground mt-0.5">
-                          Deploys use key-based SSH — no passwords. Add this public key to the
-                          host&apos;s <code>~/.ssh/authorized_keys</code> for user{' '}
+                          {t('ops.authorizeBody1')} <code>~/.ssh/authorized_keys</code>{' '}
+                          {t('ops.authorizeBody2')}{' '}
                           <code>{newTargetSshUser.trim() || 'deploy'}</code>:
                         </p>
                         {deployKey?.configured && deployKey.publicKey ? (
@@ -354,7 +362,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                                   if (k) navigator.clipboard?.writeText(k).catch(() => {/* noop */});
                                 }}
                               >
-                                Copy key
+                                {t('ops.copyKey')}
                               </button>
                               <button
                                 type="button"
@@ -364,15 +372,14 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                                   if (k) navigator.clipboard?.writeText(`echo '${k}' >> ~/.ssh/authorized_keys`).catch(() => {/* noop */});
                                 }}
                               >
-                                Copy install command
+                                {t('ops.copyInstallCommand')}
                               </button>
                             </div>
                           </div>
                         ) : (
                           <div className="mt-2 space-y-2" data-testid="apply-deploy-pubkey-missing">
                             <p className="text-xs text-muted-foreground">
-                              No deploy key is configured yet. Generate one here — the private key
-                              stays on the server; you authorize the public key on your host.
+                              {t('ops.noDeployKeyModal')}
                             </p>
                             <button
                               type="button"
@@ -381,7 +388,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                               disabled={genKeyLoading}
                               data-testid="apply-generate-deploy-key"
                             >
-                              {genKeyLoading ? 'Generating…' : 'Generate deploy key'}
+                              {genKeyLoading ? t('ops.generating') : t('ops.generateDeployKey')}
                             </button>
                             {genKeyError && (
                               <p className="text-xs text-destructive">{genKeyError}</p>
@@ -389,15 +396,32 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                           </div>
                         )}
                       </div>
+
+                      <label className="flex items-start gap-2 rounded border border-warning/40 bg-warning/10 p-2.5 text-sm cursor-pointer" htmlFor="apply-target-risk-ack">
+                        <input
+                          id="apply-target-risk-ack"
+                          name="apply-target-risk-ack"
+                          type="checkbox"
+                          className="mt-0.5"
+                          checked={newTargetRiskAck}
+                          onChange={(e) => setNewTargetRiskAck(e.target.checked)}
+                          data-testid="apply-target-risk-ack"
+                        />
+                        <span className="text-muted-foreground">
+                          I understand BuildMyStack will hold an SSH deploy key that can run Docker on this host, and I&apos;m
+                          authorized to grant that access. Prefer to run it yourself? Use{' '}
+                          <span className="font-medium">Export</span> instead — no key held.
+                        </span>
+                      </label>
                     </div>
                   )}
                   {createError && <div className="text-sm text-destructive" data-testid="apply-create-target-error">{createError}</div>}
                   <div className="flex gap-2">
                     <button type="submit" className="px-3 py-1.5 text-sm border rounded bg-primary text-primary-foreground disabled:opacity-60" disabled={isCreating}>
-                      {isCreating ? 'Creating…' : 'Create Target'}
+                      {isCreating ? t('ops.creating') : t('ops.createTarget')}
                     </button>
                     <button type="button" className="px-3 py-1.5 text-sm border rounded" onClick={() => setShowCreateTarget(false)}>
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                   </div>
                 </form>
@@ -407,7 +431,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-1">
-              <label className="text-sm font-medium">Target</label>
+              <label className="text-sm font-medium">{t('ops.targetLabel')}</label>
               <select
                 data-testid="apply-target-select"
                 className="border border-input bg-background text-foreground rounded px-3 py-2 w-full"
@@ -415,14 +439,14 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                 onChange={(e) => setSelectedTargetId(e.target.value || undefined)}
                 disabled={disabled}
               >
-                <option value="">Select a target (optional)</option>
+                <option value="">{t('ops.selectTargetOptional')}</option>
                 {targetOptions.map((opt: { id: string; label: string }) => (
                   <option key={opt.id} value={opt.id}>{opt.label}</option>
                 ))}
               </select>
             </div>
             <div className="space-y-1">
-              <label className="text-sm font-medium">Stack</label>
+              <label className="text-sm font-medium">{t('ops.stackLabel')}</label>
               <select
                 data-testid="apply-stack-select"
                 className="border border-input bg-background text-foreground rounded px-3 py-2 w-full"
@@ -430,7 +454,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                 onChange={(e) => setSelectedStackId(e.target.value || undefined)}
                 disabled={disabled}
               >
-                <option value="">Select a saved stack (optional)</option>
+                <option value="">{t('ops.selectStackOptional')}</option>
                 {stackOptions.map((opt: { id: string; label: string }) => (
                   <option key={opt.id} value={opt.id}>{opt.label}</option>
                 ))}
@@ -441,20 +465,20 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
           {/* CI YAML rendering */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <div className="text-sm font-medium">CI YAML (optional)</div>
+              <div className="text-sm font-medium">{t('ops.ciYamlOptional')}</div>
               <button
                 type="button"
                 className="px-3 py-1.5 text-sm border rounded"
                 onClick={() => setShowCiPanel(!showCiPanel)}
                 data-testid="apply-toggle-ci"
               >
-                {showCiPanel ? 'Hide' : 'Generate CI YAML'}
+                {showCiPanel ? t('ops.hide') : t('ops.generateCiYaml')}
               </button>
             </div>
             {showCiPanel && (
               <div className="border rounded p-3 space-y-2" data-testid="apply-ci-panel">
                 <div className="space-y-1">
-                  <label className="text-sm">Manifest path</label>
+                  <label className="text-sm">{t('ops.manifestPath')}</label>
                   <input
                     type="text"
                     className="border border-input bg-background text-foreground rounded px-3 py-2 w-full"
@@ -472,7 +496,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                     disabled={ciLoading}
                     data-testid="apply-render-ci"
                   >
-                    {ciLoading ? 'Rendering…' : 'Render CI YAML'}
+                    {ciLoading ? t('ops.rendering') : t('ops.renderCiYaml')}
                   </button>
                 </div>
                 {ciYaml && (
@@ -490,7 +514,7 @@ export const ApplyModal: React.FC<ApplyModalProps> = ({
                         navigator.clipboard?.writeText(ciYaml).catch(() => {/* noop */})
                       }}
                     >
-                      Copy
+                      {t('common.copy')}
                     </button>
                   </div>
                 )}

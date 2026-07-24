@@ -18,6 +18,8 @@ import {
   Loader2
 } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { useT } from '@/lib/i18n/client'
+import type { MessageKey, Translate } from '@/lib/i18n/messages'
 
 function StackOverviewSkeleton() {
   return (
@@ -42,19 +44,20 @@ function StackOverviewSkeleton() {
 }
 
 function StatusBadge({ status }: { status: string }) {
-  const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-    draft: { label: 'Draft', variant: 'secondary' },
-    active: { label: 'Active', variant: 'default' },
-    public: { label: 'Public', variant: 'default' },
-    pending_approval: { label: 'Pending Approval', variant: 'outline' },
-    rejected: { label: 'Rejected', variant: 'destructive' },
+  const t = useT()
+  const statusConfig: Record<string, { labelKey: MessageKey; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+    draft: { labelKey: 'common.draft', variant: 'secondary' },
+    active: { labelKey: 'ops.statusActive', variant: 'default' },
+    public: { labelKey: 'ops.statusPublic', variant: 'default' },
+    pending_approval: { labelKey: 'ops.statusPendingApproval', variant: 'outline' },
+    rejected: { labelKey: 'ops.statusRejected', variant: 'destructive' },
   }
 
-  const config = statusConfig[status] || { label: status, variant: 'secondary' }
+  const config = statusConfig[status]
 
   return (
-    <Badge variant={config.variant}>
-      {config.label}
+    <Badge variant={config?.variant ?? 'secondary'}>
+      {config ? t(config.labelKey) : status}
     </Badge>
   )
 }
@@ -67,17 +70,17 @@ type DeployTone = 'running' | 'stopped' | 'failed' | 'pending' | 'none'
  * ponytail: per-container health isn't tracked yet — services share the
  * stack-level deploy state, which is honest (no more hardcoded green "Running").
  */
-function deriveStatus(jobs: Array<{ mode: string; status: string }>): { label: string; tone: DeployTone } {
+function deriveStatus(jobs: Array<{ mode: string; status: string }>, t: Translate): { label: string; tone: DeployTone } {
   const latest = jobs[0]
-  if (!latest) return { label: 'Not deployed', tone: 'none' }
+  if (!latest) return { label: t('ops.notDeployed'), tone: 'none' }
   if (latest.status === 'running' || latest.status === 'queued') {
-    return { label: latest.mode === 'destroy' ? 'Stopping…' : 'Deploying…', tone: 'pending' }
+    return { label: latest.mode === 'destroy' ? t('ops.stoppingEllipsis') : t('ops.deployingEllipsis'), tone: 'pending' }
   }
-  if (latest.status === 'failed') return { label: 'Failed', tone: 'failed' }
+  if (latest.status === 'failed') return { label: t('ops.failed'), tone: 'failed' }
   if (latest.status === 'succeeded') {
     return latest.mode === 'destroy'
-      ? { label: 'Stopped', tone: 'stopped' }
-      : { label: 'Running', tone: 'running' }
+      ? { label: t('common.stopped'), tone: 'stopped' }
+      : { label: t('common.running'), tone: 'running' }
   }
   return { label: latest.status, tone: 'pending' }
 }
@@ -92,6 +95,7 @@ function dotClass(tone: DeployTone): string {
 }
 
 export default function StackOverviewPage() {
+  const t = useT()
   const params = useParams()
   const stackId = params.stackId as string
 
@@ -120,7 +124,7 @@ export default function StackOverviewPage() {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <AlertCircle className="h-12 w-12 text-destructive mb-4" />
-        <h2 className="text-lg font-semibold">Failed to load stack</h2>
+        <h2 className="text-lg font-semibold">{t('ops.stackLoadFailed')}</h2>
         <p className="text-muted-foreground">{error.message}</p>
       </div>
     )
@@ -130,15 +134,15 @@ export default function StackOverviewPage() {
     return (
       <div className="flex flex-col items-center justify-center py-12">
         <AlertCircle className="h-12 w-12 text-muted-foreground mb-4" />
-        <h2 className="text-lg font-semibold">Stack not found</h2>
-        <p className="text-muted-foreground">The stack you&apos;re looking for doesn&apos;t exist.</p>
+        <h2 className="text-lg font-semibold">{t('ops.stackNotFound')}</h2>
+        <p className="text-muted-foreground">{t('ops.stackNotFoundHint')}</p>
       </div>
     )
   }
 
   const serviceCount = stack.stack_services?.length || 0
   const jobs = jobsQuery.data?.jobs ?? []
-  const deployStatus = deriveStatus(jobs)
+  const deployStatus = deriveStatus(jobs, t)
   const busy = deploy.isPending || stop.isPending || deployStatus.tone === 'pending'
   const actionError = deploy.error?.message ?? stop.error?.message ?? null
 
@@ -168,15 +172,15 @@ export default function StackOverviewPage() {
         <div className="flex gap-2">
           <Button variant="outline" size="sm" onClick={() => deploy.mutate({ stackId })} disabled={busy}>
             {deploy.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Play className="h-4 w-4 mr-2" />}
-            Deploy
+            {t('common.deploy')}
           </Button>
           <Button variant="outline" size="sm" onClick={() => stop.mutate({ stackId })} disabled={busy}>
             {stop.isPending ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Square className="h-4 w-4 mr-2" />}
-            Stop
+            {t('ops.stop')}
           </Button>
           <Button variant="outline" size="sm" onClick={runRestart} disabled={busy}>
             <RotateCw className="h-4 w-4 mr-2" />
-            Restart
+            {t('ops.restart')}
           </Button>
         </div>
       </div>
@@ -191,20 +195,20 @@ export default function StackOverviewPage() {
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Services</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('ops.tabServices')}</CardTitle>
             <Server className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{serviceCount}</div>
             <p className="text-xs text-muted-foreground">
-              {serviceCount === 1 ? 'service' : 'services'} in this stack
+              {t(serviceCount === 1 ? 'ops.serviceInStack' : 'ops.servicesInStack')}
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Status</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('ops.statusCardTitle')}</CardTitle>
             <Activity className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -214,7 +218,7 @@ export default function StackOverviewPage() {
             </div>
             <p className="text-xs text-muted-foreground">
               <Link href={`/stacks/${stackId}/deployments`} className="hover:underline">
-                View deployment logs →
+                {t('ops.viewDeploymentLogs')}
               </Link>
             </p>
           </CardContent>
@@ -222,7 +226,7 @@ export default function StackOverviewPage() {
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Last Updated</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('ops.lastUpdated')}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
@@ -230,7 +234,7 @@ export default function StackOverviewPage() {
               {formatDistanceToNow(new Date(stack.updatedAt), { addSuffix: true })}
             </div>
             <p className="text-xs text-muted-foreground">
-              Created {formatDistanceToNow(new Date(stack.createdAt), { addSuffix: true })}
+              {t('ops.createdAgo', { time: formatDistanceToNow(new Date(stack.createdAt), { addSuffix: true }) })}
             </p>
           </CardContent>
         </Card>
@@ -239,15 +243,15 @@ export default function StackOverviewPage() {
       {/* Services List Preview */}
       <Card>
         <CardHeader>
-          <CardTitle>Services</CardTitle>
+          <CardTitle>{t('ops.tabServices')}</CardTitle>
           <CardDescription>
-            Services included in this stack
+            {t('ops.servicesCardDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {serviceCount === 0 ? (
             <p className="text-muted-foreground text-center py-8">
-              No services added to this stack yet.
+              {t('ops.noServicesInStack')}
             </p>
           ) : (
             <div className="space-y-3">
@@ -263,7 +267,7 @@ export default function StackOverviewPage() {
                     <div>
                       <p className="font-medium">{stackService.services?.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        {stackService.services?.dockerImage || 'No image specified'}
+                        {stackService.services?.dockerImage || t('ops.noImage')}
                       </p>
                     </div>
                   </div>

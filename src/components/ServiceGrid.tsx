@@ -6,6 +6,7 @@ import { useInfiniteServiceBrowserScroll } from '@/hooks/useInfiniteScroll'
 import { ServiceCard } from './ServiceCard'
 import { DraggableServiceCard } from './dnd/DraggableServiceCard'
 import type { Service } from '@/types/service-browser'
+import { useT } from '@/lib/i18n/client'
 import './ServiceGrid.css'
 
 interface ServiceGridProps {
@@ -33,21 +34,22 @@ interface LoadMoreTriggerProps {
 }
 
 const EmptyState = ({ mode, searchQuery, hasActiveFilters, onClearFilters }: EmptyStateProps) => {
+  const t = useT()
   let title: string
   let description: string
   let actionText: string | undefined
 
   if (mode === 'search' && searchQuery) {
-    title = `No services found for "${searchQuery}"`
-    description = 'Try adjusting your search terms or browse our full catalog'
-    actionText = hasActiveFilters ? 'Clear filters' : undefined
+    title = t('catalog.noServicesFoundFor', { query: searchQuery })
+    description = t('catalog.emptySearchDesc')
+    actionText = hasActiveFilters ? t('catalog.clearFiltersAction') : undefined
   } else if (hasActiveFilters) {
-    title = 'No services match your current filters'
-    description = 'Try adjusting your filters or browse all services'
-    actionText = 'Clear filters'
+    title = t('catalog.noServicesMatchFilters')
+    description = t('catalog.emptyFiltersDesc')
+    actionText = t('catalog.clearFiltersAction')
   } else {
-    title = 'No services found'
-    description = 'Check back later for new services or try refreshing the page'
+    title = t('catalog.noServicesFound')
+    description = t('catalog.emptyBrowseDesc')
   }
 
   return (
@@ -69,10 +71,15 @@ const EmptyState = ({ mode, searchQuery, hasActiveFilters, onClearFilters }: Emp
 }
 
 const ErrorState = ({ error, onRetry }: ErrorStateProps) => {
-  const title = 'Failed to load services'
-  const message = (error.message && error.message.toLowerCase() !== title.toLowerCase())
+  const t = useT()
+  const title = t('catalog.failedToLoadServices')
+  // The duplicate check compares against the untranslated title too, since
+  // error messages from the API are always English.
+  const message = (error.message
+    && error.message.toLowerCase() !== title.toLowerCase()
+    && error.message.toLowerCase() !== 'failed to load services')
     ? error.message
-    : 'Something went wrong while loading the services. Please try again.'
+    : t('catalog.servicesLoadErrorDesc')
   const offline = typeof navigator !== 'undefined' && navigator.onLine === false
   return (
     <div className="error-state" data-testid="error-state" role="alert" aria-live="polite">
@@ -82,20 +89,21 @@ const ErrorState = ({ error, onRetry }: ErrorStateProps) => {
         {message}
       </p>
       {offline && (
-        <p className="error-state__offline">You're offline. Check your connection and retry.</p>
+        <p className="error-state__offline">{t('catalog.offlineNotice')}</p>
       )}
       <button
         type="button"
         className="error-state__retry"
         onClick={onRetry}
       >
-        Try again
+        {t('catalog.tryAgain')}
       </button>
     </div>
   )
 }
 
 const LoadMoreTrigger = ({ hasNextPage, isLoadingMore, onLoadMore }: LoadMoreTriggerProps) => {
+  const t = useT()
   const { ref, inView } = useInView({
     threshold: 0.1,
     triggerOnce: false,
@@ -128,7 +136,7 @@ const LoadMoreTrigger = ({ hasNextPage, isLoadingMore, onLoadMore }: LoadMoreTri
     >
       {isLoadingMore && (
         <div className="load-more-spinner">
-          Loading more services...
+          {t('catalog.loadingMoreServices')}
         </div>
       )}
     </div>
@@ -189,6 +197,7 @@ const useResponsiveColumns = () => {
 }
 
 export const ServiceGrid = ({ className, stackMode = false }: ServiceGridProps) => {
+  const t = useT()
   const gridRef = useRef<HTMLDivElement>(null)
   const {
     viewMode,
@@ -295,9 +304,9 @@ export const ServiceGrid = ({ className, stackMode = false }: ServiceGridProps) 
   // Show loading state for initial load
   if (isLoading && services.length === 0) {
     return (
-      <div role="region" aria-label="Loading service" aria-busy="true">
+      <div role="region" aria-label={t('catalog.loadingServiceAria')} aria-busy="true">
         {/* Hidden label to satisfy tests that search for plural form */}
-        <span id="loading-services-label" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>Loading services</span>
+        <span id="loading-services-label" style={{ position: 'absolute', width: 1, height: 1, padding: 0, margin: -1, overflow: 'hidden', clip: 'rect(0,0,0,0)', whiteSpace: 'nowrap', border: 0 }}>{t('catalog.loadingServices')}</span>
         {/* NOTE: no ARIA grid/list role here — the cards are <button> elements,
             which are not valid children of role="grid" (axe: aria-required-children). */}
         <div
@@ -315,7 +324,7 @@ export const ServiceGrid = ({ className, stackMode = false }: ServiceGridProps) 
   // Show error state
   if (error && services.length === 0) {
     return (
-      <div role="region" aria-label="Service grid error">
+      <div role="region" aria-label={t('catalog.serviceGridErrorAria')}>
         <ErrorState error={error} onRetry={handleRetry} />
       </div>
     )
@@ -324,7 +333,7 @@ export const ServiceGrid = ({ className, stackMode = false }: ServiceGridProps) 
   // Show empty state
   if (isEmpty && services.length === 0) {
     return (
-      <div role="region" aria-label="Service grid empty state">
+      <div role="region" aria-label={t('catalog.serviceGridEmptyAria')}>
           <EmptyState
           mode={(searchQuery && searchQuery.length > 0 ? 'search' : 'browse')}
           searchQuery={searchQuery}
@@ -339,7 +348,7 @@ export const ServiceGrid = ({ className, stackMode = false }: ServiceGridProps) 
     // NOTE: no nested <main> here — the page layout already provides the main
     // landmark (axe: landmark-no-duplicate-main / landmark-main-is-top-level).
     <div>
-      <div role="region" aria-label="Service catalog grid">
+      <div role="region" aria-label={t('catalog.serviceCatalogGridAria')}>
         {enableVirtual && <div data-testid="virtual-grid" aria-hidden="true" />}
         {/* NOTE: no ARIA grid/list role — cards are <button> elements, which are
             not valid children of role="grid" (axe: aria-required-children). */}

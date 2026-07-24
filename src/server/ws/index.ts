@@ -43,8 +43,46 @@ import {
   getSubscriptionStats,
 } from './handlers/status';
 
+import { isBillingEnabled } from '@/lib/plans';
+import { effectivePlan } from '@/lib/billing/enforcement';
+
 // Client state management
 const clients = new Map<WebSocket, ClientState>();
+
+// Lazy Prisma — only the logs/status ownership check and the plan-capability
+// gate need the DB; keep it off the module load path (echo/self-host setups).
+let prismaClient: import('@prisma/client').PrismaClient | undefined;
+async function getPrisma(): Promise<import('@prisma/client').PrismaClient> {
+  if (!prismaClient) {
+    const { PrismaClient } = await import('@prisma/client');
+    prismaClient = new PrismaClient();
+  }
+  return prismaClient;
+}
+
+/**
+ * Log/status subscriptions stream a stack's operational data, so the subscriber
+ * must own the stack — the same gate the terminal channel enforces. Without
+ * this, any authenticated user could subscribe to another user's stackId and
+ * receive its logs/status (cross-tenant IDOR).
+ */
+export async function authorizeStackSubscription(stackId: string, userId: string): Promise<boolean> {
+  if (!stackId || !userId) return false;
+  const prisma = await getPrisma();
+  const stack = await prisma.stacks.findUnique({ where: { id: stackId }, select: { userId: true } });
+  return !!stack && stack.userId === userId;
+}
+
+/**
+ * Live logs + terminal are a Pro capability — mirror the tRPC gate on the WS
+ * side (WS bypasses tRPC). Self-host (billing off) is always allowed and never
+ * reads the plan.
+ */
+async function wsCanStream(userId: string): Promise<boolean> {
+  if (!isBillingEnabled()) return true;
+  const { limits } = await effectivePlan(await getPrisma(), userId);
+  return limits.deploy;
+}
 
 // Heartbeat interval
 const HEARTBEAT_INTERVAL_MS = 30000;
@@ -164,7 +202,7 @@ function handleMessage(ws: WebSocket, data: unknown): void {
       break;
 
     case 'subscribe':
-      handleSubscribe(ws, state, message.payload as SubscribePayload, message.requestId);
+      void handleSubscribe(ws, state, message.payload as SubscribePayload, message.requestId);
       break;
 
     case 'unsubscribe':
@@ -172,7 +210,7 @@ function handleMessage(ws: WebSocket, data: unknown): void {
       break;
 
     case 'terminal':
-      handleTerminalMessage(ws, state, message.payload as unknown);
+      void handleTerminalMessage(ws, state, message.payload as unknown);
       break;
 
     default:
@@ -195,16 +233,32 @@ function handlePing(ws: WebSocket, message: WSMessage): void {
 /**
  * Handle subscribe message
  */
-function handleSubscribe(
+async function handleSubscribe(
   ws: WebSocket,
   state: ClientState,
   payload: SubscribePayload,
   requestId?: string
-): void {
+): Promise<void> {
   const { channel, stackId, deploymentId, sessionId } = payload;
 
   if (!stackId && channel !== 'terminal') {
     sendError(ws, 'MISSING_STACK_ID', 'Stack ID required for subscription');
+    return;
+  }
+
+  // logs/status stream a stack's operational data — enforce stack ownership
+  // (parity with the terminal channel; without it this was a cross-tenant IDOR).
+  if (channel === 'logs' || channel === 'status') {
+    const allowed = await authorizeStackSubscription(stackId!, state.userId);
+    if (!allowed) {
+      sendError(ws, 'FORBIDDEN', 'Not your stack');
+      return;
+    }
+  }
+
+  // Plan gate: live logs are a Pro capability (mirrors the tRPC gate).
+  if (channel === 'logs' && !(await wsCanStream(state.userId))) {
+    sendError(ws, 'PLAN_LIMIT', 'Live logs are a Pro feature.');
     return;
   }
 
@@ -274,15 +328,20 @@ function handleUnsubscribe(
 /**
  * Handle terminal-specific messages
  */
-function handleTerminalMessage(
+async function handleTerminalMessage(
   ws: WebSocket,
   state: ClientState,
   payload: unknown
-): void {
+): Promise<void> {
   const termPayload = payload as { action: string } & Record<string, unknown>;
-  
+
   switch (termPayload.action) {
     case 'create':
+      // Plan gate: the terminal is a Pro capability (mirrors the tRPC gate).
+      if (!(await wsCanStream(state.userId))) {
+        sendError(ws, 'PLAN_LIMIT', 'The terminal is a Pro feature.');
+        break;
+      }
       createSession(ws, state.userId, termPayload as unknown as TerminalCreatePayload);
       break;
 

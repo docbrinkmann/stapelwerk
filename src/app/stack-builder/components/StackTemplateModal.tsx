@@ -9,8 +9,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Search, Plus, Users, Clock, Tag, Layers3, AlertCircle, Loader2 } from 'lucide-react';
 import { trpc } from '@/utils/trpc';
-import { useStackServices } from '@/stores/stack-builder';
+import { useStackServices, useStackBuilderStore } from '@/stores/stack-builder';
 import { useRecommendationAnalytics } from '@/lib/analytics/recommendation-analytics';
+import { useT } from '@/lib/i18n/client';
+import type { Translate } from '@/lib/i18n/messages';
 import type { Service } from '@/types/service';
 
 interface StackTemplateModalProps {
@@ -24,6 +26,19 @@ interface StackTemplateModalProps {
  * membership as `serviceIds` and connects the `services` relation, with tags
  * and per-service notes in `metadata`.
  */
+/**
+ * Curated per-service config baked into a template's `metadata.serviceConfigs`
+ * (slug → config). This is what makes a template ship CORRECT out of the box:
+ * qBittorrent routed through Gluetun's kill-switch, the *arr apps sharing one
+ * `/data` mount. Same shape the server-side `applyTemplateToStack` consumes.
+ */
+type TemplateMemberConfig = {
+  networkMode?: string;
+  volumeMounts?: Array<{ hostPath: string; containerPath: string; readOnly?: boolean }>;
+  portMappings?: Array<{ containerPort: number; hostPort: number }>;
+  environmentVariables?: Record<string, string>;
+};
+
 interface TemplateVM {
   id: string;
   name: string;
@@ -35,12 +50,14 @@ interface TemplateVM {
   tags: string[];
   estimatedSetupTime?: string;
   usageCount: number;
+  serviceConfigs: Record<string, TemplateMemberConfig>;
 }
 
-function toTemplateVM(raw: any): TemplateVM {
+function toTemplateVM(raw: any, t: Translate): TemplateVM {
+  const rawConfigs = raw?.metadata?.serviceConfigs;
   return {
     id: String(raw?.id),
-    name: raw?.name ?? 'Untitled template',
+    name: raw?.name ?? t('builder.untitledTemplate'),
     description: raw?.description ?? '',
     category: raw?.category ?? 'mixed',
     difficulty: raw?.difficulty ?? 'intermediate',
@@ -51,6 +68,7 @@ function toTemplateVM(raw: any): TemplateVM {
     tags: Array.isArray(raw?.metadata?.tags) ? raw.metadata.tags : [],
     estimatedSetupTime: raw?.estimatedSetupTime,
     usageCount: typeof raw?.usageCount === 'number' ? raw.usageCount : 0,
+    serviceConfigs: rawConfigs && typeof rawConfigs === 'object' ? rawConfigs : {},
   };
 }
 
@@ -70,12 +88,27 @@ function toBuilderService(row: any): Service {
   } as unknown as Service;
 }
 
+/** Display label for the difficulty enum; unknown values pass through raw. */
+function difficultyLabel(difficulty: string, t: Translate): string {
+  switch (difficulty) {
+    case 'beginner':
+      return t('builder.difficultyBeginner');
+    case 'intermediate':
+      return t('builder.difficultyIntermediate');
+    case 'advanced':
+      return t('builder.difficultyAdvanced');
+    default:
+      return difficulty;
+  }
+}
+
 export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps) {
+  const t = useT();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [applyingTemplateId, setApplyingTemplateId] = useState<string | null>(null);
 
-  const { addService } = useStackServices();
+  const { addService, updateServiceConfiguration } = useStackServices();
   const analytics = useRecommendationAnalytics();
   const utils = trpc.useUtils();
 
@@ -108,7 +141,7 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
   const rawTemplates: any[] = Array.isArray(templatesData)
     ? templatesData
     : ((templatesData as any)?.templates ?? []);
-  const templates: TemplateVM[] = rawTemplates.map(toTemplateVM);
+  const templates: TemplateVM[] = rawTemplates.map(raw => toTemplateVM(raw, t));
 
   const categories: string[] = ['all', ...Array.from(new Set(templates.map(t => t.category)))];
 
@@ -140,6 +173,31 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
       );
 
       rows.forEach(row => addService(toBuilderService(row)));
+
+      // Apply the curated per-service config baked into the template metadata
+      // (VPN routing via `network_mode: service:gluetun`, the shared `/data`
+      // mount, relocated ports). Without this the builder loads bare catalog
+      // services and the VPN kill-switch check correctly flags a leak — the
+      // template would ship BROKEN. `addService` already created the default
+      // config, so read it back fresh and overlay the curated fields.
+      for (const row of rows) {
+        const slug: string = (row as any)?.slug ?? '';
+        const cfg = template.serviceConfigs[slug];
+        if (!cfg) continue;
+        const current = useStackBuilderStore
+          .getState()
+          .services.find(s => s.serviceId === (row as any)?.id)?.configuration;
+        if (!current) continue;
+        updateServiceConfiguration((row as any).id, {
+          ...current,
+          ...(cfg.networkMode !== undefined ? { networkMode: cfg.networkMode } : {}),
+          ...(Array.isArray(cfg.volumeMounts) ? { volumeMounts: cfg.volumeMounts } : {}),
+          ...(Array.isArray(cfg.portMappings) ? { portMappings: cfg.portMappings } : {}),
+          ...(cfg.environmentVariables
+            ? { environmentVariables: { ...current.environmentVariables, ...cfg.environmentVariables } }
+            : {}),
+        });
+      }
 
       analytics.trackTemplateApplied?.(
         template.id,
@@ -176,9 +234,9 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh]">
         <DialogHeader>
-          <DialogTitle>Stack Templates</DialogTitle>
+          <DialogTitle>{t('builder.templatesTitle')}</DialogTitle>
           <DialogDescription>
-            Start from a curated, ready-to-deploy composition — applying one adds its services to your stack
+            {t('builder.templatesSubtitle')}
           </DialogDescription>
         </DialogHeader>
 
@@ -187,7 +245,7 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search templates..."
+              placeholder={t('builder.searchTemplatesPlaceholder')}
               value={searchQuery}
               onChange={(e) => {
                 const newQuery = e.target.value;
@@ -216,7 +274,7 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
                   analytics.trackFilter?.('category', category, filteredTemplates.length, 'template_modal');
                 }}
               >
-                {category === 'all' ? 'All' : category}
+                {category === 'all' ? t('builder.allCategories') : category}
               </Button>
             ))}
           </div>
@@ -227,22 +285,22 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
           {isLoading ? (
             <div className="flex items-center justify-center py-8 text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin mr-2" />
-              <span>Loading templates...</span>
+              <span>{t('builder.loadingTemplates')}</span>
             </div>
           ) : isError ? (
             <div className="flex items-center justify-center py-8 text-destructive">
               <AlertCircle className="h-6 w-6 mr-2" />
               <div>
-                <p>Failed to load templates</p>
+                <p>{t('builder.templatesLoadFailed')}</p>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {error?.message || 'Please try again later'}
+                  {error?.message || t('builder.tryAgainLater')}
                 </p>
               </div>
             </div>
           ) : filteredTemplates.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <p>No templates found matching your criteria.</p>
-              <p className="text-sm mt-1">Try adjusting your search or filters.</p>
+              <p>{t('builder.noTemplatesFound')}</p>
+              <p className="text-sm mt-1">{t('builder.adjustSearch')}</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pr-4">
@@ -259,7 +317,7 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
                       <div className="flex items-center gap-2 mb-2">
                         <Layers3 className="h-4 w-4" />
                         <span className="text-sm font-medium">
-                          Services ({template.serviceNames.length || template.serviceIds.length})
+                          {t('builder.templateServices', { count: template.serviceNames.length || template.serviceIds.length })}
                         </span>
                       </div>
                       <div className="flex flex-wrap gap-1">
@@ -270,7 +328,7 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
                         ))}
                         {template.serviceNames.length > 4 && (
                           <Badge variant="outline" className="text-xs">
-                            +{template.serviceNames.length - 4} more
+                            {t('builder.templateMoreServices', { count: template.serviceNames.length - 4 })}
                           </Badge>
                         )}
                       </div>
@@ -281,7 +339,7 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
                       <div>
                         <div className="flex items-center gap-2 mb-2">
                           <Tag className="h-4 w-4" />
-                          <span className="text-sm font-medium">Tags</span>
+                          <span className="text-sm font-medium">{t('builder.templateTags')}</span>
                         </div>
                         <div className="flex flex-wrap gap-1">
                           {template.tags.map((tag) => (
@@ -297,7 +355,7 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
                     <div className="flex justify-between items-center text-xs text-muted-foreground">
                       <div className="flex items-center gap-1">
                         <Users className="h-3 w-3" />
-                        {template.usageCount.toLocaleString()} uses
+                        {t('builder.templateUses', { count: template.usageCount.toLocaleString() })}
                       </div>
                       {template.estimatedSetupTime && (
                         <div className="flex items-center gap-1">
@@ -310,7 +368,7 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
 
                   <CardFooter className="flex justify-between items-center">
                     <Badge className={`capitalize ${getDifficultyColor(template.difficulty)}`}>
-                      {template.difficulty}
+                      {difficultyLabel(template.difficulty, t)}
                     </Badge>
 
                     <Button
@@ -321,12 +379,12 @@ export function StackTemplateModal({ isOpen, onClose }: StackTemplateModalProps)
                       {applyingTemplateId === template.id ? (
                         <>
                           <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                          Applying...
+                          {t('builder.applying')}
                         </>
                       ) : (
                         <>
                           <Plus className="h-4 w-4 mr-1" />
-                          Apply
+                          {t('builder.apply')}
                         </>
                       )}
                     </Button>

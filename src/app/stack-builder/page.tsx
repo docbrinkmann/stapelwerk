@@ -3,6 +3,7 @@ import { Suspense } from 'react';
 import { QueryClient, HydrationBoundary, dehydrate } from '@tanstack/react-query';
 import { appRouter } from '@/server/root';
 import { createTRPCContext } from '@/server/trpc';
+import { getT } from '@/lib/i18n/server';
 import { StackBuilderClient } from './components/StackBuilderClient';
 import { StackBuilderSkeleton } from './components/StackBuilderSkeleton';
 import './stack-builder.css';
@@ -108,7 +109,8 @@ async function StackBuilderServerComponent() {
 }
 
 // Main Stack Builder Page Component
-export default function StackBuilderPage() {
+export default async function StackBuilderPage() {
+  const t = await getT();
   return (
     <section className="stack-builder-page" aria-labelledby="stack-builder-title">
       {/* Page Header */}
@@ -116,10 +118,10 @@ export default function StackBuilderPage() {
         <div className="stack-builder-header__container">
           <div className="stack-builder-header__content">
             <h1 className="stack-builder-header__title">
-              Build Your Stack
+              {t('builder.pageTitle')}
             </h1>
             <p className="stack-builder-header__subtitle">
-              Drag and drop services to create your perfect self-hosted stack. Configure settings, manage dependencies, and export Docker Compose files.
+              {t('builder.pageSubtitle')}
             </p>
           </div>
         </div>

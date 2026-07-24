@@ -15,6 +15,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Server, Plus, Trash2, Loader2, Search } from 'lucide-react'
+import { useT } from '@/lib/i18n/client'
 
 function AddServiceDialog({
   open,
@@ -29,6 +30,7 @@ function AddServiceDialog({
   existingServiceIds: number[]
   onAdded: () => void
 }) {
+  const t = useT()
   const [search, setSearch] = useState('')
   const catalog = trpc.services.list.useQuery(
     { search: search || undefined, limit: 50 },
@@ -49,8 +51,8 @@ function AddServiceDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add a service</DialogTitle>
-          <DialogDescription>Pick a service from the catalog to add to this stack.</DialogDescription>
+          <DialogTitle>{t('ops.addAService')}</DialogTitle>
+          <DialogDescription>{t('ops.addServiceDesc')}</DialogDescription>
         </DialogHeader>
         <div className="space-y-3">
           <div className="relative">
@@ -58,9 +60,9 @@ function AddServiceDialog({
             <Input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search services…"
+              placeholder={t('ops.searchServicesPlaceholder')}
               className="pl-9"
-              aria-label="Search services"
+              aria-label={t('ops.searchServicesAria')}
             />
           </div>
           {add.error && (
@@ -74,7 +76,7 @@ function AddServiceDialog({
                 {[1, 2, 3].map((i) => <Skeleton key={i} className="h-10 w-full" />)}
               </div>
             ) : available.length === 0 ? (
-              <p className="py-6 text-center text-sm text-muted-foreground">No matching services.</p>
+              <p className="py-6 text-center text-sm text-muted-foreground">{t('ops.noMatchingServices')}</p>
             ) : (
               available.map((s: any) => (
                 <button
@@ -100,6 +102,7 @@ function AddServiceDialog({
 }
 
 export default function StackServicesPage() {
+  const t = useT()
   const params = useParams()
   const stackId = params.stackId as string
   const [addOpen, setAddOpen] = useState(false)
@@ -135,14 +138,14 @@ export default function StackServicesPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Services</h2>
+          <h2 className="text-xl font-semibold">{t('ops.tabServices')}</h2>
           <p className="text-muted-foreground">
-            Manage services in this stack
+            {t('ops.servicesSubtitle')}
           </p>
         </div>
         <Button onClick={() => setAddOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Service
+          {t('ops.addService')}
         </Button>
       </div>
 
@@ -150,13 +153,13 @@ export default function StackServicesPage() {
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <Server className="h-12 w-12 text-muted-foreground mb-4" />
-            <h3 className="text-lg font-semibold">No services yet</h3>
+            <h3 className="text-lg font-semibold">{t('ops.noServicesYet')}</h3>
             <p className="text-muted-foreground text-center max-w-sm mt-2">
-              Add services to your stack to get started with your deployment.
+              {t('ops.noServicesHint')}
             </p>
             <Button className="mt-4" onClick={() => setAddOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
-              Add Your First Service
+              {t('ops.addFirstService')}
             </Button>
           </CardContent>
         </Card>
@@ -175,7 +178,7 @@ export default function StackServicesPage() {
                         {stackService.services?.name}
                       </CardTitle>
                       <CardDescription>
-                        {stackService.services?.dockerImage || 'No image specified'}
+                        {stackService.services?.dockerImage || t('ops.noImage')}
                       </CardDescription>
                     </div>
                   </div>
@@ -185,7 +188,7 @@ export default function StackServicesPage() {
                     className="text-destructive hover:text-destructive"
                     onClick={() => remove.mutate({ stackId, serviceId: stackService.serviceId })}
                     disabled={remove.isPending}
-                    aria-label={`Remove ${stackService.services?.name ?? 'service'}`}
+                    aria-label={t('ops.removeService', { name: stackService.services?.name ?? t('ops.serviceFallback') })}
                   >
                     {remove.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
                   </Button>
@@ -194,13 +197,13 @@ export default function StackServicesPage() {
               <CardContent>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <p className="text-muted-foreground">Category</p>
+                    <p className="text-muted-foreground">{t('ops.categoryLabel')}</p>
                     <p className="font-medium">
-                      {stackService.services?.categories?.name || 'Uncategorized'}
+                      {stackService.services?.categories?.name || t('ops.uncategorized')}
                     </p>
                   </div>
                   <div>
-                    <p className="text-muted-foreground">Order</p>
+                    <p className="text-muted-foreground">{t('ops.orderLabel')}</p>
                     <p className="font-medium">{stackService.order}</p>
                   </div>
                 </div>

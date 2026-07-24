@@ -20,6 +20,11 @@ import {
 import { trpc } from '@/utils/trpc';
 import { useStackServices } from '@/stores/stack-builder';
 import { useRecommendationAnalytics } from '@/lib/analytics/recommendation-analytics';
+import { useT } from '@/lib/i18n/client';
+import {
+  generateStackOptimizations,
+  SUGGESTION_LABELS,
+} from '@/lib/recommendations/stack-optimizations';
 
 interface RecommendationEngineProps {
   className?: string;
@@ -68,6 +73,10 @@ export function RecommendationEngine({
   
   const { services: currentStackServices } = useStackServices();
   const analytics = useRecommendationAnalytics();
+  const utils = trpc.useUtils();
+  // One-click apply state for optimization suggestions.
+  const [applyingSlug, setApplyingSlug] = useState<string | null>(null);
+  const [applyError, setApplyError] = useState<string | null>(null);
 
   const currentServiceIds = useMemo(
     () => currentStackServices
@@ -105,50 +114,27 @@ export function RecommendationEngine({
     { enabled: currentServiceIds.length > 0, refetchOnWindowFocus: false }
   );
 
-  // Analyze current stack for optimization suggestions
-  const analyzeStack = useMemo(() => {
-    if (currentStackServices.length === 0) return null;
+  // Applicable optimization suggestions — pure lib, tolerant of the category
+  // shapes services actually arrive in; each suggestion carries addable slugs.
+  const optimizations = useMemo(
+    () => generateStackOptimizations(currentStackServices),
+    [currentStackServices]
+  );
 
-    const optimizations = [];
-    const serviceCategories = new Set(currentStackServices.map(s => s.service.category?.slug));
-    
-    // Check for missing monitoring
-    if (!currentStackServices.some(s => s.service.category?.slug === 'monitoring')) {
-      optimizations.push({
-        type: 'missing-monitoring',
-        title: 'Add Monitoring',
-        description: 'Consider adding monitoring tools like Prometheus or Grafana',
-        priority: 'high',
-        impact: 'Improved observability and debugging'
-      });
+  // One-click apply: fetch the suggested catalog service and hand it to the
+  // builder exactly like a service recommendation.
+  const handleApplyOptimization = async (slug: string) => {
+    setApplyingSlug(slug);
+    setApplyError(null);
+    try {
+      const service = await utils.services.getBySlug.fetch({ slug });
+      onServiceRecommend?.(service);
+    } catch {
+      setApplyError(t('builder.recAddFailed', { name: SUGGESTION_LABELS[slug] ?? slug }));
+    } finally {
+      setApplyingSlug(null);
     }
-
-    // Check for security concerns
-    if (currentStackServices.some(s => s.service.name.includes('database')) && 
-        !currentStackServices.some(s => s.service.category?.slug === 'security')) {
-      optimizations.push({
-        type: 'security-gap',
-        title: 'Security Enhancement',
-        description: 'Add security tools for database protection',
-        priority: 'high',
-        impact: 'Better data protection and compliance'
-      });
-    }
-
-    // Check for scalability
-    if (currentStackServices.length > 5 && 
-        !currentStackServices.some(s => s.service.category?.slug === 'load-balancer')) {
-      optimizations.push({
-        type: 'scalability',
-        title: 'Load Balancing',
-        description: 'Consider adding a load balancer for better distribution',
-        priority: 'medium',
-        impact: 'Improved performance and reliability'
-      });
-    }
-
-    return optimizations;
-  }, [currentStackServices]);
+  };
 
   // Map the server's compatibility-scored recommendations (with rationale) into
   // the display shape. Each carries the full catalog service so "Add" can drop
@@ -198,6 +184,8 @@ export function RecommendationEngine({
     return 'bg-destructive/10 text-destructive';
   };
 
+  const t = useT();
+
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high': return 'text-destructive';
@@ -213,17 +201,17 @@ export function RecommendationEngine({
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5" />
-            Start your stack
+            {t('builder.recStartTitle')}
           </CardTitle>
           <CardDescription>
-            Pick a popular starting point, or add a service and we&apos;ll suggest what pairs well.
+            {t('builder.recStartBody')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2">
           {starters.length === 0 ? (
             <div className="text-center py-4 text-muted-foreground">
               <Target className="h-8 w-8 mx-auto mb-2 opacity-50" />
-              <p>Add a service to get compatibility-based recommendations.</p>
+              <p>{t('builder.recStartEmpty')}</p>
             </div>
           ) : (
             starters.map((tpl: any) => (
@@ -253,18 +241,18 @@ export function RecommendationEngine({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lightbulb className="h-5 w-5" />
-          Recommendations
+          {t('builder.recTitle')}
         </CardTitle>
         <CardDescription>
-          Services that pair well with what&apos;s already in your stack
+          {t('builder.recSubtitle')}
         </CardDescription>
         
         {/* Tab Navigation — wrap so labels never clip in the narrow side panel */}
         <div className="flex flex-wrap gap-1 mt-4">
           {[
-            { id: 'templates', label: 'Templates', icon: TrendingUp },
-            { id: 'services', label: 'Services', icon: Zap },
-            { id: 'optimizations', label: 'Optimize', icon: Target }
+            { id: 'templates', label: t('builder.recTabTemplates'), icon: TrendingUp },
+            { id: 'services', label: t('builder.recTabServices'), icon: Zap },
+            { id: 'optimizations', label: t('builder.recTabOptimize'), icon: Target }
           ].map(({ id, label, icon: Icon }) => (
             <Button
               key={id}
@@ -304,7 +292,7 @@ export function RecommendationEngine({
               {isLoadingRecommendations ? (
                 <div className="text-center py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary mx-auto"></div>
-                  <p className="text-sm text-muted-foreground mt-2">Finding recommendations...</p>
+                  <p className="text-sm text-muted-foreground mt-2">{t('builder.recFinding')}</p>
                 </div>
               ) : (Array.isArray(recommendationsData) && recommendationsData.length > 0) ? (
                 recommendationsData.map((rec: any, idx: number) => {
@@ -390,8 +378,8 @@ export function RecommendationEngine({
                 })
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
-                  <p>No template recommendations available</p>
-                  <p className="text-xs mt-1">Try adding more services to your stack</p>
+                  <p>{t('builder.recNoTemplates')}</p>
+                  <p className="text-xs mt-1">{t('builder.recTryMore')}</p>
                 </div>
               )}
             </div>
@@ -410,7 +398,7 @@ export function RecommendationEngine({
                         </CardDescription>
                       </div>
                       <Badge className={getConfidenceColor(recommendation.confidence)}>
-                        {Math.round(recommendation.confidence * 100)}% fit
+                        {t('builder.recFitBadge', { pct: Math.round(recommendation.confidence * 100) })}
                       </Badge>
                     </div>
                   </CardHeader>
@@ -422,7 +410,7 @@ export function RecommendationEngine({
                         {recommendation.estimatedSetupTime > 0 && (
                           <div className="flex items-center gap-1">
                             <Clock className="h-3 w-3" />
-                            {recommendation.estimatedSetupTime}min setup
+                            {t('builder.recSetupTime', { min: recommendation.estimatedSetupTime })}
                           </div>
                         )}
                         <Badge
@@ -433,13 +421,19 @@ export function RecommendationEngine({
                             'border-destructive/30'
                           }`}
                         >
-                          {recommendation.difficulty}
+                          {t(
+                            recommendation.difficulty === 'advanced'
+                              ? 'builder.difficultyAdvanced'
+                              : recommendation.difficulty === 'intermediate'
+                                ? 'builder.difficultyIntermediate'
+                                : 'builder.difficultyBeginner'
+                          )}
                         </Badge>
                       </div>
                       
                       {recommendation.complementsServices.length > 0 && (
                         <div className="text-xs">
-                          <span className="text-muted-foreground">Complements: </span>
+                          <span className="text-muted-foreground">{t('builder.recComplements')} </span>
                           {recommendation.complementsServices.join(', ')}
                         </div>
                       )}
@@ -462,7 +456,7 @@ export function RecommendationEngine({
                           }}
                           className="h-7"
                         >
-                          Add Service <ChevronRight className="h-3 w-3 ml-1" />
+                          {t('builder.recAddService')} <ChevronRight className="h-3 w-3 ml-1" />
                         </Button>
                       </div>
                     </div>
@@ -473,8 +467,8 @@ export function RecommendationEngine({
               {generateServiceRecommendations.length === 0 && (
                 <div className="text-center py-4 text-muted-foreground">
                   <CheckCircle className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                  <p>Your stack looks complete!</p>
-                  <p className="text-xs mt-1">No immediate service recommendations</p>
+                  <p>{t('builder.recComplete')}</p>
+                  <p className="text-xs mt-1">{t('builder.recNoServiceRecs')}</p>
                 </div>
               )}
             </div>
@@ -483,7 +477,7 @@ export function RecommendationEngine({
           {activeTab === 'optimizations' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
-                <h4 className="font-medium">Stack Analysis</h4>
+                <h4 className="font-medium">{t('builder.recAnalysis')}</h4>
                 <Button 
                   size="sm" 
                   variant="outline" 
@@ -491,46 +485,69 @@ export function RecommendationEngine({
                   disabled={isAnalyzing}
                   className="h-7"
                 >
-                  {isAnalyzing ? 'Analyzing...' : 'Re-analyze'}
+                  {isAnalyzing ? t('builder.recAnalyzing') : t('builder.recReanalyze')}
                 </Button>
               </div>
               
-              {analyzeStack && analyzeStack.length > 0 ? (
-                analyzeStack.map((optimization, index) => (
+              {applyError && (
+                <p role="alert" className="text-xs text-destructive">{applyError}</p>
+              )}
+              {optimizations.length > 0 ? (
+                optimizations.map((optimization, index) => (
                   <Card key={index} className="border-l-4 border-l-orange-500">
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <div>
                           <CardTitle className="text-base flex items-center gap-2">
                             <AlertTriangle className={`h-4 w-4 ${getPriorityColor(optimization.priority)}`} />
-                            {optimization.title}
+                            {t(optimization.titleKey)}
                           </CardTitle>
                           <CardDescription className="text-sm">
-                            {optimization.description}
+                            {t(optimization.descriptionKey)}
                           </CardDescription>
                         </div>
-                        <Badge 
+                        <Badge
                           variant="outline"
                           className={`text-xs ${
                             optimization.priority === 'high' ? 'border-destructive/30 text-destructive' :
-                            optimization.priority === 'medium' ? 'border-warning/30 text-warning' :
-                            'border-success/30 text-success'
+                            'border-warning/30 text-warning'
                           }`}
                         >
-                          {optimization.priority}
+                          {t(optimization.priority === 'high' ? 'builder.priorityHigh' : 'builder.priorityMedium')}
                         </Badge>
                       </div>
                     </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-sm text-muted-foreground">{optimization.impact}</p>
+                    <CardContent className="pt-0 space-y-3">
+                      <p className="text-sm text-muted-foreground">
+                        <span className="font-medium text-foreground">{t('builder.optImpactLabel')}</span>{' '}
+                        {t(optimization.impactKey)}
+                      </p>
+                      {/* One-click apply: add a concrete suggested service. */}
+                      <div className="flex flex-wrap gap-2">
+                        {optimization.suggestedSlugs.map(slug => (
+                          <Button
+                            key={slug}
+                            size="sm"
+                            variant="outline"
+                            className="h-7"
+                            disabled={applyingSlug !== null}
+                            onClick={() => handleApplyOptimization(slug)}
+                            data-testid={`apply-optimization-${slug}`}
+                          >
+                            {applyingSlug === slug
+                              ? t('common.loading')
+                              : t('builder.optAdd', { name: SUGGESTION_LABELS[slug] ?? slug })}
+                          </Button>
+                        ))}
+                      </div>
                     </CardContent>
                   </Card>
                 ))
               ) : (
                 <div className="text-center py-4 text-muted-foreground">
                   <CheckCircle className="h-8 w-8 mx-auto mb-2 text-success" />
-                  <p>Your stack is well optimized!</p>
-                  <p className="text-xs mt-1">No immediate optimizations needed</p>
+                  <p>{t('builder.recOptimized')}</p>
+                  <p className="text-xs mt-1">{t('builder.recNoOptimizations')}</p>
                 </div>
               )}
             </div>

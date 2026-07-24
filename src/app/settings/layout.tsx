@@ -4,6 +4,7 @@ import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/s
 import { AppSidebar } from "@/components/layout/app-sidebar"
 import { Separator } from "@/components/ui/separator"
 import { getPageSession } from "@/lib/auth"
+import { getT } from "@/lib/i18n/server"
 
 export default async function SettingsRootLayout({
   children,
@@ -16,6 +17,7 @@ export default async function SettingsRootLayout({
     if (!session) redirect("/auth/signin" as Route)
   }
 
+  const t = await getT()
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -23,7 +25,7 @@ export default async function SettingsRootLayout({
         <header className="flex h-14 items-center gap-4 border-b border-border bg-background px-6">
           <SidebarTrigger className="-ml-2" />
           <Separator orientation="vertical" className="h-6" />
-          <h1 className="text-lg font-semibold">Settings</h1>
+          <h1 className="text-lg font-semibold">{t('common.settings')}</h1>
         </header>
         <main className="flex-1 overflow-auto">
           {children}

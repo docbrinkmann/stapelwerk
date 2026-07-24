@@ -13,6 +13,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { useToast } from '@/components/ui/use-toast';
 import { useStackBuilder } from '@/stores/stack-builder';
 import { trpc } from '@/utils/trpc';
+import { useT } from '@/lib/i18n/client';
 import {
   Search,
   Filter,
@@ -117,6 +118,7 @@ const CommunityMarketplace: React.FC<CommunityMarketplaceProps> = ({
   categories,
   marketplaceStats
 }) => {
+  const t = useT();
   const router = useRouter();
   const { toast } = useToast();
   const { importFromJSON, exportAsJSON, services: currentServices } = useStackBuilder();
@@ -183,8 +185,8 @@ const CommunityMarketplace: React.FC<CommunityMarketplaceProps> = ({
       await importFromJSON(JSON.stringify(stackData));
       
       toast({
-        title: 'Stack Imported Successfully!',
-        description: 'The community stack has been imported to your workspace.',
+        title: t('catalog.toastStackImportedTitle'),
+        description: t('catalog.toastCommunityImportedDesc'),
 variant: 'default'
       });
 
@@ -194,8 +196,8 @@ variant: 'default'
       router.push('/stack-builder');
     } catch (error) {
       toast({
-        title: 'Import Failed',
-        description: 'Failed to import stack. Please try again.',
+        title: t('catalog.toastImportFailedTitle'),
+        description: t('catalog.toastImportFailedDesc'),
         variant: 'destructive'
       });
     } finally {
@@ -207,8 +209,8 @@ variant: 'default'
   const handleExportToFile = (stack: CommunityStack) => {
     if (!stack.dockerCompose) {
       toast({
-        title: 'Export Not Available',
-        description: 'Docker Compose file is not available for this stack.',
+        title: t('catalog.toastExportNotAvailableTitle'),
+        description: t('catalog.composeNotAvailable'),
         variant: 'destructive'
       });
       return;
@@ -225,8 +227,8 @@ variant: 'default'
     URL.revokeObjectURL(url);
 
     toast({
-      title: 'Download Started',
-      description: 'Docker Compose file is downloading.',
+      title: t('catalog.toastDownloadStartedTitle'),
+      description: t('catalog.toastDownloadStartedDesc'),
       variant: 'default'
     });
   };
@@ -237,14 +239,14 @@ variant: 'default'
       await navigator.clipboard.writeText(shareUrl);
       
       toast({
-        title: 'Share URL Copied!',
-        description: 'Stack share link copied to clipboard.',
+        title: t('catalog.toastShareUrlCopiedTitle'),
+        description: t('catalog.toastShareUrlCopiedDesc'),
         variant: 'default'
       });
     } catch (error) {
       toast({
-        title: 'Copy Failed',
-        description: 'Failed to copy share URL.',
+        title: t('catalog.copyFailedTitle'),
+        description: t('catalog.toastCopyShareUrlFailedDesc'),
         variant: 'destructive'
       });
     }
@@ -295,7 +297,7 @@ variant: 'default'
               {stack.featured && (
                 <Badge variant="default" className="text-xs px-2 py-0.5">
                   <Star className="h-3 w-3 mr-1" />
-                  Featured
+                  {t('catalog.featuredBadge')}
                 </Badge>
               )}
             </div>
@@ -312,13 +314,13 @@ variant: 'default'
       <CardContent className="space-y-3">
         {/* Stats — only metrics we actually track (imports). */}
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span className="flex items-center gap-1" title="Times imported">
+          <span className="flex items-center gap-1" title={t('catalog.timesImportedTitle')}>
             <Download className="h-3 w-3" />
-            {(stack.stats?.downloads ?? 0).toLocaleString()} imports
+            {t('catalog.importsCount', { count: (stack.stats?.downloads ?? 0).toLocaleString() })}
           </span>
           <div className="flex items-center gap-1">
             <Layers3 className="h-3 w-3" />
-            <span>{stack.services.length} services</span>
+            <span>{t('catalog.servicesCount', { count: stack.services.length })}</span>
           </div>
         </div>
 
@@ -327,7 +329,7 @@ variant: 'default'
           <div className="flex items-center justify-between">
             {renderStarRating(stack.stats.rating)}
             <span className="text-xs text-muted-foreground">
-              {stack.stats.reviewCount} reviews
+              {t('catalog.reviewsCount', { count: stack.stats.reviewCount })}
             </span>
           </div>
         )}
@@ -357,7 +359,7 @@ variant: 'default'
             }}
           >
             <Upload className="h-3 w-3 mr-1" />
-            Import
+            {t('common.import')}
           </Button>
           <Button
             variant="outline"
@@ -368,7 +370,7 @@ variant: 'default'
             }}
           >
             <Download className="h-3 w-3 mr-1" />
-            Export
+            {t('common.export')}
           </Button>
           <Button
             variant="ghost"
@@ -400,14 +402,14 @@ variant: 'default'
       {!isOnline && (
         <div role="status" aria-live="polite" className="offline-banner">
           <div className="offline-banner__content">
-            <span>You’re offline. Check your connection and retry.</span>
+            <span>{t('catalog.offlineBanner')}</span>
             <Button
               variant="outline"
               size="sm"
               onClick={() => queryClient.invalidateQueries()}
               className="ml-3"
             >
-              Retry
+              {t('common.retry')}
             </Button>
           </div>
         </div>
@@ -416,29 +418,28 @@ variant: 'default'
       <div className="border-b bg-card py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl font-bold mb-4 text-foreground">Community Stack Marketplace</h1>
+            <h1 className="text-4xl font-bold mb-4 text-foreground">{t('catalog.communityTitle')}</h1>
             <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-              Discover, share, and import infrastructure stacks created by developers worldwide.
-              Find the perfect configuration for your next project.
+              {t('catalog.communitySubtitle')}
             </p>
 
             {/* Stats */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto">
               <div className="text-center">
                 <div className="text-2xl font-bold text-foreground">{marketplaceStats.totalStacks.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Community Stacks</div>
+                <div className="text-sm text-muted-foreground">{t('catalog.statCommunityStacks')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-foreground">{marketplaceStats.totalDownloads.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Total Downloads</div>
+                <div className="text-sm text-muted-foreground">{t('catalog.statTotalDownloads')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-foreground">{marketplaceStats.activeContributors.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Contributors</div>
+                <div className="text-sm text-muted-foreground">{t('catalog.statContributors')}</div>
               </div>
               <div className="text-center">
                 <div className="text-2xl font-bold text-foreground">{marketplaceStats.featuredStacks.toLocaleString()}</div>
-                <div className="text-sm text-muted-foreground">Featured Stacks</div>
+                <div className="text-sm text-muted-foreground">{t('catalog.featuredStacks')}</div>
               </div>
             </div>
           </div>
@@ -450,9 +451,9 @@ variant: 'default'
         {featuredStacks.length > 0 && (
           <section className="mb-12">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-2xl font-bold text-foreground">Featured Stacks</h2>
+              <h2 className="text-2xl font-bold text-foreground">{t('catalog.featuredStacks')}</h2>
               <Button variant="outline" onClick={() => router.push('/community')}>
-                View All <ArrowRight className="h-4 w-4 ml-2" />
+                {t('catalog.viewAll')} <ArrowRight className="h-4 w-4 ml-2" />
               </Button>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -468,7 +469,7 @@ variant: 'default'
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search community stacks..."
+                  placeholder={t('catalog.searchCommunityPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 w-full"
@@ -482,7 +483,7 @@ variant: 'default'
               className="flex items-center gap-2"
             >
               <SlidersHorizontal className="h-4 w-4" />
-              Filters
+              {t('catalog.filters')}
             </Button>
 
             <div className="flex items-center gap-2">
@@ -507,13 +508,13 @@ variant: 'default'
           {showFilters && (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4 border-t">
               <div>
-                <Label className="text-sm font-medium mb-2 block">Category</Label>
+                <Label className="text-sm font-medium mb-2 block">{t('catalog.categoryLabel')}</Label>
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value)}
                   className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
                 >
-                  <option value="all">All Categories</option>
+                  <option value="all">{t('catalog.allCategories')}</option>
                   {categories.map(category => (
                     <option key={category} value={category}>{category}</option>
                   ))}
@@ -521,29 +522,29 @@ variant: 'default'
               </div>
 
               <div>
-                <Label className="text-sm font-medium mb-2 block">Difficulty</Label>
+                <Label className="text-sm font-medium mb-2 block">{t('catalog.difficultyLabel')}</Label>
                 <select
                   value={selectedDifficulty}
                   onChange={(e) => setSelectedDifficulty(e.target.value)}
                   className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
                 >
-                  <option value="all">All Levels</option>
-                  <option value="beginner">Beginner</option>
-                  <option value="intermediate">Intermediate</option>
-                  <option value="advanced">Advanced</option>
+                  <option value="all">{t('catalog.allLevels')}</option>
+                  <option value="beginner">{t('catalog.difficultyBeginner')}</option>
+                  <option value="intermediate">{t('catalog.difficultyIntermediate')}</option>
+                  <option value="advanced">{t('catalog.difficultyAdvanced')}</option>
                 </select>
               </div>
 
               <div>
-                <Label className="text-sm font-medium mb-2 block">Sort By</Label>
+                <Label className="text-sm font-medium mb-2 block">{t('catalog.communitySortBy')}</Label>
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as any)}
                   className="w-full px-3 py-2 border border-input rounded-md bg-background text-sm"
                 >
-                  <option value="popular">Most Popular</option>
-                  <option value="recent">Most Recent</option>
-                  <option value="rating">Highest Rated</option>
+                  <option value="popular">{t('catalog.sortMostPopular')}</option>
+                  <option value="recent">{t('catalog.sortMostRecent')}</option>
+                  <option value="rating">{t('catalog.sortHighestRated')}</option>
                 </select>
               </div>
             </div>
@@ -554,12 +555,12 @@ variant: 'default'
         <section>
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-xl font-semibold text-foreground">
-              {searchQuery ? `Search Results (${filteredStacks.length})` : 'Popular Stacks'}
+              {searchQuery ? t('catalog.searchResultsCount', { count: filteredStacks.length }) : t('catalog.popularStacks')}
             </h2>
           </div>
 
           {searchQuery && searchStacksQuery.isLoading ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" role="status" aria-label="Loading search results">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" role="status" aria-label={t('catalog.loadingSearchResults')}>
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="h-40 bg-muted rounded animate-pulse" />
               ))}
@@ -567,20 +568,20 @@ variant: 'default'
           ) : searchStacksQuery.isError ? (
             <div className="text-center py-12" role="alert" aria-live="polite">
               <Layers3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-medium text-foreground mb-2">Failed to load stacks</h3>
+              <h3 className="text-xl font-medium text-foreground mb-2">{t('catalog.failedToLoadStacks')}</h3>
               <p className="text-muted-foreground mb-4">
-                {(searchStacksQuery.error as any)?.message || 'Something went wrong. Please try again.'}
+                {(searchStacksQuery.error as any)?.message || t('catalog.somethingWentWrong')}
               </p>
-              <Button onClick={() => searchStacksQuery.refetch()}>Try again</Button>
+              <Button onClick={() => searchStacksQuery.refetch()}>{t('catalog.tryAgain')}</Button>
             </div>
           ) : filteredStacks.length === 0 ? (
             <div className="text-center py-12">
               <Layers3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-              <h3 className="text-xl font-medium text-foreground mb-2">No stacks found</h3>
+              <h3 className="text-xl font-medium text-foreground mb-2">{t('catalog.noStacksFound')}</h3>
               <p className="text-muted-foreground mb-6">
-                {searchQuery 
-                  ? `No stacks match your search for "${searchQuery}"`
-                  : 'Try adjusting your filters or search terms'
+                {searchQuery
+                  ? t('catalog.noStacksMatchSearch', { query: searchQuery })
+                  : t('catalog.tryAdjustingFilters')
                 }
               </p>
               <Button onClick={() => {
@@ -588,7 +589,7 @@ variant: 'default'
                 setSelectedCategory('all');
                 setSelectedDifficulty('all');
               }}>
-                Clear Filters
+                {t('catalog.clearFilters')}
               </Button>
             </div>
           ) : (
@@ -607,28 +608,27 @@ variant: 'default'
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Import Community Stack</DialogTitle>
+            <DialogTitle>{t('catalog.importCommunityStack')}</DialogTitle>
             <DialogDescription>
-              This will import "{selectedStack?.name}" into your workspace.
-              Your current stack will be replaced.
+              {t('catalog.importDialogDesc', { name: selectedStack?.name ?? '' })}{' '}
+              {t('catalog.currentStackReplaced')}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="bg-info/10 border border-info/30 rounded-lg p-4">
-              <h4 className="font-medium mb-2">What will be imported:</h4>
+              <h4 className="font-medium mb-2">{t('catalog.whatWillBeImported')}</h4>
               <ul className="text-sm text-foreground space-y-1">
-                <li>• {selectedStack?.services.length} services</li>
-                <li>• Service configurations and settings</li>
-                <li>• Stack metadata and description</li>
+                <li>• {t('catalog.servicesCount', { count: selectedStack?.services.length ?? 0 })}</li>
+                <li>• {t('catalog.importItemConfigs')}</li>
+                <li>• {t('catalog.importItemMetadata')}</li>
               </ul>
             </div>
             
             {currentServices.length > 0 && (
               <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
                 <p className="text-sm text-warning">
-                  You have {currentServices.length} services in your current workspace.
-                  Importing will replace your current stack.
+                  {t('catalog.workspaceReplaceWarning', { count: currentServices.length })}
                 </p>
               </div>
             )}
@@ -638,13 +638,13 @@ variant: 'default'
                 variant="outline" 
                 onClick={() => setShowImportDialog(false)}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
-              <Button 
+              <Button
                 onClick={() => selectedStack && handleImportStack(selectedStack)}
                 disabled={isImporting}
               >
-                {isImporting ? 'Importing...' : 'Import Stack'}
+                {isImporting ? t('catalog.importing') : t('catalog.importStack')}
               </Button>
             </div>
           </div>

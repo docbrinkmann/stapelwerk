@@ -9,13 +9,15 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AlertCircle, Layers, Plus, Server } from 'lucide-react'
 import { formatDistanceToNow } from 'date-fns'
+import { useT } from '@/lib/i18n/client'
+import type { MessageKey } from '@/lib/i18n/messages'
 
-const statusConfig: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
-  draft: { label: 'Draft', variant: 'secondary' },
-  active: { label: 'Active', variant: 'default' },
-  public: { label: 'Public', variant: 'default' },
-  pending_approval: { label: 'Pending Approval', variant: 'outline' },
-  rejected: { label: 'Rejected', variant: 'destructive' },
+const statusConfig: Record<string, { labelKey: MessageKey; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
+  draft: { labelKey: 'common.draft', variant: 'secondary' },
+  active: { labelKey: 'ops.statusActive', variant: 'default' },
+  public: { labelKey: 'ops.statusPublic', variant: 'default' },
+  pending_approval: { labelKey: 'ops.statusPendingApproval', variant: 'outline' },
+  rejected: { labelKey: 'ops.statusRejected', variant: 'destructive' },
 }
 
 function StacksSkeleton() {
@@ -29,6 +31,7 @@ function StacksSkeleton() {
 }
 
 export default function StacksPage() {
+  const t = useT()
   const { data, isLoading, error } = trpc.stacks.list.useQuery({ limit: 50 })
   const stacks = data?.stacks ?? []
 
@@ -36,15 +39,15 @@ export default function StacksPage() {
     <div className="flex-1 space-y-6 p-4 md:p-6">
       <div className="flex items-start justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Stacks</h1>
+          <h1 className="text-3xl font-bold tracking-tight">{t('ops.stacksTitle')}</h1>
           <p className="text-muted-foreground">
-            Your composed Docker stacks — open one to manage services, env vars and deployments
+            {t('ops.stacksSubtitle')}
           </p>
         </div>
         <Button asChild>
           <Link href={'/stack-builder' as Route}>
             <Plus className="mr-2 h-4 w-4" />
-            New Stack
+            {t('ops.newStack')}
           </Link>
         </Button>
       </div>
@@ -54,27 +57,30 @@ export default function StacksPage() {
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <AlertCircle className="mb-4 h-12 w-12 text-destructive" />
-          <h2 className="text-lg font-semibold">Failed to load stacks</h2>
+          <h2 className="text-lg font-semibold">{t('ops.stacksLoadFailed')}</h2>
           <p className="text-muted-foreground">{error.message}</p>
         </div>
       ) : stacks.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
           <Layers className="mb-4 h-12 w-12 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">No stacks yet</h2>
+          <h2 className="text-lg font-semibold">{t('ops.noStacksYet')}</h2>
           <p className="mb-4 max-w-sm text-muted-foreground">
-            Compose your first Docker stack from curated, tested services.
+            {t('ops.noStacksHint')}
           </p>
           <Button asChild>
             <Link href={'/stack-builder' as Route}>
               <Plus className="mr-2 h-4 w-4" />
-              Create your first stack
+              {t('ops.createFirstStack')}
             </Link>
           </Button>
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {stacks.map((stack: any) => {
-            const status = statusConfig[stack.status] || { label: stack.status, variant: 'secondary' as const }
+            const config = statusConfig[stack.status]
+            const status = config
+              ? { label: t(config.labelKey), variant: config.variant }
+              : { label: stack.status, variant: 'secondary' as const }
             const serviceCount = stack.stack_services?.length ?? stack._count?.stack_services ?? 0
             return (
               <Link key={stack.id} href={`/stacks/${stack.id}` as Route} className="group">
@@ -95,11 +101,11 @@ export default function StacksPage() {
                   <CardContent className="flex items-center gap-4 text-sm text-muted-foreground">
                     <span className="inline-flex items-center gap-1.5">
                       <Server className="h-4 w-4" />
-                      {serviceCount} {serviceCount === 1 ? 'service' : 'services'}
+                      {t(serviceCount === 1 ? 'ops.serviceCountOne' : 'ops.serviceCountMany', { count: serviceCount })}
                     </span>
                     {stack.updatedAt && (
                       <span>
-                        Updated {formatDistanceToNow(new Date(stack.updatedAt), { addSuffix: true })}
+                        {t('ops.updatedAgo', { time: formatDistanceToNow(new Date(stack.updatedAt), { addSuffix: true }) })}
                       </span>
                     )}
                   </CardContent>

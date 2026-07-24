@@ -3,6 +3,7 @@ import { Star, Shield, Zap } from 'lucide-react'
 import { useServiceBrowserStore } from '@/store/service-browser'
 import type { Service } from '@/types/service-browser'
 import { ServiceCardSkeleton } from '@/components/ui/skeleton-shimmer'
+import { useT } from '@/lib/i18n/client'
 import './ServiceCard.css'
 
 interface ServiceCardProps {
@@ -32,26 +33,27 @@ interface FeaturesDisplayProps {
 }
 
 const MetricsDisplay = ({ metrics, compact = false }: MetricsDisplayProps) => {
+  const t = useT()
   if (!metrics) return null
 
   const displayMetrics = [
     {
       key: 'popularity',
-      label: 'Popularity rating',
+      label: t('catalog.popularityRating'),
       value: metrics.popularity,
       format: (val: number) => val.toFixed(1),
       icon: Star
     },
     {
       key: 'reliability',
-      label: 'Reliability percentage',
+      label: t('catalog.reliabilityPercentage'),
       value: metrics.reliability,
       format: (val: number) => `${val}%`,
       icon: Shield
     },
     {
       key: 'performance',
-      label: 'Performance rating',
+      label: t('catalog.performanceRating'),
       value: metrics.performance,
       format: (val: number) => val.toFixed(1),
       icon: Zap
@@ -78,14 +80,15 @@ const MetricsDisplay = ({ metrics, compact = false }: MetricsDisplayProps) => {
 }
 
 const CompanyInfo = ({ company }: CompanyInfoProps) => {
+  const t = useT()
   if (!company?.name) return null
 
   const content = (
     <>
       <span className="company-name">{company.name}</span>
       {company.founded && (
-        <span className="company-founded" aria-label={`Founded in ${company.founded}`}>
-          Est. {company.founded}
+        <span className="company-founded" aria-label={t('catalog.foundedIn', { year: company.founded })}>
+          {t('catalog.estYear', { year: company.founded })}
         </span>
       )}
     </>
@@ -109,6 +112,7 @@ const CompanyInfo = ({ company }: CompanyInfoProps) => {
 }
 
 const TagsDisplay = ({ tags, maxTags = 3 }: TagsDisplayProps) => {
+  const t = useT()
   if (!tags || tags.length === 0) return null
 
   const visibleTags = tags.slice(0, maxTags)
@@ -122,13 +126,14 @@ const TagsDisplay = ({ tags, maxTags = 3 }: TagsDisplayProps) => {
         </span>
       ))}
       {remainingCount > 0 && (
-        <span className="tag tag--more">+{remainingCount} more</span>
+        <span className="tag tag--more">{t('catalog.moreCount', { count: remainingCount })}</span>
       )}
     </div>
   )
 }
 
 const FeaturesDisplay = ({ features, maxFeatures = 2 }: FeaturesDisplayProps) => {
+  const t = useT()
   if (!features || features.length === 0) return null
 
   const visibleFeatures = features.slice(0, maxFeatures)
@@ -142,13 +147,14 @@ const FeaturesDisplay = ({ features, maxFeatures = 2 }: FeaturesDisplayProps) =>
         </span>
       ))}
       {remainingCount > 0 && (
-        <span className="feature feature--more">+{remainingCount} more</span>
+        <span className="feature feature--more">{t('catalog.moreCount', { count: remainingCount })}</span>
       )}
     </div>
   )
 }
 
 export const ServiceCard = ({ service, loading = false, compact = false, className }: ServiceCardProps) => {
+  const t = useT()
   const [isHovered, setIsHovered] = useState(false)
   const { openServiceModal, modalState } = useServiceBrowserStore()
 
@@ -198,7 +204,7 @@ export const ServiceCard = ({ service, loading = false, compact = false, classNa
       onKeyDown={handleKeyDown}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
-      aria-label={`View ${service.name} details`}
+      aria-label={t('catalog.viewServiceDetailsAria', { name: service.name })}
       data-testid="service-card"
       tabIndex={0}
     >
@@ -259,7 +265,9 @@ export const ServiceCard = ({ service, loading = false, compact = false, classNa
         {integrationCount > 0 && (
           <div className="integrations-info @container(min-width: 300px):block hidden">
             <span className="integrations-count">
-              {integrationCount} integration{integrationCount !== 1 ? 's' : ''}
+              {integrationCount === 1
+                ? t('catalog.integrationCountOne', { count: integrationCount })
+                : t('catalog.integrationsCount', { count: integrationCount })}
             </span>
           </div>
         )}

@@ -14,6 +14,7 @@ import { deploymentsRouter } from './routers/deployments'
 import { logsRouter } from './routers/logs'
 import { terminalRouter } from './routers/terminal'
 import { usersRouter } from './routers/users'
+import { verifiedDeployRouter } from './routers/verified-deploy'
 
 /**
  * Main tRPC router
@@ -37,6 +38,7 @@ export const appRouter = createTRPCRouter({
   logs: logsRouter,
   terminal: terminalRouter,
   users: usersRouter,
+  verifiedDeploy: verifiedDeployRouter,
 })
 
 // Export type definition of the router

@@ -8,8 +8,10 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AlertCircle, Layers, Loader2 } from 'lucide-react'
+import { useT } from '@/lib/i18n/client'
 
 function SignInForm() {
+  const t = useT()
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard'
@@ -30,7 +32,7 @@ function SignInForm() {
     const email = String(data.get('email') || '').trim()
     const password = String(data.get('password') || '')
     if (!email || !password) {
-      setError('Please enter your email and password.')
+      setError(t('landing.signinErrorMissing'))
       return
     }
     setError(null)
@@ -42,7 +44,7 @@ function SignInForm() {
         redirect: false,
       })
       if (result?.error) {
-        setError('Invalid email or password. Please try again.')
+        setError(t('landing.signinErrorInvalid'))
         return
       }
       router.push(callbackUrl as any)
@@ -59,9 +61,9 @@ function SignInForm() {
           <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary text-primary-foreground">
             <Layers className="h-6 w-6" aria-hidden="true" />
           </div>
-          <CardTitle className="text-xl">Sign in to BuildMyStack</CardTitle>
+          <CardTitle className="text-xl">{t('landing.signinTitle')}</CardTitle>
           <CardDescription>
-            Compose, manage and export your Docker stacks
+            {t('landing.signinSubtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -80,19 +82,19 @@ function SignInForm() {
               </div>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t('landing.signinEmail')}</Label>
               <Input
                 id="email"
                 name="email"
                 type="email"
                 autoComplete="email"
                 required
-                placeholder="you@example.com"
+                placeholder={t('landing.signinEmailPlaceholder')}
                 disabled={isLoading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t('landing.signinPassword')}</Label>
               <Input
                 id="password"
                 name="password"
@@ -104,11 +106,11 @@ function SignInForm() {
             </div>
             <Button type="submit" className="w-full" disabled={isLoading || !hydrated}>
               {(isLoading || !hydrated) && <Loader2 className="mr-2 h-4 w-4 animate-spin" aria-hidden="true" />}
-              {hydrated ? 'Sign in' : 'Loading…'}
+              {hydrated ? t('landing.signIn') : t('common.loading')}
             </Button>
           </form>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Demo account: <span className="font-medium text-foreground">demo@buildmystack.dev</span> / <span className="font-medium text-foreground">demo1234</span>
+            {t('landing.signinDemo')} <span className="font-medium text-foreground">demo@buildmystack.dev</span> / <span className="font-medium text-foreground">demo1234</span>
           </p>
         </CardContent>
       </Card>

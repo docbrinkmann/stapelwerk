@@ -5,10 +5,11 @@ import type { Route } from "next"
 import { Plus, Layers, Server, FileText } from "lucide-react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { useT } from "@/lib/i18n/client"
 
 /**
  * Quick Actions Component
- * 
+ *
  * Provides quick access to common dashboard actions.
  * Create stack, browse templates, and other frequent tasks.
  */
@@ -21,44 +22,45 @@ interface QuickAction {
   variant?: "default" | "outline"
 }
 
-const quickActions: QuickAction[] = [
-  {
-    title: "Create Stack",
-    description: "Start a new stack from scratch",
-    icon: Plus,
-    href: "/stack-builder",
-    variant: "default",
-  },
-  {
-    title: "Browse Templates",
-    description: "Explore community templates",
-    icon: Layers,
-    href: "/services",
-    variant: "outline",
-  },
-  {
-    title: "View Services",
-    description: "Manage your running services",
-    icon: Server,
-    href: "/services",
-    variant: "outline",
-  },
-  {
-    title: "Documentation",
-    description: "Learn how to use BuildMyStack",
-    icon: FileText,
-    href: "/docs",
-    variant: "outline",
-  },
-]
-
 export function QuickActions() {
+  const t = useT()
+  const quickActions: QuickAction[] = [
+    {
+      title: t("shell.createStack"),
+      description: t("shell.createStackDesc"),
+      icon: Plus,
+      href: "/stack-builder",
+      variant: "default",
+    },
+    {
+      title: t("shell.browseTemplates"),
+      description: t("shell.browseTemplatesDesc"),
+      icon: Layers,
+      href: "/services",
+      variant: "outline",
+    },
+    {
+      title: t("shell.viewServices"),
+      description: t("shell.viewServicesDesc"),
+      icon: Server,
+      href: "/services",
+      variant: "outline",
+    },
+    {
+      title: t("shell.documentation"),
+      description: t("shell.documentationDesc"),
+      icon: FileText,
+      href: "/docs",
+      variant: "outline",
+    },
+  ]
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Quick Actions</CardTitle>
+        <CardTitle>{t("shell.quickActions")}</CardTitle>
         <CardDescription>
-          Common tasks to get you started
+          {t("shell.quickActionsDesc")}
         </CardDescription>
       </CardHeader>
       <CardContent>

@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react'
 import { useJobStatus } from '@/hooks/useJobStatus'
+import { useT } from '@/lib/i18n/client'
 import './JobStatusPanel.css'
 
 export interface JobStatusPanelProps {
@@ -15,7 +16,7 @@ export interface JobStatusPanelProps {
 
 export const JobStatusPanel: React.FC<JobStatusPanelProps> = ({
   jobId,
-  title = 'Deployment Job',
+  title,
   autoStart = true,
   pollIntervalMs = 1500,
   stopOnSuccess = false,
@@ -23,6 +24,7 @@ export const JobStatusPanel: React.FC<JobStatusPanelProps> = ({
   className = '',
   onViewCi,
 }) => {
+  const t = useT()
   const {
     status,
     mode,
@@ -56,27 +58,27 @@ export const JobStatusPanel: React.FC<JobStatusPanelProps> = ({
   return (
     <div className={`job-status-panel ${className}`} data-testid="job-status-panel">
       <div className="job-status-panel__header">
-        <h3 className="job-status-panel__title">{title}</h3>
+        <h3 className="job-status-panel__title">{title ?? t('ops.deploymentJob')}</h3>
         <div className="job-status-panel__meta">
           <span className={badgeClass} data-testid="job-status-badge">{statusLabel}</span>
           {mode && <span className="job-status-mode" aria-label="job-mode">{mode}</span>}
-          <span className="job-status-updated" aria-label="last-updated">Updated: {lastUpdated}</span>
+          <span className="job-status-updated" aria-label="last-updated">{t('ops.updatedAt', { time: lastUpdated })}</span>
         </div>
       </div>
 
       <div className="job-status-panel__controls">
         <button type="button" className="job-status-btn" onClick={start} disabled={isRunning}>
-          Start
+          {t('ops.start')}
         </button>
         <button type="button" className="job-status-btn" onClick={stop}>
-          Stop
+          {t('ops.stop')}
         </button>
         <button type="button" className="job-status-btn" onClick={refreshNow}>
-          Refresh
+          {t('ops.refresh')}
         </button>
         {onViewCi && isSucceeded && (
           <button type="button" className="job-status-btn" onClick={onViewCi} data-testid="job-view-ci-btn">
-            View CI snippet
+            {t('ops.viewCiSnippet')}
           </button>
         )}
       </div>
@@ -86,7 +88,7 @@ export const JobStatusPanel: React.FC<JobStatusPanelProps> = ({
       </div>
 
       <div className="job-status-panel__logs" role="log" aria-live="polite" data-testid="job-log">
-        {logs.length === 0 && <div className="job-log-empty">No logs yet.</div>}
+        {logs.length === 0 && <div className="job-log-empty">{t('ops.noLogsYet')}</div>}
         {logs.map((entry, idx) => (
           <div key={`${entry.t}-${idx}`} className="job-log-entry">
             <span className="job-log-time">{new Date(entry.t).toLocaleTimeString()}:</span>

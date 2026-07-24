@@ -132,7 +132,8 @@ export const StackCreateSchema = z.object({
       environmentVariables: StackEnvVarSchema.optional(),
       portMappings: StackPortMappingSchema.optional(),
       volumeMounts: StackVolumeMountSchema.optional(),
-      dependsOn: StackDependenciesSchema.optional()
+      dependsOn: StackDependenciesSchema.optional(),
+      networkMode: z.string().max(128).optional()
     }).optional()
   })).optional()
 })
@@ -173,7 +174,8 @@ export const StackUpdateSchema = z.object({
       environmentVariables: StackEnvVarSchema.optional(),
       portMappings: StackPortMappingSchema.optional(),
       volumeMounts: StackVolumeMountSchema.optional(),
-      dependsOn: StackDependenciesSchema.optional()
+      dependsOn: StackDependenciesSchema.optional(),
+      networkMode: z.string().max(128).optional()
     }).optional()
   })).optional()
 })
@@ -210,7 +212,9 @@ export const StackServiceAddSchema = z.object({
     
     dependsOn: StackDependenciesSchema
       .default([])
-      .optional()
+      .optional(),
+
+    networkMode: z.string().max(128).optional()
   }).optional()
 })
 
@@ -230,7 +234,8 @@ export const StackServiceConfigurationUpdateSchema = z.object({
     environmentVariables: StackEnvVarSchema.optional(),
     portMappings: StackPortMappingSchema.optional(),
     volumeMounts: StackVolumeMountSchema.optional(),
-    dependsOn: StackDependenciesSchema.optional()
+    dependsOn: StackDependenciesSchema.optional(),
+    networkMode: z.string().max(128).optional()
   })
 })
 

@@ -16,6 +16,7 @@ import { asArray } from '@/lib/service-detail';
 import { buildNetworkOverview } from '@/lib/network-overview';
 import { StackSlugGenerator } from '@/lib/utils/stack-slug-generator';
 import { StackServiceConfigValidator } from '@/lib/validation/stack-config-validator';
+import { effectivePlan, assertStackLimit } from '@/lib/billing/enforcement';
 import crypto from 'crypto';
 
 // Define StackServiceConfigurationSchema locally
@@ -23,7 +24,9 @@ const StackServiceConfigurationSchema = z.object({
   environmentVariables: StackEnvVarSchema.optional(),
   portMappings: StackPortMappingSchema.optional(),
   volumeMounts: StackVolumeMountSchema.optional(),
-  dependsOn: StackDependenciesSchema.optional()
+  dependsOn: StackDependenciesSchema.optional(),
+  // Optional docker network_mode, e.g. "service:gluetun" (VPN kill-switch).
+  networkMode: z.string().max(128).optional()
 });
 
 // Input schemas for stack endpoints
@@ -315,7 +318,8 @@ export const stacksRouter = createTRPCRouter({
         const { id } = input;
         const userId = ctx.userId!;
 
-        await validateStackOwnership(id, userId, ctx.prisma);
+        const ownership = await validateStackOwnership(id, userId, ctx.prisma);
+        const isOwner = ownership.userId === userId;
 
         const stack = await ctx.prisma.stacks.findUnique({
           where: { id },
@@ -343,6 +347,17 @@ export const stacksRouter = createTRPCRouter({
           });
         }
 
+        // Env vars can hold secrets. A non-owner reaching this via the public
+        // path must not see their values (was a cleartext secret leak for any
+        // published stack). Owner-only fields like envVars are unaffected.
+        if (!isOwner) {
+          for (const ss of stack.stack_services ?? []) {
+            if (ss.stack_service_configurations) {
+              ss.stack_service_configurations.environmentVariables = '{}';
+            }
+          }
+        }
+
         return stack;
       } catch (error) {
         if (error instanceof TRPCError) {
@@ -365,6 +380,13 @@ export const stacksRouter = createTRPCRouter({
       try {
         const userId = ctx.userId!;
         const { name, description, services = [], isPublic = false, status = StackStatus.DRAFT, isTemplate = false } = input;
+
+        // Plan gate: enforce the saved-stack limit (self-host ⇒ unlimited).
+        const ep = await effectivePlan(ctx.prisma, userId);
+        if (ep.limits.stacks !== null) {
+          const stackCount = await ctx.prisma.stacks.count({ where: { userId } });
+          assertStackLimit(ep, stackCount);
+        }
 
         // Generate unique slug
         const slugGenerator = new StackSlugGenerator(ctx.prisma);
@@ -441,6 +463,7 @@ export const stacksRouter = createTRPCRouter({
                     portMappings: JSON.stringify(service.configuration.portMappings || {}),
                     volumeMounts: JSON.stringify(service.configuration.volumeMounts || {}),
                     dependsOn: JSON.stringify(service.configuration.dependsOn || []),
+                    networkMode: service.configuration.networkMode ?? null,
                     updatedAt: new Date()
                   }
                 });
@@ -569,6 +592,7 @@ export const stacksRouter = createTRPCRouter({
                   portMappings: JSON.stringify(config.portMappings || {}),
                   volumeMounts: JSON.stringify(config.volumeMounts || {}),
                   dependsOn: JSON.stringify(config.dependsOn || []),
+                  networkMode: (config as { networkMode?: string }).networkMode ?? null,
                   updatedAt: new Date()
                 }
               });
@@ -710,6 +734,7 @@ export const stacksRouter = createTRPCRouter({
               portMappings: JSON.stringify(configuration?.portMappings || {}),
               volumeMounts: JSON.stringify(configuration?.volumeMounts || {}),
               dependsOn: JSON.stringify(configuration?.dependsOn || []),
+              networkMode: configuration?.networkMode ?? null,
               updatedAt: new Date()
             }
           });
@@ -840,7 +865,8 @@ export const stacksRouter = createTRPCRouter({
           environmentVariables: JSON.stringify(configuration.environmentVariables || {}),
           portMappings: JSON.stringify(configuration.portMappings || {}),
           volumeMounts: JSON.stringify(configuration.volumeMounts || {}),
-          dependsOn: JSON.stringify(configuration.dependsOn || [])
+          dependsOn: JSON.stringify(configuration.dependsOn || []),
+          networkMode: (configuration as { networkMode?: string }).networkMode ?? null
         };
 
         let updatedConfig;

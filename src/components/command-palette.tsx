@@ -37,6 +37,7 @@ import {
 import { useCommandPaletteStore } from '@/stores/command-palette'
 import { useReducedMotion } from '@/hooks/useReducedMotion'
 import { cn } from '@/lib/utils/cn'
+import { useT } from '@/lib/i18n/client'
 import type { Service } from '@/types/service'
 
 interface CommandPaletteProps {
@@ -58,6 +59,7 @@ export function CommandPalette({
   onServiceSelect,
   className,
 }: CommandPaletteProps) {
+  const t = useT()
   const router = useRouter()
   const reducedMotion = useReducedMotion()
 
@@ -156,7 +158,9 @@ export function CommandPalette({
       // Track in recent actions
       addRecentAction({
         type: action === 'add' ? 'service-add' : 'service-view',
-        label: `${action === 'add' ? 'Added' : 'Viewed'} ${service.name}`,
+        label: action === 'add'
+          ? t('catalog.addedAction', { name: service.name })
+          : t('catalog.viewedAction', { name: service.name }),
         data: service,
         icon: 'Package',
       })
@@ -172,7 +176,7 @@ export function CommandPalette({
       // Close palette
       setIsOpen(false)
     },
-    [addRecentAction, onServiceSelect, router, setIsOpen]
+    [addRecentAction, onServiceSelect, router, setIsOpen, t]
   )
 
   /**
@@ -253,10 +257,10 @@ export function CommandPalette({
         >
           {/* Hidden title for screen readers */}
           <h2 id="command-palette-title" className="sr-only">
-            Command Palette
+            {t('catalog.commandPalette')}
           </h2>
           <p id="command-palette-description" className="sr-only">
-            Search for services and actions using keyboard shortcuts
+            {t('catalog.commandPaletteDesc')}
           </p>
 
           {/* Search input */}
@@ -269,15 +273,15 @@ export function CommandPalette({
               ref={inputRef}
               value={searchQuery}
               onValueChange={setSearchQuery}
-              placeholder="Search services, categories, or actions..."
+              placeholder={t('catalog.commandPalettePlaceholder')}
               className="flex h-12 w-full bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
-              aria-label="Search services"
+              aria-label={t('catalog.searchServicesAria')}
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
                 className="ml-2 rounded-md p-1 hover:bg-accent"
-                aria-label="Clear search"
+                aria-label={t('catalog.clearSearch')}
               >
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -288,13 +292,13 @@ export function CommandPalette({
           <Command.List
             ref={listRef}
             className="max-h-[400px] overflow-y-auto p-2"
-            aria-label="Search results"
+            aria-label={t('catalog.searchResultsAria')}
           >
             {/* Recent actions */}
             {!searchQuery && displayRecentActions.length > 0 && (
-              <Command.Group heading="Recent">
+              <Command.Group heading={t('catalog.recent')}>
                 <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                  Recent
+                  {t('catalog.recent')}
                 </div>
                 {displayRecentActions.map((action, index) => (
                   <Command.Item
@@ -324,9 +328,9 @@ export function CommandPalette({
 
             {/* Service search results */}
             {searchResults.length > 0 && (
-              <Command.Group heading="Services">
+              <Command.Group heading={t('catalog.services')}>
                 <div className="px-2 py-1.5 text-xs font-medium text-muted-foreground">
-                  Services
+                  {t('catalog.services')}
                 </div>
                 {searchResults.map((service, index) => {
                   const itemIndex = !searchQuery && displayRecentActions.length > 0
@@ -366,8 +370,8 @@ export function CommandPalette({
                             'rounded-md p-1 opacity-0 transition-opacity hover:bg-background group-hover:opacity-100',
                             'focus:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring'
                           )}
-                          aria-label={`Add ${service.name} to stack`}
-                          title="Add to stack"
+                          aria-label={t('catalog.addToStackAria', { name: service.name })}
+                          title={t('catalog.addToStackTitle')}
                         >
                           <Plus className="h-3.5 w-3.5" />
                         </button>
@@ -388,9 +392,9 @@ export function CommandPalette({
             {searchQuery && searchResults.length === 0 && (
               <Command.Empty className="py-12 text-center text-sm text-muted-foreground">
                 <Package className="mx-auto mb-4 h-12 w-12 opacity-20" aria-hidden="true" />
-                <p>No services found for "{searchQuery}"</p>
+                <p>{t('catalog.noServicesFoundFor', { query: searchQuery })}</p>
                 <p className="mt-2 text-xs">
-                  Try searching by name, category, or tags
+                  {t('catalog.trySearchingBy')}
                 </p>
               </Command.Empty>
             )}
@@ -404,24 +408,24 @@ export function CommandPalette({
                   <span>↑</span>
                   <span>↓</span>
                 </kbd>
-                <span>Navigate</span>
+                <span>{t('catalog.kbdNavigate')}</span>
               </div>
               <div className="flex items-center gap-1">
                 <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-xs">
                   <span>↵</span>
                 </kbd>
-                <span>Select</span>
+                <span>{t('catalog.kbdSelect')}</span>
               </div>
               <div className="flex items-center gap-1">
                 <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-background px-1.5 font-mono text-xs">
                   <span>ESC</span>
                 </kbd>
-                <span>Close</span>
+                <span>{t('common.close')}</span>
               </div>
             </div>
             <div className="flex items-center gap-1">
               <Plus className="h-3 w-3" aria-hidden="true" />
-              <span>Add to stack</span>
+              <span>{t('catalog.addToStackTitle')}</span>
             </div>
           </div>
         </Command>
@@ -442,6 +446,7 @@ export function CommandPaletteTrigger({
   onClick: () => void
   className?: string
 }) {
+  const t = useT()
   return (
     <button
       onClick={onClick}
@@ -450,13 +455,13 @@ export function CommandPaletteTrigger({
         'focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2',
         className
       )}
-      aria-label="Open command palette"
+      aria-label={t('catalog.openCommandPalette')}
     >
       <Search className="h-4 w-4" aria-hidden="true" />
-      <span>Search services...</span>
+      <span>{t('catalog.searchServicesPlaceholder')}</span>
       <kbd
         className="pointer-events-none hidden select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-xs font-medium text-muted-foreground sm:inline-flex"
-        aria-label="Keyboard shortcut: Command K"
+        aria-label={t('catalog.kbdShortcutAria')}
       >
         <span className="text-xs">⌘</span>K
       </kbd>

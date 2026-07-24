@@ -6,6 +6,7 @@ import { appRouter } from '@/server/root';
 import { createTRPCContext } from '@/server/trpc';
 import { ServiceBrowserClient } from './components/ServiceBrowserClient';
 import { ServiceGridSkeleton } from '@/components/ServiceGridSkeleton';
+import { getT } from '@/lib/i18n/server';
 import './services.css';
 
 // Page metadata
@@ -92,7 +93,8 @@ async function ServicesServerComponent() {
 }
 
 // Main Services Page Component
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const t = await getT();
   return (
     <section className="services-page" aria-labelledby="services-title">
       {/* Page Header */}
@@ -100,11 +102,10 @@ export default function ServicesPage() {
         <div className="services-header__container">
           <div className="services-header__content">
             <h1 className="services-header__title">
-              Service catalog
+              {t('catalog.browseTitle')}
             </h1>
             <p className="services-header__subtitle">
-              Curated, self-hostable services — each ships with real image, port, environment and volume
-              metadata, so the stack you compose actually runs.
+              {t('catalog.browseSubtitle')}
             </p>
           </div>
         </div>

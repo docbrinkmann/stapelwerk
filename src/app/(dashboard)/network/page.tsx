@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AlertCircle, AlertTriangle, ExternalLink, HardDrive, Link2, Network, Plus, Server } from 'lucide-react'
+import { useT } from '@/lib/i18n/client'
 
 function portLabel(p: { hostPort: number; containerPort: number; protocol: string }): string {
   const proto = p.protocol && p.protocol !== 'tcp' ? `/${p.protocol}` : ''
@@ -15,6 +16,7 @@ function portLabel(p: { hostPort: number; containerPort: number; protocol: strin
 }
 
 export default function NetworkPage() {
+  const t = useT()
   const { data, isLoading, error } = trpc.stacks.networkOverview.useQuery()
   const stacks = data?.stacks ?? []
   const conflicts = data?.conflicts ?? []
@@ -23,12 +25,11 @@ export default function NetworkPage() {
   return (
     <div className="flex-1 space-y-6 p-4 md:p-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Network</h1>
+        <h1 className="text-3xl font-bold tracking-tight">{t('ops.networkTitle')}</h1>
         <p className="text-muted-foreground">
-          Published host ports and internal networking across all your stacks. Each stack runs on its
-          own{' '}
+          {t('ops.networkSubtitle1')}{' '}
           <code className="rounded bg-muted px-1 py-0.5 font-mono text-sm text-foreground">appnet</code>{' '}
-          bridge network — services reach each other by name.
+          {t('ops.networkSubtitle2')}
         </p>
       </div>
 
@@ -41,20 +42,20 @@ export default function NetworkPage() {
       ) : error ? (
         <div className="flex flex-col items-center justify-center py-12 text-center">
           <AlertCircle className="mb-4 h-12 w-12 text-destructive" />
-          <h2 className="text-lg font-semibold">Failed to load network info</h2>
+          <h2 className="text-lg font-semibold">{t('ops.networkLoadFailed')}</h2>
           <p className="text-muted-foreground">{error.message}</p>
         </div>
       ) : stacks.length === 0 ? (
         <div className="flex flex-col items-center justify-center rounded-lg border border-dashed py-16 text-center">
           <Network className="mb-4 h-12 w-12 text-muted-foreground" />
-          <h2 className="text-lg font-semibold">No stacks yet</h2>
+          <h2 className="text-lg font-semibold">{t('ops.noStacksYet')}</h2>
           <p className="mb-4 max-w-sm text-muted-foreground">
-            Compose a stack and map some ports — they&apos;ll show up here with conflict checks.
+            {t('ops.networkEmptyHint')}
           </p>
           <Button asChild>
             <Link href={'/stack-builder' as Route}>
               <Plus className="mr-2 h-4 w-4" />
-              Create a stack
+              {t('ops.createStack')}
             </Link>
           </Button>
         </div>
@@ -64,11 +65,10 @@ export default function NetworkPage() {
             <div className="rounded-lg border border-destructive/40 bg-destructive/10 p-4">
               <div className="flex items-center gap-2 font-medium text-destructive">
                 <AlertTriangle className="h-4 w-4" />
-                {conflicts.length} host-port {conflicts.length === 1 ? 'conflict' : 'conflicts'}
+                {t(conflicts.length === 1 ? 'ops.hostPortConflictOne' : 'ops.hostPortConflictMany', { count: conflicts.length })}
               </div>
               <p className="mt-1 text-sm text-muted-foreground">
-                These host ports are bound by more than one service — those stacks can&apos;t run at
-                the same time on one host.
+                {t('ops.conflictExplain')}
               </p>
               <ul className="mt-3 space-y-2 text-sm">
                 {conflicts.map((c) => (
@@ -84,9 +84,8 @@ export default function NetworkPage() {
           )}
 
           <div className="text-sm text-muted-foreground">
-            {stacks.length} {stacks.length === 1 ? 'stack' : 'stacks'} ·{' '}
-            {data?.totalPublished ?? 0} published{' '}
-            {(data?.totalPublished ?? 0) === 1 ? 'port' : 'ports'}
+            {t(stacks.length === 1 ? 'ops.stackCountOne' : 'ops.stackCountMany', { count: stacks.length })} ·{' '}
+            {t((data?.totalPublished ?? 0) === 1 ? 'ops.publishedPortsOne' : 'ops.publishedPortsMany', { count: data?.totalPublished ?? 0 })}
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -105,8 +104,8 @@ export default function NetworkPage() {
                     </Badge>
                   </div>
                   <CardDescription>
-                    {stack.publishedCount} published {stack.publishedCount === 1 ? 'port' : 'ports'} ·{' '}
-                    {stack.services.length} {stack.services.length === 1 ? 'service' : 'services'}
+                    {t(stack.publishedCount === 1 ? 'ops.publishedPortsOne' : 'ops.publishedPortsMany', { count: stack.publishedCount })} ·{' '}
+                    {t(stack.services.length === 1 ? 'ops.serviceCountOne' : 'ops.serviceCountMany', { count: stack.services.length })}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-3">
@@ -126,7 +125,7 @@ export default function NetworkPage() {
                       {/* Internal endpoints — how other services in the stack reach it. */}
                       {svc.internalPorts.length > 0 ? (
                         <div className="flex flex-wrap items-center gap-1">
-                          <span className="mr-0.5 text-xs text-muted-foreground">reachable at</span>
+                          <span className="mr-0.5 text-xs text-muted-foreground">{t('ops.reachableAt')}</span>
                           {svc.internalPorts.map((p, i) => (
                             <Badge
                               key={i}
@@ -134,7 +133,7 @@ export default function NetworkPage() {
                               className="font-mono text-xs"
                               title={[
                                 p.description,
-                                p.published ? 'also published to a host port' : 'stack-internal only',
+                                p.published ? t('ops.alsoPublished') : t('ops.stackInternalOnly'),
                               ]
                                 .filter(Boolean)
                                 .join(' · ')}
@@ -145,20 +144,20 @@ export default function NetworkPage() {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-xs text-muted-foreground">no exposed ports</div>
+                        <div className="text-xs text-muted-foreground">{t('ops.noExposedPorts')}</div>
                       )}
 
                       {/* Published host ports — reachable from the host, clickable. */}
                       {svc.publishedPorts.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1">
-                          <span className="mr-0.5 text-xs text-muted-foreground">published</span>
+                          <span className="mr-0.5 text-xs text-muted-foreground">{t('ops.published')}</span>
                           {svc.publishedPorts.map((p, i) => (
                             <a
                               key={i}
                               href={`http://localhost:${p.hostPort}`}
                               target="_blank"
                               rel="noopener noreferrer"
-                              title={`Open http://localhost:${p.hostPort} (on the host running this stack)`}
+                              title={t('ops.openPortTitle', { url: `http://localhost:${p.hostPort}` })}
                             >
                               <Badge
                                 variant={conflictPorts.has(p.hostPort) ? 'destructive' : 'default'}
@@ -176,7 +175,7 @@ export default function NetworkPage() {
                       {svc.dependsOn.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                           <Link2 className="h-3.5 w-3.5 shrink-0" />
-                          <span className="mr-0.5">depends on</span>
+                          <span className="mr-0.5">{t('ops.dependsOn')}</span>
                           {svc.dependsOn.map((d, i) => (
                             <Badge key={i} variant="outline" className="text-xs">
                               {d}
@@ -189,7 +188,7 @@ export default function NetworkPage() {
                       {svc.volumes.length > 0 && (
                         <div className="flex flex-wrap items-center gap-1 text-xs text-muted-foreground">
                           <HardDrive className="h-3.5 w-3.5 shrink-0" />
-                          <span className="mr-0.5">volumes</span>
+                          <span className="mr-0.5">{t('ops.volumes')}</span>
                           {svc.volumes.map((v, i) => (
                             <Badge
                               key={i}
@@ -197,7 +196,7 @@ export default function NetworkPage() {
                               className="font-mono text-xs"
                               title={[
                                 v.description,
-                                v.named ? 'named volume (persistent)' : 'bind mount',
+                                v.named ? t('ops.namedVolume') : t('ops.bindMount'),
                               ]
                                 .filter(Boolean)
                                 .join(' · ')}

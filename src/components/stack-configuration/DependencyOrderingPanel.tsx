@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import type { Service } from '@/types/service';
+import { useT } from '@/lib/i18n/client';
 
 interface DependencyOrderingPanelProps {
   services: Service[];
@@ -15,6 +16,7 @@ export const DependencyOrderingPanel: React.FC<DependencyOrderingPanelProps> = (
   onChange,
   currentServiceId,
 }) => {
+  const t = useT();
   const [selectedService, setSelectedService] = useState<string>('');
   const [circularDeps, setCircularDeps] = useState<string[]>([]);
 
@@ -135,10 +137,10 @@ export const DependencyOrderingPanel: React.FC<DependencyOrderingPanelProps> = (
             </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-destructive">
-                Circular Dependencies Detected
+                {t('builder.edCircularTitle')}
               </h3>
               <div className="mt-2 text-sm text-destructive">
-                <p>The following services have circular dependencies:</p>
+                <p>{t('builder.edCircularBody')}</p>
                 <ul className="list-disc list-inside mt-1">
                   {circularDeps.map(service => (
                     <li key={service}>{service}</li>
@@ -152,20 +154,20 @@ export const DependencyOrderingPanel: React.FC<DependencyOrderingPanelProps> = (
 
       {/* Service dependency configuration */}
       <div className="space-y-4">
-        <h3 className="text-lg font-medium">Configure Dependencies</h3>
+        <h3 className="text-lg font-medium">{t('builder.edConfigureDeps')}</h3>
         
         {services.map(service => (
           <div key={service.id} className="border rounded-lg p-4">
             <div className="flex items-center justify-between mb-3">
               <h4 className="font-medium">{service.name}</h4>
               <span className="text-sm text-muted-foreground">
-                Order: {startupOrder.indexOf(String(service.id)) + 1}
+                {t('builder.edOrder', { n: startupOrder.indexOf(String(service.id)) + 1 })}
               </span>
             </div>
 
             <div className="space-y-2">
               <label className="text-sm font-medium text-foreground">
-                Depends on:
+                {t('builder.edDependsOn')}
               </label>
               
               {/* Current dependencies */}
@@ -201,7 +203,7 @@ export const DependencyOrderingPanel: React.FC<DependencyOrderingPanelProps> = (
                   onChange={(e) => setSelectedService(e.target.value)}
                   className="block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring"
                 >
-                  <option value="">Select dependency...</option>
+                  <option value="">{t('builder.edSelectDependency')}</option>
                   {availableDependencies(String(service.id)).map(dep => (
                     <option key={dep.id} value={String(dep.id)}>
                       {dep.name}
@@ -219,7 +221,7 @@ export const DependencyOrderingPanel: React.FC<DependencyOrderingPanelProps> = (
                   className="px-3 py-2 text-sm bg-primary text-white rounded hover:bg-primary/90 disabled:bg-muted"
                   data-testid="add-dependency"
                 >
-                  Add
+                  {t('common.add')}
                 </button>
               </div>
             </div>
@@ -229,7 +231,7 @@ export const DependencyOrderingPanel: React.FC<DependencyOrderingPanelProps> = (
 
       {/* Startup order visualization */}
       <div className="border-t pt-6">
-        <h3 className="text-lg font-medium mb-4">Startup Order</h3>
+        <h3 className="text-lg font-medium mb-4">{t('builder.edStartupOrder')}</h3>
         <div className="space-y-2" data-testid="startup-order">
           {startupOrder.map((serviceId, index) => {
             const service = services.find(s => String(s.id) === serviceId);
@@ -249,14 +251,16 @@ export const DependencyOrderingPanel: React.FC<DependencyOrderingPanelProps> = (
                   <div className="font-medium">{service?.name}</div>
                   {dependencies[serviceId] && dependencies[serviceId].length > 0 && (
                     <div className="text-sm text-muted-foreground">
-                      Waits for: {dependencies[serviceId]
-                        .map(dep => services.find(s => String(s.id) === dep)?.name || dep)
-                        .join(', ')}
+                      {t('builder.edWaitsFor', {
+                        names: dependencies[serviceId]
+                          .map(dep => services.find(s => String(s.id) === dep)?.name || dep)
+                          .join(', '),
+                      })}
                     </div>
                   )}
                 </div>
                 {circularDeps.includes(serviceId) && (
-                  <span className="text-destructive text-sm">Circular dependency</span>
+                  <span className="text-destructive text-sm">{t('builder.edCircularDep')}</span>
                 )}
               </div>
             );

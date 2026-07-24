@@ -14,6 +14,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { useStackPersistence } from '@/stores/stack-builder';
 import { stackPersistence } from '@/lib/stack-persistence';
+import { useT } from '@/lib/i18n/client';
 import {
   Upload,
   Download,
@@ -57,6 +58,7 @@ const BulkImportExportManager: React.FC<BulkImportExportManagerProps> = ({
   onClose,
   mode
 }) => {
+  const t = useT();
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const folderInputRef = useRef<HTMLInputElement>(null);
@@ -193,7 +195,7 @@ const BulkImportExportManager: React.FC<BulkImportExportManagerProps> = ({
         results.push({
           success: false,
           stackName: file.name,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : t('catalog.unknownError'),
           services: 0
         });
       }
@@ -206,8 +208,8 @@ const BulkImportExportManager: React.FC<BulkImportExportManagerProps> = ({
     
     const successCount = results.filter(r => r.success).length;
     toast({
-      title: "Import Complete",
-      description: `Successfully imported ${successCount} of ${totalFiles} stacks.`,
+      title: t('catalog.importCompleteTitle'),
+      description: t('catalog.importCompleteDesc', { success: successCount, total: totalFiles }),
       variant: successCount > 0 ? "default" : "destructive"
     });
   };
@@ -251,7 +253,7 @@ const BulkImportExportManager: React.FC<BulkImportExportManagerProps> = ({
         results.push({
           success: false,
           stackName: url,
-          error: error instanceof Error ? error.message : 'Unknown error',
+          error: error instanceof Error ? error.message : t('catalog.unknownError'),
           services: 0
         });
       }
@@ -264,8 +266,8 @@ const BulkImportExportManager: React.FC<BulkImportExportManagerProps> = ({
     
     const successCount = results.filter(r => r.success).length;
     toast({
-      title: "Import Complete",
-      description: `Successfully imported ${successCount} of ${totalUrls} stacks.`,
+      title: t('catalog.importCompleteTitle'),
+      description: t('catalog.importCompleteDesc', { success: successCount, total: totalUrls }),
       variant: successCount > 0 ? "default" : "destructive"
     });
   };
@@ -278,8 +280,8 @@ const BulkImportExportManager: React.FC<BulkImportExportManagerProps> = ({
       const stacks = getLocalStacks();
       if (stacks.length === 0) {
         toast({
-          title: "No Stacks Found",
-          description: "You don't have any stacks to export.",
+          title: t('catalog.noStacksFoundTitle'),
+          description: t('catalog.noStacksToExport'),
           variant: "destructive"
         });
         return;
@@ -351,14 +353,14 @@ const BulkImportExportManager: React.FC<BulkImportExportManagerProps> = ({
       }
 
       toast({
-        title: "Export Complete",
-        description: `Successfully exported ${stacks.length} stacks.`,
+        title: t('catalog.exportCompleteTitle'),
+        description: t('catalog.exportCompleteDesc', { count: stacks.length }),
 variant: 'default'
       });
     } catch (error) {
       toast({
-        title: "Export Failed",
-        description: "Failed to export stacks. Please try again.",
+        title: t('catalog.exportFailedTitle'),
+        description: t('catalog.exportFailedDesc'),
         variant: "destructive"
       });
     } finally {
@@ -370,16 +372,16 @@ variant: 'default'
     <div className="space-y-6">
       <Tabs value={importSource} onValueChange={(value: any) => setImportSource(value)}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="files">Files</TabsTrigger>
-          <TabsTrigger value="folder">Folder</TabsTrigger>
-          <TabsTrigger value="urls">URLs</TabsTrigger>
+          <TabsTrigger value="files">{t('catalog.tabFiles')}</TabsTrigger>
+          <TabsTrigger value="folder">{t('catalog.tabFolder')}</TabsTrigger>
+          <TabsTrigger value="urls">{t('catalog.tabUrls')}</TabsTrigger>
         </TabsList>
 
         <TabsContent value="files" className="space-y-4">
           <div>
-            <Label>Select Stack Files</Label>
+            <Label>{t('catalog.selectStackFiles')}</Label>
             <p className="text-sm text-muted-foreground mb-2">
-              Choose multiple JSON or Docker Compose files to import
+              {t('catalog.selectStackFilesDesc')}
             </p>
             <input
               ref={fileInputRef}
@@ -395,11 +397,11 @@ variant: 'default'
               className="w-full"
             >
               <FileText className="h-4 w-4 mr-2" />
-              Choose Files
+              {t('catalog.chooseFiles')}
             </Button>
             {selectedFiles && (
               <p className="text-sm text-muted-foreground mt-2">
-                Selected: {selectedFiles.length} files
+                {t('catalog.selectedFilesCount', { count: selectedFiles.length })}
               </p>
             )}
           </div>
@@ -407,9 +409,9 @@ variant: 'default'
 
         <TabsContent value="folder" className="space-y-4">
           <div>
-            <Label>Select Folder</Label>
+            <Label>{t('catalog.selectFolder')}</Label>
             <p className="text-sm text-muted-foreground mb-2">
-              Choose a folder containing stack files
+              {t('catalog.selectFolderDesc')}
             </p>
             <input
               ref={folderInputRef}
@@ -425,11 +427,11 @@ variant: 'default'
               className="w-full"
             >
               <FolderOpen className="h-4 w-4 mr-2" />
-              Choose Folder
+              {t('catalog.chooseFolder')}
             </Button>
             {selectedFiles && (
               <p className="text-sm text-muted-foreground mt-2">
-                Found: {selectedFiles.length} files
+                {t('catalog.foundFilesCount', { count: selectedFiles.length })}
               </p>
             )}
           </div>
@@ -437,9 +439,9 @@ variant: 'default'
 
         <TabsContent value="urls" className="space-y-4">
           <div>
-            <Label htmlFor="url-list">Stack URLs</Label>
+            <Label htmlFor="url-list">{t('catalog.stackUrls')}</Label>
             <p className="text-sm text-muted-foreground mb-2">
-              Enter one URL per line pointing to stack JSON files
+              {t('catalog.stackUrlsDesc')}
             </p>
             <Textarea
               id="url-list"
@@ -449,7 +451,7 @@ variant: 'default'
               rows={5}
             />
             <p className="text-sm text-muted-foreground">
-              URLs: {urlList.split('\n').filter(url => url.trim().length > 0).length}
+              {t('catalog.urlsCount', { count: urlList.split('\n').filter(url => url.trim().length > 0).length })}
             </p>
           </div>
         </TabsContent>
@@ -460,7 +462,7 @@ variant: 'default'
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm">Processing imports...</span>
+            <span className="text-sm">{t('catalog.processingImports')}</span>
           </div>
           <Progress value={processingProgress} className="w-full" />
         </div>
@@ -469,7 +471,7 @@ variant: 'default'
       {/* Import Results */}
       {importResults.length > 0 && (
         <div className="space-y-2">
-          <h4 className="font-medium">Import Results</h4>
+          <h4 className="font-medium">{t('catalog.importResults')}</h4>
           <div className="max-h-48 overflow-y-auto space-y-1">
             {importResults.map((result, index) => (
               <div key={index} className="flex items-center justify-between p-2 bg-muted rounded text-sm">
@@ -482,7 +484,7 @@ variant: 'default'
                   <span className="font-medium">{result.stackName}</span>
                   {result.success && (
                     <Badge variant="outline" className="text-xs">
-                      {result.services} services
+                      {t('catalog.servicesCount', { count: result.services })}
                     </Badge>
                   )}
                 </div>
@@ -498,11 +500,11 @@ variant: 'default'
           <div className="flex gap-2 text-sm">
             <Badge variant="outline" className="text-success">
               <CheckCircle2 className="h-3 w-3 mr-1" />
-              {importResults.filter(r => r.success).length} successful
+              {t('catalog.successfulCount', { count: importResults.filter(r => r.success).length })}
             </Badge>
             <Badge variant="outline" className="text-destructive">
               <XCircle className="h-3 w-3 mr-1" />
-              {importResults.filter(r => !r.success).length} failed
+              {t('catalog.failedCount', { count: importResults.filter(r => !r.success).length })}
             </Badge>
           </div>
         </div>
@@ -525,12 +527,12 @@ variant: 'default'
           {isProcessing ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Processing...
+              {t('catalog.processing')}
             </>
           ) : (
             <>
               <Upload className="h-4 w-4 mr-2" />
-              Import Stacks
+              {t('catalog.importStacks')}
             </>
           )}
         </Button>
@@ -541,11 +543,11 @@ variant: 'default'
   const renderExportInterface = () => (
     <div className="space-y-6">
       <div className="space-y-4">
-        <h4 className="font-medium">Export Options</h4>
-        
+        <h4 className="font-medium">{t('catalog.exportOptions')}</h4>
+
         <div className="space-y-3">
           <div>
-            <Label>Export Format</Label>
+            <Label>{t('catalog.exportFormat')}</Label>
             <div className="flex gap-2 mt-1">
               {['json', 'yaml', 'zip'].map((format) => (
                 <Button
@@ -561,7 +563,7 @@ variant: 'default'
           </div>
 
           <div className="space-y-2">
-            <Label>Include Options</Label>
+            <Label>{t('catalog.includeOptions')}</Label>
             <div className="space-y-2">
               <label className="flex items-center space-x-2 cursor-pointer">
                 <input
@@ -573,7 +575,7 @@ variant: 'default'
                   }))}
                   className="rounded"
                 />
-                <span className="text-sm">Include metadata (timestamps, versions)</span>
+                <span className="text-sm">{t('catalog.includeMetadata')}</span>
               </label>
               
               <label className="flex items-center space-x-2 cursor-pointer">
@@ -586,7 +588,7 @@ variant: 'default'
                   }))}
                   className="rounded"
                 />
-                <span className="text-sm">Include documentation and descriptions</span>
+                <span className="text-sm">{t('catalog.includeDocumentation')}</span>
               </label>
               
               <label className="flex items-center space-x-2 cursor-pointer">
@@ -599,7 +601,7 @@ variant: 'default'
                   }))}
                   className="rounded"
                 />
-                <span className="text-sm">Include service configurations</span>
+                <span className="text-sm">{t('catalog.includeConfigurations')}</span>
               </label>
 
               <label className="flex items-center space-x-2 cursor-pointer">
@@ -612,7 +614,7 @@ variant: 'default'
                   }))}
                   className="rounded"
                 />
-                <span className="text-sm">Export as separate files</span>
+                <span className="text-sm">{t('catalog.exportSeparateFiles')}</span>
               </label>
             </div>
           </div>
@@ -624,7 +626,7 @@ variant: 'default'
         <div className="space-y-2">
           <div className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span className="text-sm">Exporting stacks...</span>
+            <span className="text-sm">{t('catalog.exportingStacks')}</span>
           </div>
           <Progress value={processingProgress} className="w-full" />
         </div>
@@ -633,10 +635,11 @@ variant: 'default'
       <Alert>
         <Database className="h-4 w-4" />
         <AlertDescription>
-          You have {getLocalStacks().length} stacks available for export.
-          {exportOptions.separateFiles 
-            ? ' Each stack will be exported as a separate file.'
-            : ' All stacks will be combined into a single export file.'
+          {t('catalog.stacksAvailableForExport', { count: getLocalStacks().length })}
+          {' '}
+          {exportOptions.separateFiles
+            ? t('catalog.eachStackSeparateFile')
+            : t('catalog.allStacksCombined')
           }
         </AlertDescription>
       </Alert>
@@ -649,12 +652,12 @@ variant: 'default'
         {isProcessing ? (
           <>
             <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-            Exporting...
+            {t('catalog.exporting')}
           </>
         ) : (
           <>
             <Download className="h-4 w-4 mr-2" />
-            Export All Stacks
+            {t('catalog.exportAllStacks')}
           </>
         )}
       </Button>
@@ -670,20 +673,20 @@ variant: 'default'
               {mode === 'import' ? (
                 <>
                   <Upload className="h-5 w-5" />
-                  Bulk Import Stacks
+                  {t('catalog.bulkImportStacks')}
                 </>
               ) : (
                 <>
                   <Download className="h-5 w-5" />
-                  Bulk Export Stacks
+                  {t('catalog.bulkExportStacks')}
                 </>
               )}
             </div>
           </DialogTitle>
           <DialogDescription>
-            {mode === 'import' 
-              ? 'Import multiple stacks from files, folders, or URLs at once.'
-              : 'Export all your stacks with customizable options and formats.'
+            {mode === 'import'
+              ? t('catalog.bulkImportDesc')
+              : t('catalog.bulkExportDesc')
             }
           </DialogDescription>
         </DialogHeader>

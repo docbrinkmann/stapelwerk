@@ -5,6 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Activity, Layers, Server, Bell, HeartPulse } from 'lucide-react'
+import { useT } from '@/lib/i18n/client'
+import type { MessageKey } from '@/lib/i18n/messages'
 
 const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> = {
   healthy: 'default',
@@ -12,8 +14,15 @@ const STATUS_VARIANT: Record<string, 'default' | 'secondary' | 'destructive'> = 
   unhealthy: 'destructive',
 }
 
+const STATUS_LABEL_KEY: Record<string, MessageKey> = {
+  healthy: 'shell.statusHealthy',
+  degraded: 'shell.statusDegraded',
+  unhealthy: 'shell.statusUnhealthy',
+}
+
 /** Real system-health summary for the dashboard Monitoring tab. */
 export function MonitoringPanel() {
+  const t = useT()
   const health = trpc.monitoring.getSystemHealth.useQuery(undefined, { retry: false })
 
   if (health.isLoading) {
@@ -29,18 +38,19 @@ export function MonitoringPanel() {
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">
           <Activity className="mx-auto mb-2 h-8 w-8" />
-          Monitoring data is unavailable right now.
+          {t('shell.monitoringUnavailable')}
         </CardContent>
       </Card>
     )
   }
 
   const { healthScore, status, metrics } = health.data
+  const statusLabelKey = STATUS_LABEL_KEY[status]
   const cards = [
-    { label: 'Total Stacks', value: metrics.totalStacks, icon: Layers },
-    { label: 'Active Stacks', value: metrics.activeStacks, icon: Activity },
-    { label: 'Services', value: metrics.totalServices, icon: Server },
-    { label: 'Active Alerts', value: metrics.activeAlerts, icon: Bell },
+    { label: t('shell.totalStacks'), value: metrics.totalStacks, icon: Layers },
+    { label: t('shell.activeStacks'), value: metrics.activeStacks, icon: Activity },
+    { label: t('shell.servicesLabel'), value: metrics.totalServices, icon: Server },
+    { label: t('shell.activeAlerts'), value: metrics.activeAlerts, icon: Bell },
   ]
 
   return (
@@ -49,15 +59,15 @@ export function MonitoringPanel() {
         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle className="flex items-center gap-2 text-sm font-medium">
             <HeartPulse className="h-4 w-4 text-muted-foreground" />
-            System Health
+            {t('shell.systemHealth')}
           </CardTitle>
-          <Badge variant={STATUS_VARIANT[status] ?? 'secondary'} className="capitalize">
-            {status}
+          <Badge variant={STATUS_VARIANT[status] ?? 'secondary'}>
+            {statusLabelKey ? t(statusLabelKey) : status}
           </Badge>
         </CardHeader>
         <CardContent>
           <div className="text-3xl font-bold">{healthScore}<span className="text-lg text-muted-foreground">/100</span></div>
-          <p className="text-xs text-muted-foreground">Health score across your stacks and alerts</p>
+          <p className="text-xs text-muted-foreground">{t('shell.healthScoreDesc')}</p>
         </CardContent>
       </Card>
 

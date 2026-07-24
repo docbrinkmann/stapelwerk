@@ -116,14 +116,15 @@ describe('ApplyModal', () => {
     const pubkey = await screen.findByTestId('apply-deploy-pubkey')
     expect(pubkey).toHaveTextContent('ssh-ed25519 AAAAC3NzaC1lZDI1 deploy@buildmystack')
 
-    // Fill host + user (port defaults to 22) and submit.
+    // Fill host + user (port defaults to 22), acknowledge the SSH-key liability, and submit.
     await act(async () => {
       await user.type(screen.getByLabelText(/^Host$/i), '192.168.1.20')
       await user.type(screen.getByLabelText(/SSH user/i), 'deploy')
+      await user.click(screen.getByTestId('apply-target-risk-ack'))
       await user.click(screen.getByRole('button', { name: /Create Target/i }))
     })
 
-    // The mutation carries the remote SSH shape and is forced to a docker target.
+    // The mutation carries the remote SSH shape (incl. the liability ack) and is forced to a docker target.
     await waitFor(() => {
       expect(api.deployments.createTarget.mutate).toHaveBeenCalledWith(
         expect.objectContaining({
@@ -133,6 +134,7 @@ describe('ApplyModal', () => {
           host: '192.168.1.20',
           sshUser: 'deploy',
           sshPort: 22,
+          riskAcknowledged: true,
         }),
       )
     })

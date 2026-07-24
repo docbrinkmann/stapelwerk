@@ -7,6 +7,8 @@ import { ServiceBrowserQueryProvider } from '@/components/providers/query-provid
 import Header from '@/components/header'
 import { ThemeProvider } from './providers'
 import { loadAppearancePrefs } from '@/lib/appearance'
+import { I18nProvider } from '@/lib/i18n/client'
+import type { Locale } from '@/lib/i18n/messages'
 
 /**
  * ProvidersRoot Component
@@ -15,7 +17,15 @@ import { loadAppearancePrefs } from '@/lib/appearance'
  * Conditionally shows the marketing Header only on non-dashboard routes.
  * Dashboard routes use their own sidebar layout.
  */
-export function ProvidersRoot({ children, session }: { children: React.ReactNode; session?: any }) {
+export function ProvidersRoot({
+  children,
+  session,
+  initialLocale = 'en',
+}: {
+  children: React.ReactNode
+  session?: any
+  initialLocale?: Locale
+}) {
   const pathname = usePathname()
 
   // Apply persisted accent/font-size prefs app-wide on load.
@@ -43,11 +53,13 @@ export function ProvidersRoot({ children, session }: { children: React.ReactNode
 
   return (
     <ThemeProvider>
-      {/* SessionProvider is always mounted: components like AppSidebar call
-          useSession(), which throws without a provider. When
-          NEXT_PUBLIC_APP_DISABLE_AUTH=true the session is simply
-          unauthenticated — route guards are skipped elsewhere. */}
-      <SessionProvider session={session}>{content}</SessionProvider>
+      <I18nProvider initialLocale={initialLocale}>
+        {/* SessionProvider is always mounted: components like AppSidebar call
+            useSession(), which throws without a provider. When
+            NEXT_PUBLIC_APP_DISABLE_AUTH=true the session is simply
+            unauthenticated — route guards are skipped elsewhere. */}
+        <SessionProvider session={session}>{content}</SessionProvider>
+      </I18nProvider>
     </ThemeProvider>
   )
 }

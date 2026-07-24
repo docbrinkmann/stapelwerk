@@ -26,6 +26,7 @@ import {
   Settings
 } from 'lucide-react';
 import type { PersistedStack } from '@/lib/stack-persistence';
+import { useT } from '@/lib/i18n/client';
 
 interface StackStorageManagerProps {
   isOpen: boolean;
@@ -34,6 +35,7 @@ interface StackStorageManagerProps {
 }
 
 export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStorageManagerProps) {
+  const t = useT();
   const [activeTab, setActiveTab] = useState('local');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStack, setSelectedStack] = useState<PersistedStack | null>(null);
@@ -102,7 +104,7 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
   };
 
   const handleClearAllLocal = () => {
-    if (window.confirm('Are you sure you want to delete all local stacks? This action cannot be undone.')) {
+    if (window.confirm(t('catalog.confirmDeleteAllStacks'))) {
       clearLocalStacks();
       setLocalStacks([]);
       setStorageStats(getStorageStats());
@@ -138,9 +140,9 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
 
   const getStackTypeLabel = (stack: any) => {
     const metadata = stack.metadata;
-    if (metadata?.autoSave) return { label: 'Auto-save', color: 'bg-info/10 text-info' };
-    if (metadata?.isDraft) return { label: 'Draft', color: 'bg-warning/10 text-warning' };
-    return { label: 'Saved', color: 'bg-success/10 text-success' };
+    if (metadata?.autoSave) return { label: t('catalog.autoSaveLabel'), color: 'bg-info/10 text-info' };
+    if (metadata?.isDraft) return { label: t('common.draft'), color: 'bg-warning/10 text-warning' };
+    return { label: t('catalog.savedLabel'), color: 'bg-success/10 text-success' };
   };
 
   return (
@@ -150,11 +152,11 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
           <DialogTitle>
             <div className="flex items-center gap-2">
               <HardDrive className="h-5 w-5" />
-              <span>Stack Storage Manager</span>
+              <span>{t('catalog.stackStorageManager')}</span>
             </div>
           </DialogTitle>
           <DialogDescription>
-            Manage your saved stacks, drafts, and storage settings
+            {t('catalog.stackStorageManagerDesc')}
           </DialogDescription>
         </DialogHeader>
 
@@ -162,11 +164,11 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="local" className="flex items-center gap-2">
               <HardDrive className="h-4 w-4" />
-              Local Storage
+              {t('catalog.localStorageTab')}
             </TabsTrigger>
             <TabsTrigger value="settings" className="flex items-center gap-2">
               <Settings className="h-4 w-4" />
-              Settings
+              {t('common.settings')}
             </TabsTrigger>
           </TabsList>
 
@@ -175,22 +177,22 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
             <Card>
               <CardHeader>
                 <CardTitle className="text-lg flex items-center gap-2">
-                  Current Stack
-                  {isDirty && <Badge variant="outline">Unsaved changes</Badge>}
+                  {t('catalog.currentStack')}
+                  {isDirty && <Badge variant="outline">{t('catalog.unsavedChanges')}</Badge>}
                 </CardTitle>
                 <CardDescription>
-                  {lastSaved ? `Last saved: ${formatDate(lastSaved)}` : 'Not saved yet'}
+                  {lastSaved ? t('catalog.lastSavedAt', { date: formatDate(lastSaved) }) : t('catalog.notSavedYet')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex gap-2">
                   <Button onClick={handleSaveCurrentStack} disabled={!isDirty}>
                     <Save className="h-4 w-4 mr-1" />
-                    Save as Draft
+                    {t('catalog.saveAsDraft')}
                   </Button>
                   <Button variant="outline" onClick={() => savePermanently()}>
                     <Cloud className="h-4 w-4 mr-1" />
-                    Save Permanently
+                    {t('catalog.savePermanently')}
                   </Button>
                 </div>
               </CardContent>
@@ -199,21 +201,21 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
             {/* Storage Stats */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-sm">Storage Statistics</CardTitle>
+                <CardTitle className="text-sm">{t('catalog.storageStatistics')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span>Local stacks:</span>
+                  <span>{t('catalog.localStacksColon')}</span>
                   <span className="font-medium">{storageStats.localStacks}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Storage used:</span>
+                  <span>{t('catalog.storageUsedColon')}</span>
                   <span className="font-medium">{formatFileSize(storageStats.localStorageSize)}</span>
                 </div>
                 <div className="flex justify-between text-sm">
-                  <span>Auto-save:</span>
+                  <span>{t('catalog.autoSaveColon')}</span>
                   <span className={`font-medium ${autoSaveEnabled ? 'text-success' : 'text-muted-foreground'}`}>
-                    {autoSaveEnabled ? 'Enabled' : 'Disabled'}
+                    {autoSaveEnabled ? t('catalog.enabled') : t('catalog.disabled')}
                   </span>
                 </div>
               </CardContent>
@@ -224,7 +226,7 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
               <div className="flex-1 relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search saved stacks..."
+                  placeholder={t('catalog.searchSavedStacksPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -232,7 +234,7 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
               </div>
               <Button variant="outline" onClick={handleClearAllLocal} size="sm">
                 <Trash2 className="h-4 w-4 mr-1" />
-                Clear All
+                {t('catalog.clearAll')}
               </Button>
             </div>
 
@@ -242,8 +244,8 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
                 {filteredLocalStacks.length === 0 ? (
                   <div className="text-center py-8 text-muted-foreground">
                     <HardDrive className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <p>No saved stacks found</p>
-                    <p className="text-sm">Start building and save your first stack!</p>
+                    <p>{t('catalog.noSavedStacks')}</p>
+                    <p className="text-sm">{t('catalog.noSavedStacksHint')}</p>
                   </div>
                 ) : (
                   filteredLocalStacks.map((stack) => {
@@ -255,20 +257,20 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
                             <div className="flex-1 min-w-0">
                               <CardTitle className="text-base truncate">{stack.name}</CardTitle>
                               <CardDescription className="text-sm">
-                                {stack.description || 'No description'}
+                                {stack.description || t('catalog.noDescription')}
                               </CardDescription>
                             </div>
                             <div className="flex items-center gap-2">
                               <Badge className={typeInfo.color}>
                                 {typeInfo.label}
                               </Badge>
-                              {stack.isPublic && <Badge variant="outline">Public</Badge>}
+                              {stack.isPublic && <Badge variant="outline">{t('catalog.publicBadge')}</Badge>}
                             </div>
                           </div>
                         </CardHeader>
                         <CardContent className="pt-0">
                           <div className="flex justify-between items-center text-sm text-muted-foreground mb-3">
-                            <span>{stack.services.length} services</span>
+                            <span>{t('catalog.servicesCount', { count: stack.services.length })}</span>
                             <span className="flex items-center gap-1">
                               <Clock className="h-3 w-3" />
                               {formatDate(stack.updatedAt || stack.createdAt || new Date())}
@@ -281,7 +283,7 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
                               onClick={() => handleLoadStack(stack)}
                             >
                               <Upload className="h-3 w-3 mr-1" />
-                              Load
+                              {t('catalog.load')}
                             </Button>
                             <Button
                               variant="outline"
@@ -289,7 +291,7 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
                               onClick={() => setSelectedStack(stack)}
                             >
                               <Download className="h-3 w-3 mr-1" />
-                              Export
+                              {t('common.export')}
                             </Button>
                             <Button
                               variant="outline"
@@ -298,7 +300,7 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
                               disabled={isDeleting === String(stack.id)}
                             >
                               <Trash2 className="h-3 w-3 mr-1" />
-                              Delete
+                              {t('common.delete')}
                             </Button>
                           </div>
                         </CardContent>
@@ -313,17 +315,17 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
           <TabsContent value="settings" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Auto-Save Settings</CardTitle>
+                <CardTitle>{t('catalog.autoSaveSettings')}</CardTitle>
                 <CardDescription>
-                  Automatically save your work as you build
+                  {t('catalog.autoSaveSettingsDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center justify-between">
                   <div>
-                    <Label htmlFor="auto-save-toggle">Enable Auto-Save</Label>
+                    <Label htmlFor="auto-save-toggle">{t('catalog.enableAutoSave')}</Label>
                     <p className="text-sm text-muted-foreground">
-                      Automatically save drafts every 30 seconds
+                      {t('catalog.autoSaveEvery30s')}
                     </p>
                   </div>
                   <Button
@@ -331,7 +333,7 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
                     onClick={toggleAutoSave}
                     className={autoSaveEnabled ? 'bg-success/10 border-success/30' : ''}
                   >
-                    {autoSaveEnabled ? 'Enabled' : 'Disabled'}
+                    {autoSaveEnabled ? t('catalog.enabled') : t('catalog.disabled')}
                   </Button>
                 </div>
               </CardContent>
@@ -339,31 +341,31 @@ export function StackStorageManager({ isOpen, onClose, onLoadStack }: StackStora
 
             <Card>
               <CardHeader>
-                <CardTitle>Storage Cleanup</CardTitle>
+                <CardTitle>{t('catalog.storageCleanup')}</CardTitle>
                 <CardDescription>
-                  Manage your local storage space
+                  {t('catalog.storageCleanupDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-medium">Clear Auto-Saves</p>
-                    <p className="text-sm text-muted-foreground">Remove old auto-saved drafts (7+ days)</p>
+                    <p className="font-medium">{t('catalog.clearAutoSaves')}</p>
+                    <p className="text-sm text-muted-foreground">{t('catalog.clearAutoSavesDesc')}</p>
                   </div>
                   <Button variant="outline" size="sm">
                     <Trash2 className="h-4 w-4 mr-1" />
-                    Clean Up
+                    {t('catalog.cleanUp')}
                   </Button>
                 </div>
                 
                 <div className="flex justify-between items-center">
                   <div>
-                    <p className="font-medium">Clear All Data</p>
-                    <p className="text-sm text-muted-foreground">Remove all locally stored stacks</p>
+                    <p className="font-medium">{t('catalog.clearAllData')}</p>
+                    <p className="text-sm text-muted-foreground">{t('catalog.clearAllDataDesc')}</p>
                   </div>
                   <Button variant="outline" size="sm" onClick={handleClearAllLocal}>
                     <AlertCircle className="h-4 w-4 mr-1" />
-                    Clear All
+                    {t('catalog.clearAll')}
                   </Button>
                 </div>
               </CardContent>

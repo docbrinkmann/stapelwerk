@@ -12,6 +12,7 @@ import { Upload, FileText, Link, AlertCircle, CheckCircle } from 'lucide-react';
 import { stackPersistence } from '@/lib/stack-persistence';
 import { trpc } from '@/utils/trpc';
 import { useStackServices } from '@/stores/stack-builder';
+import { useT } from '@/lib/i18n/client';
 import type { Service } from '@/types/service';
 
 interface ImportStackModalProps {
@@ -20,6 +21,7 @@ interface ImportStackModalProps {
 }
 
 export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
+  const t = useT();
   const [activeTab, setActiveTab] = useState('file');
   const [dockerCompose, setDockerCompose] = useState('');
   const [stackUrl, setStackUrl] = useState('');
@@ -55,20 +57,20 @@ export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
         try {
           const response = await fetch(stackUrl);
           if (!response.ok) {
-            throw new Error(`Failed to fetch URL: ${response.statusText}`);
+            throw new Error(t('builder.importFetchUrlFailed', { status: response.statusText }));
           }
           yamlContent = await response.text();
         } catch (fetchError) {
           throw new Error(
             fetchError instanceof Error
-              ? `Failed to fetch docker-compose.yml from URL: ${fetchError.message}`
-              : 'Failed to fetch docker-compose.yml from URL'
+              ? t('builder.importFetchComposeFailedDetail', { message: fetchError.message })
+              : t('builder.importFetchComposeFailed')
           );
         }
       }
 
       if (!yamlContent.trim()) {
-        throw new Error('No docker-compose content provided');
+        throw new Error(t('builder.importNoContent'));
       }
 
       // Parse the docker-compose YAML
@@ -112,7 +114,7 @@ export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
       }
 
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to import stack');
+      setError(err instanceof Error ? err.message : t('builder.importFailed'));
     } finally {
       setIsImporting(false);
     }
@@ -132,9 +134,9 @@ export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Import Stack</DialogTitle>
+          <DialogTitle>{t('builder.importStack')}</DialogTitle>
           <DialogDescription>
-            Import a stack from a Docker Compose file, URL, or template.
+            {t('builder.importSubtitle')}
           </DialogDescription>
         </DialogHeader>
 
@@ -142,21 +144,21 @@ export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="file" className="flex items-center gap-2">
               <Upload className="h-4 w-4" />
-              Upload File
+              {t('builder.importTabFile')}
             </TabsTrigger>
             <TabsTrigger value="paste" className="flex items-center gap-2">
               <FileText className="h-4 w-4" />
-              Paste Content
+              {t('builder.importTabPaste')}
             </TabsTrigger>
             <TabsTrigger value="url" className="flex items-center gap-2">
               <Link className="h-4 w-4" />
-              From URL
+              {t('builder.importTabUrl')}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="file" className="space-y-4">
             <div>
-              <Label htmlFor="file-upload">Upload Docker Compose File</Label>
+              <Label htmlFor="file-upload">{t('builder.importUploadLabel')}</Label>
               <Input
                 id="file-upload"
                 type="file"
@@ -165,19 +167,19 @@ export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
                 className="mt-2"
               />
               <p className="text-sm text-muted-foreground mt-1">
-                Select a docker-compose.yml or docker-compose.yaml file
+                {t('builder.importUploadHint')}
               </p>
             </div>
             
             {dockerCompose && (
               <div>
-                <Label>Preview</Label>
+                <Label>{t('builder.preview')}</Label>
                 <Textarea
                   value={dockerCompose}
                   onChange={(e) => setDockerCompose(e.target.value)}
                   rows={10}
                   className="mt-2 font-mono text-sm"
-                  placeholder="Docker Compose content will appear here..."
+                  placeholder={t('builder.importFilePlaceholder')}
                 />
               </div>
             )}
@@ -185,24 +187,24 @@ export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
 
           <TabsContent value="paste" className="space-y-4">
             <div>
-              <Label htmlFor="compose-content">Docker Compose Content</Label>
+              <Label htmlFor="compose-content">{t('builder.importPasteLabel')}</Label>
               <Textarea
                 id="compose-content"
                 value={dockerCompose}
                 onChange={(e) => setDockerCompose(e.target.value)}
                 rows={12}
                 className="mt-2 font-mono text-sm"
-                placeholder="Paste your docker-compose.yml content here..."
+                placeholder={t('builder.importPastePlaceholder')}
               />
               <p className="text-sm text-muted-foreground mt-1">
-                Copy and paste the contents of your docker-compose.yml file
+                {t('builder.importPasteHint')}
               </p>
             </div>
           </TabsContent>
 
           <TabsContent value="url" className="space-y-4">
             <div>
-              <Label htmlFor="stack-url">Stack URL</Label>
+              <Label htmlFor="stack-url">{t('builder.importUrlLabel')}</Label>
               <Input
                 id="stack-url"
                 type="url"
@@ -212,14 +214,14 @@ export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
                 className="mt-2"
               />
               <p className="text-sm text-muted-foreground mt-1">
-                Enter a URL pointing to a docker-compose.yml file
+                {t('builder.importUrlHint')}
               </p>
             </div>
 
             <Alert>
               <AlertCircle className="h-4 w-4" />
               <AlertDescription>
-                Make sure the URL is publicly accessible and points directly to a valid Docker Compose file.
+                {t('builder.importUrlNote')}
               </AlertDescription>
             </Alert>
           </TabsContent>
@@ -238,18 +240,18 @@ export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
             <AlertDescription>
               <div className="space-y-2">
                 <p className="font-medium">
-                  Import completed: {importSuccess.matched} of {importSuccess.total} services matched
+                  {t('builder.importCompleted', { matched: importSuccess.matched, total: importSuccess.total })}
                 </p>
                 {importSuccess.unmatched.length > 0 && (
                   <div className="text-sm">
-                    <p className="font-medium mb-1">Unmatched services:</p>
+                    <p className="font-medium mb-1">{t('builder.importUnmatched')}</p>
                     <ul className="list-disc list-inside space-y-1">
                       {importSuccess.unmatched.map((service, idx) => (
                         <li key={idx} className="text-muted-foreground">{service}</li>
                       ))}
                     </ul>
                     <p className="mt-2 text-muted-foreground">
-                      These services are not available in our catalog. They were skipped.
+                      {t('builder.importSkipped')}
                     </p>
                   </div>
                 )}
@@ -264,7 +266,7 @@ export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
             onClick={handleClose}
             disabled={isImporting}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleImport}
@@ -275,7 +277,7 @@ export function ImportStackModal({ isOpen, onClose }: ImportStackModalProps) {
               (activeTab === 'file' && !dockerCompose.trim())
             }
           >
-            {isImporting ? 'Importing...' : 'Import Stack'}
+            {isImporting ? t('builder.importing') : t('builder.importStack')}
           </Button>
         </DialogFooter>
       </DialogContent>

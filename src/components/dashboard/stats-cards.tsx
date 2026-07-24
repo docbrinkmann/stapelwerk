@@ -4,6 +4,7 @@ import { Database, Layers, Rocket, Server } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { trpc } from "@/utils/trpc"
+import { useT } from "@/lib/i18n/client"
 
 /**
  * Stats Cards Component
@@ -33,30 +34,31 @@ function formatBytes(bytes: number) {
 }
 
 export function StatsCards({ stats, isLoading = false }: StatsCardsProps) {
+  const t = useT()
   const cards = [
     {
-      title: "Total Stacks",
+      title: t("shell.totalStacks"),
       value: String(stats?.totalStacks ?? 0),
       icon: Layers,
-      description: "Stack configurations",
+      description: t("shell.totalStacksDesc"),
     },
     {
-      title: "Running Stacks",
+      title: t("shell.runningStacks"),
       value: String(stats?.runningStacks ?? 0),
       icon: Rocket,
-      description: "Currently active",
+      description: t("shell.runningStacksDesc"),
     },
     {
-      title: "Services",
+      title: t("shell.servicesLabel"),
       value: String(stats?.totalServices ?? 0),
       icon: Server,
-      description: "Unique services across stacks",
+      description: t("shell.servicesDesc"),
     },
     {
-      title: "Storage Used",
+      title: t("shell.storageUsed"),
       value: formatBytes(stats?.storageUsed ?? 0),
       icon: Database,
-      description: "Stack configuration storage",
+      description: t("shell.storageUsedDesc"),
     },
   ]
 

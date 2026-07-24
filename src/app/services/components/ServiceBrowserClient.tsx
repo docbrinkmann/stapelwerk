@@ -28,6 +28,7 @@ import {
   type DragEndEvent,
 } from '@dnd-kit/core';
 import { ServiceDropZone } from '@/components/dnd/ServiceDropZone';
+import { useT } from '@/lib/i18n/client';
 import type { Service } from '@/types/service';
 
 // Dynamic imports for heavy components that aren't needed immediately
@@ -43,7 +44,11 @@ const StackCanvas = dynamic(
   () => import('@/components/stack-configuration/StackCanvas').then(mod => ({ default: mod.StackCanvas })),
   { 
     ssr: false,
-    loading: () => <div className="stack-canvas-loading">Loading stack canvas...</div>
+    loading: function StackCanvasLoading() {
+      // next/dynamic renders `loading` as a component, so the i18n hook is legal here.
+      const t = useT();
+      return <div className="stack-canvas-loading">{t('catalog.loadingStackCanvas')}</div>;
+    }
   }
 );
 
@@ -56,6 +61,7 @@ const SaveStackModal = dynamic(
 );
 
 export function ServiceBrowserClient() {
+  const t = useT();
   const router = useRouter();
   const queryClient = useQueryClient();
   const pathname = usePathname();
@@ -188,7 +194,7 @@ export function ServiceBrowserClient() {
       {!isOnline && (
         <div role="status" aria-live="polite" className="offline-banner">
           <div className="offline-banner__content">
-            <span>You’re offline. Check your connection and retry.</span>
+            <span>{t('catalog.offlineBanner')}</span>
             <Button
               variant="outline"
               size="sm"
@@ -197,7 +203,7 @@ export function ServiceBrowserClient() {
               }}
               className="ml-3"
             >
-              Retry
+              {t('common.retry')}
             </Button>
           </div>
         </div>
@@ -219,7 +225,7 @@ export function ServiceBrowserClient() {
               />
               <Label htmlFor="stack-mode" className="flex items-center gap-2 cursor-pointer">
                 <Layers className="h-4 w-4" />
-                Build Stack
+                {t('catalog.buildStackToggle')}
               </Label>
             </div>
           </div>
@@ -232,10 +238,10 @@ export function ServiceBrowserClient() {
           onValueChange={(value) => value && setViewMode(value as 'grid' | 'list')}
           className="border rounded-md"
         >
-          <ToggleGroupItem value="grid" aria-label="Grid view" className="px-3">
+          <ToggleGroupItem value="grid" aria-label={t('catalog.gridView')} className="px-3">
             <LayoutGrid className="h-4 w-4" />
           </ToggleGroupItem>
-          <ToggleGroupItem value="list" aria-label="List view" className="px-3">
+          <ToggleGroupItem value="list" aria-label={t('catalog.listView')} className="px-3">
             <List className="h-4 w-4" />
           </ToggleGroupItem>
         </ToggleGroup>
@@ -251,7 +257,7 @@ export function ServiceBrowserClient() {
                 data-testid="save-stack-button"
               >
                 <Save className="h-4 w-4 mr-1" />
-                Save Stack
+                {t('catalog.saveStack')}
               </Button>
             )}
             <Button
@@ -261,7 +267,7 @@ export function ServiceBrowserClient() {
               data-testid="expand-to-full-builder"
             >
               <Expand className="h-4 w-4 mr-1" />
-              Full Builder
+              {t('catalog.fullBuilder')}
             </Button>
           </div>
         )}
@@ -273,7 +279,7 @@ export function ServiceBrowserClient() {
           {/* Search Bar */}
           <div className="service-browser__search">
             <SearchBar
-              placeholder="Search services (e.g., database, web server, monitoring...)"
+              placeholder={t('catalog.searchServicesPlaceholderLong')}
               className="service-browser__search-bar"
             />
           </div>
@@ -312,11 +318,11 @@ export function ServiceBrowserClient() {
             <div className="stack-panel-header">
               <h2 className="text-lg font-semibold flex items-center gap-2">
                 <Package2 className="h-5 w-5" />
-                Your Stack
+                {t('catalog.yourStack')}
               </h2>
               {stackServices.length === 0 && (
                 <p className="text-sm text-muted-foreground">
-                  Drag a service here to add it
+                  {t('catalog.dragServiceHere')}
                 </p>
               )}
             </div>
@@ -350,8 +356,8 @@ export function ServiceBrowserClient() {
         className="sr-only"
         id="service-browser-announcements"
       >
-        {searchQuery && `Search results for "${searchQuery}"`}
-        {stackMode && 'Stack building mode activated'}
+        {searchQuery && t('catalog.searchResultsFor', { query: searchQuery })}
+        {stackMode && t('catalog.stackModeActivated')}
       </div>
 
       {/* Command Palette */}

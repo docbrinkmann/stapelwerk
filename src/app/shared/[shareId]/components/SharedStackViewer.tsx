@@ -10,6 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { useStackBuilder } from '@/stores/stack-builder';
+import { useT } from '@/lib/i18n/client';
 import { 
   Download,
   Copy,
@@ -73,6 +74,7 @@ const SharedStackViewer: React.FC<SharedStackViewerProps> = ({
   relatedStacks,
   shareId
 }) => {
+  const t = useT();
   const router = useRouter();
   const { toast } = useToast();
   const { importFromJSON, services: currentServices } = useStackBuilder();
@@ -84,8 +86,8 @@ const SharedStackViewer: React.FC<SharedStackViewerProps> = ({
   const handleImportStack = async () => {
     if (!sharedStack.allowCloning) {
       toast({
-        title: 'Import Not Allowed',
-        description: 'The author has disabled cloning for this stack.',
+        title: t('catalog.importNotAllowedTitle'),
+        description: t('catalog.importNotAllowedDesc'),
         variant: 'destructive'
       });
       return;
@@ -103,8 +105,8 @@ const SharedStackViewer: React.FC<SharedStackViewerProps> = ({
       await importFromJSON(JSON.stringify(stackData));
       
       toast({
-        title: 'Stack Imported Successfully!',
-        description: 'The stack has been added to your workspace.',
+        title: t('catalog.toastStackImportedTitle'),
+        description: t('catalog.toastStackImportedDesc'),
 variant: 'default'
       });
 
@@ -112,8 +114,8 @@ variant: 'default'
       router.push('/stack-builder');
     } catch (error) {
       toast({
-        title: 'Import Failed',
-        description: 'Failed to import stack. Please try again.',
+        title: t('catalog.toastImportFailedTitle'),
+        description: t('catalog.toastImportFailedDesc'),
         variant: 'destructive'
       });
     } finally {
@@ -126,14 +128,14 @@ variant: 'default'
     try {
       await navigator.clipboard.writeText(window.location.href);
       toast({
-        title: 'Link Copied!',
-        description: 'Share URL copied to clipboard.',
+        title: t('catalog.linkCopiedTitle'),
+        description: t('catalog.linkCopiedDesc'),
         variant: 'default'
       });
     } catch (error) {
       toast({
-        title: 'Copy Failed',
-        description: 'Failed to copy URL to clipboard.',
+        title: t('catalog.copyFailedTitle'),
+        description: t('catalog.copyUrlFailedDesc'),
         variant: 'destructive'
       });
     }
@@ -142,8 +144,8 @@ variant: 'default'
   const handleDownloadCompose = () => {
     if (!sharedStack.dockerCompose) {
       toast({
-        title: 'Not Available',
-        description: 'Docker Compose file is not available for this stack.',
+        title: t('catalog.notAvailableTitle'),
+        description: t('catalog.composeNotAvailable'),
         variant: 'destructive'
       });
       return;
@@ -185,19 +187,19 @@ variant: 'default'
           <div className="flex items-center justify-between">
             <Button variant="ghost" onClick={() => router.back()}>
               <ArrowLeft className="h-4 w-4 mr-2" />
-              Back
+              {t('common.back')}
             </Button>
             
             <div className="flex items-center gap-2">
               <Button variant="outline" onClick={handleCopyShareUrl}>
                 <Share2 className="h-4 w-4 mr-2" />
-                Share
+                {t('common.share')}
               </Button>
-              
+
               {sharedStack.allowCloning && (
                 <Button onClick={() => setShowImportDialog(true)}>
                   <Import className="h-4 w-4 mr-2" />
-                  Import Stack
+                  {t('catalog.importStack')}
                 </Button>
               )}
             </div>
@@ -229,7 +231,7 @@ variant: 'default'
                   {sharedStack.isPublic && (
                     <Badge variant="outline">
                       <Eye className="h-3 w-3 mr-1" />
-                      Public
+                      {t('catalog.publicBadge')}
                     </Badge>
                   )}
                 </div>
@@ -239,11 +241,11 @@ variant: 'default'
               <div className="flex items-center gap-6 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
                   <User className="h-4 w-4" />
-                  <span>by {sharedStack.author.name}</span>
+                  <span>{t('catalog.byAuthor', { name: sharedStack.author.name })}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
-                  <span>Created {formatDate(sharedStack.createdAt)}</span>
+                  <span>{t('catalog.createdOn', { date: formatDate(sharedStack.createdAt) })}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Tag className="h-4 w-4" />
@@ -255,20 +257,20 @@ variant: 'default'
               <div className="flex items-center gap-6 mt-4 pt-4 border-t">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Eye className="h-4 w-4" />
-                  <span>{sharedStack.stats.views.toLocaleString()} views</span>
+                  <span>{t('catalog.viewsCount', { count: sharedStack.stats.views.toLocaleString() })}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Heart className="h-4 w-4" />
-                  <span>{sharedStack.stats.likes.toLocaleString()} likes</span>
+                  <span>{t('catalog.likesCount', { count: sharedStack.stats.likes.toLocaleString() })}</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Download className="h-4 w-4" />
-                  <span>{sharedStack.stats.clones.toLocaleString()} clones</span>
+                  <span>{t('catalog.clonesCount', { count: sharedStack.stats.clones.toLocaleString() })}</span>
                 </div>
                 {sharedStack.allowComments && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <MessageCircle className="h-4 w-4" />
-                    <span>{sharedStack.stats.comments.toLocaleString()} comments</span>
+                    <span>{t('catalog.commentsCount', { count: sharedStack.stats.comments.toLocaleString() })}</span>
                   </div>
                 )}
               </div>
@@ -288,24 +290,24 @@ variant: 'default'
             {/* Stack Content Tabs */}
             <Tabs value={selectedTab} onValueChange={setSelectedTab}>
               <TabsList className="w-full grid grid-cols-4">
-                <TabsTrigger value="overview">Overview</TabsTrigger>
-                <TabsTrigger value="services">Services</TabsTrigger>
+                <TabsTrigger value="overview">{t('catalog.tabOverview')}</TabsTrigger>
+                <TabsTrigger value="services">{t('catalog.services')}</TabsTrigger>
                 <TabsTrigger value="compose">Docker Compose</TabsTrigger>
-                <TabsTrigger value="documentation">Documentation</TabsTrigger>
+                <TabsTrigger value="documentation">{t('catalog.documentation')}</TabsTrigger>
               </TabsList>
 
               <TabsContent value="overview" className="mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Stack Overview</CardTitle>
+                    <CardTitle>{t('catalog.stackOverview')}</CardTitle>
                     <CardDescription>
-                      This stack contains {sharedStack.services.length} services
+                      {t('catalog.stackContainsServices', { count: sharedStack.services.length })}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div>
-                        <h4 className="font-medium mb-3">Services ({sharedStack.services.length})</h4>
+                        <h4 className="font-medium mb-3">{t('catalog.servicesHeadingCount', { count: sharedStack.services.length })}</h4>
                         <div className="space-y-2">
                           {sharedStack.services.slice(0, 6).map((service, index) => (
                             <div key={index} className="flex items-center gap-3 p-2 bg-muted rounded">
@@ -325,33 +327,33 @@ variant: 'default'
                           ))}
                           {sharedStack.services.length > 6 && (
                             <div className="text-sm text-muted-foreground text-center py-2">
-                              +{sharedStack.services.length - 6} more services
+                              {t('catalog.moreServicesCount', { count: sharedStack.services.length - 6 })}
                             </div>
                           )}
                         </div>
                       </div>
                       
                       <div>
-                        <h4 className="font-medium mb-3">Stack Information</h4>
+                        <h4 className="font-medium mb-3">{t('catalog.stackInformation')}</h4>
                         <div className="space-y-3">
                           <div className="flex items-center gap-2">
                             <Layers3 className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">Multi-service architecture</span>
+                            <span className="text-sm">{t('catalog.multiServiceArchitecture')}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Server className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm">Container orchestration ready</span>
+                            <span className="text-sm">{t('catalog.containerOrchestrationReady')}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Shield className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">
-                              {sharedStack.allowCloning ? 'Cloning allowed' : 'View only'}
+                              {sharedStack.allowCloning ? t('catalog.cloningAllowed') : t('catalog.viewOnly')}
                             </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Clock className="h-4 w-4 text-muted-foreground" />
                             <span className="text-sm">
-                              Updated {formatDate(sharedStack.updatedAt)}
+                              {t('catalog.updatedOn', { date: formatDate(sharedStack.updatedAt) })}
                             </span>
                           </div>
                         </div>
@@ -364,9 +366,9 @@ variant: 'default'
               <TabsContent value="services" className="mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Services Configuration</CardTitle>
+                    <CardTitle>{t('catalog.servicesConfiguration')}</CardTitle>
                     <CardDescription>
-                      Detailed view of all services in this stack
+                      {t('catalog.servicesConfigurationDesc')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -386,12 +388,12 @@ variant: 'default'
                               <h5 className="font-medium text-lg">{service.name}</h5>
                               <p className="text-muted-foreground mb-2">{service.description}</p>
                               <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                <span>Category: {service.category}</span>
-                                {service.version && <span>Version: {service.version}</span>}
+                                <span>{t('catalog.categoryValue', { value: service.category })}</span>
+                                {service.version && <span>{t('catalog.versionValue', { value: service.version })}</span>}
                               </div>
                               {service.ports && service.ports.length > 0 && (
                                 <div className="mt-2">
-                                  <span className="text-sm font-medium">Ports: </span>
+                                  <span className="text-sm font-medium">{t('catalog.portsColon')} </span>
                                   <span className="text-sm text-muted-foreground">
                                     {service.ports.join(', ')}
                                   </span>
@@ -409,9 +411,9 @@ variant: 'default'
               <TabsContent value="compose" className="mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Docker Compose Configuration</CardTitle>
+                    <CardTitle>{t('catalog.composeConfiguration')}</CardTitle>
                     <CardDescription>
-                      Ready-to-use Docker Compose file for this stack
+                      {t('catalog.composeConfigurationDesc')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -420,7 +422,7 @@ variant: 'default'
                         <div className="flex justify-end mb-4">
                           <Button variant="outline" onClick={handleDownloadCompose}>
                             <Download className="h-4 w-4 mr-2" />
-                            Download
+                            {t('common.download')}
                           </Button>
                         </div>
                         <pre className="bg-muted text-foreground p-4 rounded-lg overflow-x-auto text-sm">
@@ -431,7 +433,7 @@ variant: 'default'
                       <div className="text-center py-8">
                         <Code className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                         <p className="text-muted-foreground">
-                          Docker Compose file not available for this stack.
+                          {t('catalog.composeFileNotAvailable')}
                         </p>
                       </div>
                     )}
@@ -442,9 +444,9 @@ variant: 'default'
               <TabsContent value="documentation" className="mt-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Documentation</CardTitle>
+                    <CardTitle>{t('catalog.documentation')}</CardTitle>
                     <CardDescription>
-                      Setup instructions and additional information
+                      {t('catalog.documentationDesc')}
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
@@ -458,7 +460,7 @@ variant: 'default'
                       <div className="text-center py-8">
                         <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
                         <p className="text-muted-foreground">
-                          No documentation available for this stack.
+                          {t('catalog.noDocumentation')}
                         </p>
                       </div>
                     )}
@@ -473,7 +475,7 @@ variant: 'default'
             {/* Quick Actions */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Quick Actions</CardTitle>
+                <CardTitle className="text-lg">{t('catalog.quickActions')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
                 {sharedStack.allowCloning && (
@@ -482,19 +484,19 @@ variant: 'default'
                     onClick={() => setShowImportDialog(true)}
                   >
                     <Import className="h-4 w-4 mr-2" />
-                    Import to My Workspace
+                    {t('catalog.importToWorkspace')}
                   </Button>
                 )}
                 
                 <Button variant="outline" className="w-full" onClick={handleCopyShareUrl}>
                   <Copy className="h-4 w-4 mr-2" />
-                  Copy Share Link
+                  {t('catalog.copyShareLink')}
                 </Button>
                 
                 {sharedStack.dockerCompose && (
                   <Button variant="outline" className="w-full" onClick={handleDownloadCompose}>
                     <Download className="h-4 w-4 mr-2" />
-                    Download Compose
+                    {t('catalog.downloadCompose')}
                   </Button>
                 )}
               </CardContent>
@@ -504,9 +506,9 @@ variant: 'default'
             {(relatedStacks?.length ?? 0) > 0 && (
               <Card>
                 <CardHeader>
-                  <CardTitle className="text-lg">Related Stacks</CardTitle>
+                  <CardTitle className="text-lg">{t('catalog.relatedStacks')}</CardTitle>
                   <CardDescription>
-                    Similar stacks you might find interesting
+                    {t('catalog.relatedStacksDesc')}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -522,7 +524,7 @@ variant: 'default'
                           {stack.description}
                         </p>
                         <div className="flex items-center justify-between text-xs text-muted-foreground">
-                          <span>{stack.services?.length ?? 0} services</span>
+                          <span>{t('catalog.servicesCount', { count: stack.services?.length ?? 0 })}</span>
                           <Badge className={getDifficultyColor(stack.difficulty)}>
                             {stack.difficulty}
                           </Badge>
@@ -541,28 +543,27 @@ variant: 'default'
       <Dialog open={showImportDialog} onOpenChange={setShowImportDialog}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Import Stack</DialogTitle>
+            <DialogTitle>{t('catalog.importStack')}</DialogTitle>
             <DialogDescription>
-              This will import "{sharedStack.name}" into your workspace. 
-              {currentServices.length > 0 && " Your current stack will be replaced."}
+              {t('catalog.importDialogDesc', { name: sharedStack.name })}
+              {currentServices.length > 0 && ` ${t('catalog.currentStackReplaced')}`}
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="bg-info/10 border border-info/30 rounded-lg p-4">
-              <h4 className="font-medium mb-2">What will be imported:</h4>
+              <h4 className="font-medium mb-2">{t('catalog.whatWillBeImported')}</h4>
               <ul className="text-sm text-foreground space-y-1">
-                <li>• {sharedStack.services.length} services</li>
-                <li>• Service configurations and settings</li>
-                <li>• Stack metadata and description</li>
+                <li>• {t('catalog.servicesCount', { count: sharedStack.services.length })}</li>
+                <li>• {t('catalog.importItemConfigs')}</li>
+                <li>• {t('catalog.importItemMetadata')}</li>
               </ul>
             </div>
             
             {currentServices.length > 0 && (
               <div className="bg-warning/10 border border-warning/30 rounded-lg p-4">
                 <p className="text-sm text-warning">
-                  You have {currentServices.length} services in your current workspace.
-                  Importing will replace your current stack.
+                  {t('catalog.workspaceReplaceWarning', { count: currentServices.length })}
                 </p>
               </div>
             )}
@@ -572,13 +573,13 @@ variant: 'default'
                 variant="outline" 
                 onClick={() => setShowImportDialog(false)}
               >
-                Cancel
+                {t('common.cancel')}
               </Button>
-              <Button 
+              <Button
                 onClick={handleImportStack}
                 disabled={isImporting}
               >
-                {isImporting ? 'Importing...' : 'Import Stack'}
+                {isImporting ? t('catalog.importing') : t('catalog.importStack')}
               </Button>
             </div>
           </div>

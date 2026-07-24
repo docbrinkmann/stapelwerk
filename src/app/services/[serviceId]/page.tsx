@@ -5,6 +5,7 @@ import { appRouter } from '@/server/root'
 import { createTRPCContext } from '@/server/trpc'
 import { ArrowLeft, ExternalLink, Server, HardDrive, Network, KeyRound } from 'lucide-react'
 import { asArray, portLabel, volumeLabel } from '@/lib/service-detail'
+import { getT } from '@/lib/i18n/server'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,6 +45,8 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
   const service = (await getService(id)) as any
   if (!service) notFound()
 
+  const t = await getT()
+
   const ports = asArray(service.ports)
   const envVars = asArray(service.environmentVariables)
   const volumes = asArray(service.volumes)
@@ -55,7 +58,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
     <main className="mx-auto max-w-3xl px-4 py-10 sm:px-6 lg:px-8">
       <Link href="/services" className="inline-flex items-center gap-1.5 text-sm text-muted-foreground transition-colors hover:text-foreground">
         <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Back to catalog
+        {t('catalog.backToCatalog')}
       </Link>
 
       <div className="mt-6 flex items-start gap-4">
@@ -78,12 +81,12 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
 
       <dl className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div>
-          <dt className="text-sm text-muted-foreground">Image</dt>
+          <dt className="text-sm text-muted-foreground">{t('catalog.detailImage')}</dt>
           <dd className="mt-1 font-mono text-sm text-foreground">{image}</dd>
         </div>
         {service.documentationUrl && (
           <div>
-            <dt className="text-sm text-muted-foreground">Documentation</dt>
+            <dt className="text-sm text-muted-foreground">{t('catalog.documentation')}</dt>
             <dd className="mt-1">
               <a
                 href={service.documentationUrl}
@@ -91,7 +94,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1 text-sm text-info hover:underline"
               >
-                Official docs
+                {t('catalog.officialDocs')}
                 <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
               </a>
             </dd>
@@ -100,7 +103,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
       </dl>
 
       {ports.length > 0 && (
-        <Section title="Ports" icon={Network}>
+        <Section title={t('catalog.detailPorts')} icon={Network}>
           <ul className="flex flex-wrap gap-2">
             {ports.map((p: any, i: number) => (
               <li key={i} className="rounded border border-border bg-muted px-2 py-0.5 font-mono text-xs text-muted-foreground">
@@ -112,12 +115,12 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
       )}
 
       {envVars.length > 0 && (
-        <Section title="Environment variables" icon={KeyRound}>
+        <Section title={t('catalog.detailEnvVars')} icon={KeyRound}>
           <ul className="space-y-1">
             {envVars.map((e: any, i: number) => (
               <li key={i} className="font-mono text-xs text-muted-foreground">
                 {typeof e === 'object' ? (e.name ?? e.key ?? JSON.stringify(e)) : String(e)}
-                {e?.required ? <span className="ml-1 text-warning">(required)</span> : null}
+                {e?.required ? <span className="ml-1 text-warning">{t('catalog.requiredMarker')}</span> : null}
               </li>
             ))}
           </ul>
@@ -125,7 +128,7 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
       )}
 
       {volumes.length > 0 && (
-        <Section title="Volumes" icon={HardDrive}>
+        <Section title={t('catalog.detailVolumes')} icon={HardDrive}>
           <ul className="space-y-1">
             {volumes.map((v: any, i: number) => (
               <li key={i} className="font-mono text-xs text-muted-foreground">
@@ -141,13 +144,13 @@ export default async function ServiceDetailPage({ params }: { params: Promise<{ 
           href="/stack-builder"
           className="inline-flex items-center rounded-lg bg-primary px-5 py-3 text-sm font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90"
         >
-          Add it in the Stack Builder
+          {t('catalog.addInStackBuilder')}
         </Link>
         <Link
           href="/services"
           className="inline-flex items-center rounded-lg border border-border px-5 py-3 text-sm font-medium text-foreground transition-colors hover:bg-accent"
         >
-          Browse more services
+          {t('catalog.browseMoreServices')}
         </Link>
       </div>
     </main>

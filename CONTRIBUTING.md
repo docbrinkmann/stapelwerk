@@ -1,15 +1,60 @@
 # Contributing Guide
 
-This document describes how to develop, test, and validate BuildMyStack changes.
+Thanks for helping build BuildMyStack! This document describes how to develop,
+test, and validate changes. By contributing you agree to the
+[Code of Conduct](CODE_OF_CONDUCT.md).
 
 ## Table of Contents
 
+- [Your easiest first PR: add a catalog service](#your-easiest-first-pr-add-a-catalog-service)
+- [Developer Certificate of Origin (sign-off)](#developer-certificate-of-origin-sign-off)
 - [Branching & PRs](#branching--prs)
 - [Development Setup](#development-setup)
 - [Code Style Guidelines](#code-style-guidelines)
 - [Testing Requirements](#testing-requirements)
 - [CI/CD Pipeline](#cicd-pipeline)
 - [Docker Deployment](#docker-deployment)
+
+---
+
+## Your easiest first PR: add a catalog service
+
+The catalog is just seed data — adding a service is the friendliest way in, no
+deep codebase knowledge required. Services live in `prisma/seed.ts`, grouped by
+category (`dbServices`, `webServices`, `mediaServices`, `devServices`,
+`monitoringServices`, `securityServices`, `productivityServices`). Copy the
+nearest entry and adjust:
+
+```ts
+{
+  name: 'PostgreSQL', slug: 'postgresql', image: 'postgres:18-alpine', version: '18',
+  ports: [{ containerPort: 5432, protocol: 'tcp', description: 'PostgreSQL' }],
+  env: [
+    { name: 'POSTGRES_PASSWORD', description: 'Superuser password', required: true, secret: true },
+    { name: 'POSTGRES_USER', description: 'Superuser name', required: false, secret: false, default: 'postgres' },
+  ],
+  volumes: [{ containerPath: '/var/lib/postgresql/data', description: 'Database data directory', named: true }],
+  resources: { cpu: 0.5, memory: 512 },
+},
+```
+
+Rules of thumb: pin a real image tag; mark every secret env `secret: true` and
+every must-set env `required: true`; give data dirs a named volume; keep
+`resources` realistic (they drive the "fits on my Pi" check). Then
+`npm run db:seed`, add it to a stack in the builder, and export — if the compose
+runs, your PR is good.
+
+## Developer Certificate of Origin (sign-off)
+
+BuildMyStack uses the [DCO](docs/DCO.md) instead of a CLA. Every commit must be
+signed off, which certifies you wrote (or have the right to submit) the change:
+
+```bash
+git commit --signoff        # adds a "Signed-off-by: Your Name <you@example.com>" line
+```
+
+Use your real name and a reachable email. PRs with unsigned commits can't be
+merged.
 
 ---
 
@@ -63,12 +108,12 @@ npm run dev
 ### Database Setup
 
 ```bash
-npm run db:generate && npm run db:deploy && npm run db:seed
-# Enterprise extras:
-SEED_ENTERPRISE=true npm run db:seed
+npm run db:generate && npm run db:migrate && npm run db:seed
 ```
 
-See [Development Setup Guide](docs/development/setup.md) for detailed instructions.
+Or in one shot: `npm run setup:dev` (starts postgres+redis via Docker, then
+generates + migrates). See [Development Setup Guide](docs/development/setup.md)
+for details.
 
 ---
 
@@ -193,8 +238,8 @@ docker inspect --format='{{json .State.Health}}' $(docker ps -q -f name=build-my
 
 ## Getting Help
 
-- **Questions**: Open a GitLab Issue
-- **Bugs**: File with reproduction steps
-- **Security**: Email security@build-my-stack.dev
+- **Questions / bugs**: open a GitHub issue (use the templates)
+- **Security**: do not open a public issue — see [SECURITY.md](SECURITY.md)
+  (security@buildmystack.dev)
 
 Thank you for contributing!

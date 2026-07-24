@@ -2,24 +2,27 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import ThemeToggle from "@/components/ui/theme-toggle"
+import LanguageToggle from "@/components/ui/language-toggle"
 import {
   Breadcrumb,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
 } from "@/components/ui/breadcrumb"
+import { getT } from "@/lib/i18n/server"
 
 /**
  * Services Layout
- * 
+ *
  * Layout wrapper for service browser pages.
  * Uses the same sidebar navigation as the dashboard.
  */
-export default function ServicesLayout({
+export default async function ServicesLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const t = await getT()
   return (
     <SidebarProvider>
       <AppSidebar />
@@ -31,7 +34,7 @@ export default function ServicesLayout({
             <BreadcrumbList>
               <BreadcrumbItem className="hidden md:block">
                 <BreadcrumbLink href="/dashboard">
-                  Dashboard
+                  {t('catalog.breadcrumbDashboard')}
                 </BreadcrumbLink>
               </BreadcrumbItem>
               <BreadcrumbItem>
@@ -39,12 +42,13 @@ export default function ServicesLayout({
               </BreadcrumbItem>
               <BreadcrumbItem>
                 <BreadcrumbLink href="/services">
-                  Services
+                  {t('catalog.services')}
                 </BreadcrumbLink>
               </BreadcrumbItem>
             </BreadcrumbList>
           </Breadcrumb>
           <div className="ml-auto flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
           </div>
         </header>

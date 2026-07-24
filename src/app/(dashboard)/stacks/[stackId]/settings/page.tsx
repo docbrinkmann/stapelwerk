@@ -30,8 +30,10 @@ import {
   Lock
 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
+import { useT } from '@/lib/i18n/client'
 
 export default function StackSettingsPage() {
+  const t = useT()
   const params = useParams()
   const router = useRouter()
   const { toast } = useToast()
@@ -44,21 +46,21 @@ export default function StackSettingsPage() {
 
   const updateStack = trpc.stacks.update.useMutation({
     onSuccess: () => {
-      toast({ title: 'Stack settings updated' })
+      toast({ title: t('ops.settingsUpdated') })
       refetch()
     },
     onError: (error) => {
-      toast({ title: `Failed to update: ${error.message}`, variant: 'destructive' })
+      toast({ title: t('ops.updateFailed', { message: error.message }), variant: 'destructive' })
     },
   })
 
   const deleteStack = trpc.stacks.delete.useMutation({
     onSuccess: () => {
-      toast({ title: 'Stack deleted' })
+      toast({ title: t('ops.stackDeleted') })
       router.push('/stacks' as any)
     },
     onError: (error) => {
-      toast({ title: `Failed to delete: ${error.message}`, variant: 'destructive' })
+      toast({ title: t('ops.deleteFailed', { message: error.message }), variant: 'destructive' })
     },
   })
 
@@ -87,7 +89,7 @@ export default function StackSettingsPage() {
 
   const handleDelete = () => {
     if (deleteConfirm !== stack?.name) {
-      toast({ title: 'Please type the stack name to confirm', variant: 'destructive' })
+      toast({ title: t('ops.typeNameToConfirm'), variant: 'destructive' })
       return
     }
     deleteStack.mutate({ id: stackId })
@@ -106,9 +108,9 @@ export default function StackSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-xl font-semibold">Settings</h2>
+        <h2 className="text-xl font-semibold">{t('common.settings')}</h2>
         <p className="text-muted-foreground">
-          Manage your stack configuration and preferences
+          {t('ops.settingsSubtitle')}
         </p>
       </div>
 
@@ -117,35 +119,35 @@ export default function StackSettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            General Settings
+            {t('ops.generalSettings')}
           </CardTitle>
           <CardDescription>
-            Basic information about your stack
+            {t('ops.generalSettingsDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Stack Name</Label>
+            <Label htmlFor="name">{t('ops.stackName')}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="My Stack"
+              placeholder={t('ops.stackNamePlaceholder')}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('common.description')}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe your stack..."
+              placeholder={t('ops.describeStackPlaceholder')}
               rows={3}
             />
           </div>
           <Button onClick={handleSave} disabled={updateStack.isPending}>
             <Save className="h-4 w-4 mr-2" />
-            {updateStack.isPending ? 'Saving...' : 'Save Changes'}
+            {updateStack.isPending ? t('ops.saving') : t('ops.saveChanges')}
           </Button>
         </CardContent>
       </Card>
@@ -155,20 +157,20 @@ export default function StackSettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             {isPublic ? <Globe className="h-5 w-5" /> : <Lock className="h-5 w-5" />}
-            Visibility
+            {t('ops.visibility')}
           </CardTitle>
           <CardDescription>
-            Control who can see and access your stack
+            {t('ops.visibilityDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <div className="space-y-0.5">
-              <Label>Public Stack</Label>
+              <Label>{t('ops.publicStack')}</Label>
               <p className="text-sm text-muted-foreground">
-                {isPublic 
-                  ? 'This stack is visible to everyone'
-                  : 'Only you can see this stack'
+                {isPublic
+                  ? t('ops.publicStackOn')
+                  : t('ops.publicStackOff')
                 }
               </p>
             </div>
@@ -191,38 +193,38 @@ export default function StackSettingsPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2 text-destructive">
             <AlertTriangle className="h-5 w-5" />
-            Danger Zone
+            {t('ops.dangerZone')}
           </CardTitle>
           <CardDescription>
-            Irreversible and destructive actions
+            {t('ops.dangerZoneDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between p-4 rounded-lg border border-destructive/30 bg-destructive/5">
             <div>
-              <p className="font-medium">Delete this stack</p>
+              <p className="font-medium">{t('ops.deleteThisStack')}</p>
               <p className="text-sm text-muted-foreground">
-                Once deleted, this stack and all its data cannot be recovered.
+                {t('ops.deleteThisStackDesc')}
               </p>
             </div>
             <AlertDialog>
               <AlertDialogTrigger asChild>
                 <Button variant="destructive">
                   <Trash2 className="h-4 w-4 mr-2" />
-                  Delete Stack
+                  {t('ops.deleteStack')}
                 </Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                  <AlertDialogTitle>{t('ops.areYouSure')}</AlertDialogTitle>
                   <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete the
-                    stack <strong>{stack?.name}</strong> and all associated data.
+                    {t('ops.deleteConfirmBefore')} <strong>{stack?.name}</strong>{' '}
+                    {t('ops.deleteConfirmAfter')}
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="py-4">
                   <Label htmlFor="confirm">
-                    Type <strong>{stack?.name}</strong> to confirm
+                    {t('ops.typeToConfirmBefore')} <strong>{stack?.name}</strong> {t('ops.typeToConfirmAfter')}
                   </Label>
                   <Input
                     id="confirm"
@@ -234,14 +236,14 @@ export default function StackSettingsPage() {
                 </div>
                 <AlertDialogFooter>
                   <AlertDialogCancel onClick={() => setDeleteConfirm('')}>
-                    Cancel
+                    {t('common.cancel')}
                   </AlertDialogCancel>
                   <AlertDialogAction
                     onClick={handleDelete}
                     disabled={deleteConfirm !== stack?.name || deleteStack.isPending}
                     className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                   >
-                    {deleteStack.isPending ? 'Deleting...' : 'Delete Stack'}
+                    {deleteStack.isPending ? t('ops.deleting') : t('ops.deleteStack')}
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

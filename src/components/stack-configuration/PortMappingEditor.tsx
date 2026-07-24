@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import type { Service } from '@/types/service';
+import { useT } from '@/lib/i18n/client';
 
 interface PortMapping {
   containerPort: number;
@@ -20,7 +21,8 @@ export const PortMappingEditor: React.FC<PortMappingEditorProps> = ({
   onChange,
   usedPorts,
 }) => {
-const [showAddForm, setShowAddForm] = useState(false);
+  const t = useT();
+  const [showAddForm, setShowAddForm] = useState(false);
   const [newMapping, setNewMapping] = useState<{
     hostPort: string;
     containerPort: string;
@@ -85,7 +87,7 @@ return (
           <div key={port.port} className="flex items-center gap-4">
             <div className="flex-1">
 <label htmlFor={`container-port-${port.port}`} className="block text-sm font-medium text-foreground">
-                Container Port (default)
+                {t('builder.edContainerPortDefault')}
               </label>
               <input
                 id={`container-port-${port.port}`}
@@ -97,7 +99,7 @@ return (
             </div>
             <div className="flex-1">
               <label className="block text-sm font-medium text-foreground">
-                Host Port for {port.name} ({port.port}/{port.protocol})
+                {t('builder.edHostPortFor', { name: port.name, port: port.port, protocol: port.protocol })}
               </label>
               <input
                 type="number"
@@ -126,11 +128,11 @@ className={`mt-1 block w-full rounded-md shadow-sm focus:border-ring focus:ring-
                 }`}
               />
               {hasConflict && (
-                <p className="mt-1 text-sm text-destructive">Port {hostPort} is already in use</p>
+                <p className="mt-1 text-sm text-destructive">{t('builder.edPortInUse', { port: hostPort })}</p>
               )}
             </div>
             <div className="w-40">
-              <label htmlFor={`protocol-${port.port}`} className="block text-sm font-medium text-foreground">Protocol</label>
+              <label htmlFor={`protocol-${port.port}`} className="block text-sm font-medium text-foreground">{t('builder.edProtocol')}</label>
               <select
                 id={`protocol-${port.port}`}
                 value={(portMappings.find(m => m.containerPort === port.port)?.protocol) || port.protocol}
@@ -163,7 +165,7 @@ className={`mt-1 block w-full rounded-md shadow-sm focus:border-ring focus:ring-
               {mapping.hostPort} → {mapping.containerPort}/{mapping.protocol}
             </span>
             {isPortConflict(mapping.hostPort) && (
-              <p className="text-sm text-destructive">Port conflict detected</p>
+              <p className="text-sm text-destructive">{t('builder.edPortConflict')}</p>
             )}
           </div>
           <button
@@ -171,7 +173,7 @@ onClick={() => handleRemoveMapping(mapping)}
             className="text-destructive hover:text-destructive/80"
             data-testid="remove-port-mapping"
           >
-            Remove
+            {t('common.remove')}
           </button>
         </div>
       ))}
@@ -184,14 +186,14 @@ onClick={() => handleRemoveMapping(mapping)}
             className="text-sm text-primary hover:text-primary/80"
             data-testid="add-port-mapping"
           >
-            + Add custom port mapping
+            {t('builder.edAddCustomPort')}
           </button>
         ) : (
           <div className="space-y-3">
             <div className="grid grid-cols-3 gap-3">
               <div>
                 <label htmlFor="host-port" className="block text-sm font-medium text-foreground">
-                  Host Port
+                  {t('builder.edHostPort')}
                 </label>
 <input
                   type="number"
@@ -201,12 +203,12 @@ onClick={() => handleRemoveMapping(mapping)}
                   className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring"
                 />
                 {hasPortRangeError(newMapping.hostPort) && (
-                  <p className="mt-1 text-sm text-destructive">Port must be between 1 and 65535</p>
+                  <p className="mt-1 text-sm text-destructive">{t('builder.edPortRange')}</p>
                 )}
               </div>
               <div>
                 <label htmlFor="container-port" className="block text-sm font-medium text-foreground">
-                  Container Port
+                  {t('builder.edContainerPort')}
                 </label>
 <input
                   type="number"
@@ -216,12 +218,12 @@ onClick={() => handleRemoveMapping(mapping)}
                   className="mt-1 block w-full rounded-md border-border shadow-sm focus:border-ring focus:ring-ring"
                 />
                 {hasPortRangeError(newMapping.containerPort) && (
-                  <p className="mt-1 text-sm text-destructive">Port must be between 1 and 65535</p>
+                  <p className="mt-1 text-sm text-destructive">{t('builder.edPortRange')}</p>
                 )}
               </div>
               <div>
                 <label htmlFor="protocol" className="block text-sm font-medium text-foreground">
-                  Protocol
+                  {t('builder.edProtocol')}
                 </label>
                 <select
                   id="protocol"
@@ -241,13 +243,13 @@ onClick={() => handleRemoveMapping(mapping)}
                 data-testid="save-port-mapping"
                 disabled={hasPortRangeError(newMapping.hostPort) || hasPortRangeError(newMapping.containerPort) || !newMapping.hostPort || !newMapping.containerPort}
               >
-                Add
+                {t('common.add')}
               </button>
               <button
                 onClick={() => setShowAddForm(false)}
                 className="px-3 py-1 text-sm bg-muted text-foreground rounded hover:bg-muted/80"
               >
-                Cancel
+                {t('common.cancel')}
               </button>
             </div>
           </div>

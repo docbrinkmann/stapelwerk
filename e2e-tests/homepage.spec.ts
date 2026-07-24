@@ -12,7 +12,7 @@ test.describe('Homepage', () => {
 
     // The marketing homepage has no <main> landmark — its primary content
     // is the hero section.
-    const heroSection = page.locator('section[aria-label="Hero section"]')
+    const heroSection = page.locator('section[aria-label="Introduction"]')
     await expect(heroSection).toBeVisible()
   })
 
@@ -30,7 +30,7 @@ test.describe('Homepage', () => {
   test('should be responsive', async ({ page }) => {
     // Test desktop view
     await page.setViewportSize({ width: 1200, height: 800 })
-    const heroSection = page.locator('section[aria-label="Hero section"]')
+    const heroSection = page.locator('section[aria-label="Introduction"]')
     await expect(heroSection).toBeVisible()
 
     // Test mobile view

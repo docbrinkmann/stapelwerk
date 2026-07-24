@@ -12,6 +12,7 @@ import {
   Trash2,
   RotateCw,
 } from 'lucide-react'
+import { useT } from '@/lib/i18n/client'
 
 interface TerminalPanelProps {
   title?: string
@@ -57,6 +58,7 @@ export function TerminalPanel({
   readOnly = false,
   ariaLabel,
 }: TerminalPanelProps) {
+  const t = useT()
   const terminalRef = useRef<HTMLDivElement>(null)
   const xtermRef = useRef<any>(null)
   const fitAddonRef = useRef<any>(null)
@@ -67,13 +69,21 @@ export function TerminalPanel({
 
   // Controlled state wins over the internal WebSocket state
   const effectiveConnected = isConnected ?? (wsUrl ? wsConnected : undefined)
-  const statusLabel = isConnecting
-    ? 'Connecting'
+  const statusKey = isConnecting
+    ? ('connecting' as const)
     : effectiveConnected === true
-      ? 'Connected'
+      ? ('connected' as const)
       : effectiveConnected === false
-        ? 'Disconnected'
+        ? ('disconnected' as const)
         : null
+  const statusLabel =
+    statusKey === 'connecting'
+      ? t('ops.terminalConnecting')
+      : statusKey === 'connected'
+        ? t('ops.terminalConnected')
+        : statusKey === 'disconnected'
+          ? t('ops.terminalDisconnected')
+          : null
 
   // Initialize terminal
   useEffect(() => {
@@ -287,7 +297,7 @@ export function TerminalPanel({
         className
       )}
       role="region"
-      aria-label={`Terminal: ${title}`}
+      aria-label={t('ops.terminalRegion', { title })}
     >
       {/* Header */}
       <div className="flex items-center justify-between px-3 py-2 bg-[#24283b] border-b border-border">
@@ -298,18 +308,18 @@ export function TerminalPanel({
             <span
               className={cn(
                 'inline-flex items-center gap-1.5 text-xs',
-                statusLabel === 'Connected' && 'text-success',
-                statusLabel === 'Disconnected' && 'text-destructive',
-                statusLabel === 'Connecting' && 'text-warning'
+                statusKey === 'connected' && 'text-success',
+                statusKey === 'disconnected' && 'text-destructive',
+                statusKey === 'connecting' && 'text-warning'
               )}
               role="status"
             >
               <span
                 className={cn(
                   'h-2 w-2 rounded-full',
-                  statusLabel === 'Connected' && 'bg-success',
-                  statusLabel === 'Disconnected' && 'bg-destructive',
-                  statusLabel === 'Connecting' && 'bg-warning animate-pulse'
+                  statusKey === 'connected' && 'bg-success',
+                  statusKey === 'disconnected' && 'bg-destructive',
+                  statusKey === 'connecting' && 'bg-warning animate-pulse'
                 )}
                 aria-hidden="true"
               />
@@ -318,7 +328,7 @@ export function TerminalPanel({
           )}
           {readOnly && (
             <span className="rounded border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-wide text-muted-foreground">
-              Read-only
+              {t('ops.readOnly')}
             </span>
           )}
         </div>
@@ -331,7 +341,7 @@ export function TerminalPanel({
               onClick={onReconnect}
             >
               <RotateCw className="h-3 w-3" aria-hidden="true" />
-              Reconnect
+              {t('ops.reconnect')}
             </Button>
           )}
           <Button
@@ -339,7 +349,7 @@ export function TerminalPanel({
             size="icon"
             className="h-6 w-6 text-muted-foreground hover:text-white"
             onClick={handleCopy}
-            aria-label="Copy selection"
+            aria-label={t('ops.copySelection')}
           >
             <Copy className="h-3 w-3" aria-hidden="true" />
           </Button>
@@ -348,7 +358,7 @@ export function TerminalPanel({
             size="icon"
             className="h-6 w-6 text-muted-foreground hover:text-white"
             onClick={handleClear}
-            aria-label="Clear terminal"
+            aria-label={t('ops.clearTerminal')}
           >
             <Trash2 className="h-3 w-3" aria-hidden="true" />
           </Button>
@@ -358,7 +368,7 @@ export function TerminalPanel({
               size="icon"
               className="h-6 w-6 text-muted-foreground hover:text-white"
               onClick={() => setIsMaximized(!isMaximized)}
-              aria-label={isMaximized ? 'Exit fullscreen' : 'Enter fullscreen'}
+              aria-label={isMaximized ? t('ops.exitFullscreen') : t('ops.enterFullscreen')}
             >
               {isMaximized ? (
                 <Minimize2 className="h-3 w-3" aria-hidden="true" />
@@ -373,7 +383,7 @@ export function TerminalPanel({
               size="icon"
               className="h-6 w-6 text-muted-foreground hover:text-white"
               onClick={onClose}
-              aria-label="Close terminal"
+              aria-label={t('ops.closeTerminal')}
             >
               <X className="h-3 w-3" aria-hidden="true" />
             </Button>
@@ -407,7 +417,7 @@ export function TerminalPanel({
             />
             {isLoading && (
               <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
-                <span className="animate-pulse">Initializing terminal...</span>
+                <span className="animate-pulse">{t('ops.initializingTerminal')}</span>
               </div>
             )}
           </>

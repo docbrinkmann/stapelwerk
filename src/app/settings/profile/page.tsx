@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Separator } from "@/components/ui/separator"
 import { trpc } from "@/utils/trpc"
+import { useT } from "@/lib/i18n/client"
 
 function initialsOf(name?: string | null, email?: string | null): string {
   const source = name?.trim() || email || ""
@@ -19,6 +20,7 @@ function initialsOf(name?: string | null, email?: string | null): string {
 
 // ponytail: profile = display name only; grow the form when the schema grows
 export default function ProfileSettingsPage() {
+  const t = useT()
   const { data: session, update: updateSession } = useSession()
   const me = trpc.users.me.useQuery(undefined, { refetchOnWindowFocus: false })
   const [name, setName] = useState("")
@@ -42,8 +44,8 @@ export default function ProfileSettingsPage() {
 
   return (
     <SettingsLayout
-      title="Profile"
-      description="Manage your profile information"
+      title={t('catalog.settingsProfile')}
+      description={t('catalog.settingsProfileManageDesc')}
     >
       <div className="space-y-8">
         {/* Identity */}
@@ -54,7 +56,7 @@ export default function ProfileSettingsPage() {
             </AvatarFallback>
           </Avatar>
           <div>
-            <p className="font-medium">{displayName || "Unnamed user"}</p>
+            <p className="font-medium">{displayName || t('catalog.unnamedUser')}</p>
             <p className="text-sm text-muted-foreground">{email}</p>
           </div>
         </div>
@@ -63,24 +65,24 @@ export default function ProfileSettingsPage() {
 
         {/* Basic Information */}
         <div className="space-y-4">
-          <h3 className="text-sm font-medium">Basic Information</h3>
+          <h3 className="text-sm font-medium">{t('catalog.basicInformation')}</h3>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Display name</Label>
+            <Label htmlFor="name">{t('catalog.displayName')}</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Your name"
+              placeholder={t('catalog.yourNamePlaceholder')}
               maxLength={100}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t('catalog.emailLabel')}</Label>
             <Input id="email" type="email" value={email} readOnly disabled />
             <p className="text-xs text-muted-foreground">
-              Your email is your sign-in identity and cannot be changed here.
+              {t('catalog.emailImmutableNote')}
             </p>
           </div>
         </div>
@@ -89,7 +91,7 @@ export default function ProfileSettingsPage() {
 
         {/* Actions */}
         <div className="flex items-center justify-end gap-4">
-          {saved && <span className="text-sm text-success">Saved</span>}
+          {saved && <span className="text-sm text-success">{t('catalog.savedIndicator')}</span>}
           {updateProfile.error && (
             <span className="text-sm text-destructive" role="alert">
               {updateProfile.error.message}
@@ -99,7 +101,7 @@ export default function ProfileSettingsPage() {
             onClick={() => updateProfile.mutate({ name })}
             disabled={updateProfile.isPending || !name.trim() || name === (me.data?.name ?? "")}
           >
-            {updateProfile.isPending ? "Saving…" : "Save changes"}
+            {updateProfile.isPending ? t('catalog.saving') : t('catalog.saveChanges')}
           </Button>
         </div>
       </div>

@@ -210,6 +210,7 @@ describe('Deployments: remote SSH target (deployStack/stopStack with a remote ta
       host: '192.168.178.13',
       sshUser: 'serveradmin',
       sshPort: 22,
+      riskAcknowledged: true,
     })
 
   it('routes deployStack(remote targetId) to the remote executor with the target host/user/key', async () => {

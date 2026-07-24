@@ -6,7 +6,8 @@
  */
 
 import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure, publicProcedure } from '../trpc';
+import { createTRPCRouter, protectedProcedure, publicProcedure, adminProcedure } from '../trpc';
+import { effectivePlan, assertDeployCapability } from '@/lib/billing/enforcement';
 import { TRPCError } from '@trpc/server';
 
 // Terminal session status
@@ -64,6 +65,9 @@ export const terminalRouter = createTRPCRouter({
           message: 'You do not have access to this stack',
         });
       }
+
+      // Plan gate: the terminal is a Pro capability (self-host ⇒ allowed).
+      assertDeployCapability(await effectivePlan(ctx.prisma, ctx.userId!));
 
       try {
         const session = await ctx.prisma.terminal_sessions.create({
@@ -319,9 +323,11 @@ export const terminalRouter = createTRPCRouter({
     }),
   
   /**
-   * Cleanup old sessions (admin only)
+   * Cleanup old sessions. Admin-only: this deleteMany spans ALL users'
+   * terminal_sessions (no userId filter), so a plain protectedProcedure was a
+   * cross-tenant destructive IDOR.
    */
-  cleanup: protectedProcedure
+  cleanup: adminProcedure
     .input(z.object({
       olderThan: z.date().optional(),
       status: TerminalStatusSchema.optional(),

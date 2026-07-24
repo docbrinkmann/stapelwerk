@@ -20,6 +20,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { useT } from "@/lib/i18n/client"
 
 /**
  * Nav User Component
@@ -37,6 +38,7 @@ interface NavUserProps {
 
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar()
+  const t = useT()
 
   // Get initials from name
   const initials = user.name
@@ -95,13 +97,13 @@ export function NavUser({ user }: NavUserProps) {
               <DropdownMenuItem asChild>
                 <Link href="/settings/profile">
                   <User className="mr-2 size-4" />
-                  Profile
+                  {t("shell.profile")}
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link href="/settings">
                   <BadgeCheck className="mr-2 size-4" />
-                  Account
+                  {t("shell.account")}
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuGroup>
@@ -110,7 +112,7 @@ export function NavUser({ user }: NavUserProps) {
               onClick={() => signOut({ callbackUrl: "/auth/signin" })}
             >
               <LogOut className="mr-2 size-4" />
-              Log out
+              {t("shell.logOut")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

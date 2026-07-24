@@ -16,6 +16,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useStackPersistence, stackPersistence } from '@/lib/stack-persistence';
 import { dbStackServicesToPersisted } from '@/lib/deploy/persisted-stack';
 import { trpc } from '@/utils/trpc';
+import { useT } from '@/lib/i18n/client';
 import { 
   Plus,
   Play,
@@ -73,6 +74,7 @@ interface DashboardStats {
 
 export function DashboardClient() {
   const router = useRouter();
+  const t = useT();
   const [activeTab, setActiveTab] = useState('overview');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStack, setSelectedStack] = useState<PersistedStack | null>(null);
@@ -257,6 +259,23 @@ export function DashboardClient() {
     }
   };
 
+  const getStatusLabel = (status: StackMetrics['status']) => {
+    switch (status) {
+      case 'running':
+        return t('common.running');
+      case 'draft':
+        return t('common.draft');
+      case 'stopped':
+        return t('common.stopped');
+      case 'error':
+        return t('common.error');
+      case 'deploying':
+        return t('shell.statusDeploying');
+      default:
+        return status;
+    }
+  };
+
   const getStatusIcon = (status: StackMetrics['status']) => {
     switch (status) {
       case 'running':
@@ -297,7 +316,7 @@ export function DashboardClient() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Search your stacks..."
+              placeholder={t('shell.searchStacksPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10 w-80"
@@ -308,11 +327,11 @@ export function DashboardClient() {
         <div className="dashboard-actions__buttons">
           <Button variant="outline" onClick={() => router.push('/community')}>
             <Users className="h-4 w-4 mr-2" />
-            Community
+            {t('shell.community')}
           </Button>
           <Button onClick={handleCreateNewStack}>
             <Plus className="h-4 w-4 mr-2" />
-            New Stack
+            {t('shell.newStack')}
           </Button>
         </div>
       </div>
@@ -322,19 +341,19 @@ export function DashboardClient() {
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview" className="flex items-center gap-2">
             <BarChart3 className="h-4 w-4" />
-            Overview
+            {t('shell.tabOverview')}
           </TabsTrigger>
           <TabsTrigger value="stacks" className="flex items-center gap-2">
             <Layers3 className="h-4 w-4" />
-            My Stacks
+            {t('shell.tabMyStacks')}
           </TabsTrigger>
           <TabsTrigger value="monitoring" className="flex items-center gap-2">
             <Activity className="h-4 w-4" />
-            Monitoring
+            {t('shell.tabMonitoring')}
           </TabsTrigger>
           <TabsTrigger value="analytics" className="flex items-center gap-2">
             <TrendingUp className="h-4 w-4" />
-            Analytics
+            {t('shell.tabAnalytics')}
           </TabsTrigger>
         </TabsList>
 
@@ -344,8 +363,8 @@ export function DashboardClient() {
           {/* Recent Stacks */}
           <Card>
             <CardHeader>
-              <CardTitle>Recent Stacks</CardTitle>
-              <CardDescription>Your most recently modified stacks</CardDescription>
+              <CardTitle>{t('shell.recentStacks')}</CardTitle>
+              <CardDescription>{t('shell.recentStacksDesc')}</CardDescription>
             </CardHeader>
             <CardContent>
               {stacksLoading ? (
@@ -357,11 +376,11 @@ export function DashboardClient() {
               ) : filteredStacks.length === 0 ? (
                 <div className="text-center py-8">
                   <Layers3 className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="text-lg font-medium text-foreground mb-2">No stacks found</h3>
-                  <p className="text-muted-foreground mb-4">Get started by creating your first stack</p>
+                  <h3 className="text-lg font-medium text-foreground mb-2">{t('shell.noStacksFound')}</h3>
+                  <p className="text-muted-foreground mb-4">{t('shell.noStacksHint')}</p>
                   <Button onClick={handleCreateNewStack}>
                     <Plus className="h-4 w-4 mr-2" />
-                    Create Stack
+                    {t('shell.createStack')}
                   </Button>
                 </div>
               ) : (
@@ -375,16 +394,16 @@ export function DashboardClient() {
                             <CardTitle className="text-base">{stack.name}</CardTitle>
                             <Badge className={getStatusColor(metrics.status)}>
                               {getStatusIcon(metrics.status)}
-                              <span className="ml-1 capitalize">{metrics.status}</span>
+                              <span className="ml-1">{getStatusLabel(metrics.status)}</span>
                             </Badge>
                           </div>
                           <CardDescription className="text-sm">
-                            {stack.description || 'No description'}
+                            {stack.description || t('shell.noDescription')}
                           </CardDescription>
                         </CardHeader>
                         <CardContent>
                           <div className="flex items-center justify-between text-sm text-muted-foreground mb-3">
-                            <span>{metrics.services} services</span>
+                            <span>{t('shell.servicesCount', { count: metrics.services })}</span>
                             {metrics.uptime && (
                               <span className="flex items-center gap-1">
                                 <Clock className="h-3 w-3" />
@@ -395,21 +414,21 @@ export function DashboardClient() {
                           <div className="flex gap-2">
                             <Button size="sm" variant="outline" onClick={() => handleViewStack(stack)}>
                               <Eye className="h-3 w-3 mr-1" />
-                              View
+                              {t('common.view')}
                             </Button>
                             <Button size="sm" onClick={() => handleLoadStack(stack)}>
                               <Edit className="h-3 w-3 mr-1" />
-                              Edit
+                              {t('common.edit')}
                             </Button>
                           </div>
                           <div className="flex gap-2 mt-2">
                             <Button size="sm" variant="ghost" onClick={() => handleShareStack(stack)}>
                               <Share className="h-3 w-3 mr-1" />
-                              Share
+                              {t('common.share')}
                             </Button>
                             <Button size="sm" variant="ghost" onClick={() => handleSubmitTemplate(stack)}>
                               <Upload className="h-3 w-3 mr-1" />
-                              Template
+                              {t('shell.template')}
                             </Button>
                           </div>
                         </CardContent>
@@ -436,13 +455,13 @@ export function DashboardClient() {
                 <CardContent className="py-12">
                   <div className="text-center">
                     <Layers3 className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="text-xl font-medium text-foreground mb-2">No stacks found</h3>
+                    <h3 className="text-xl font-medium text-foreground mb-2">{t('shell.noStacksFound')}</h3>
                     <p className="text-muted-foreground mb-6 max-w-sm mx-auto">
-                      {searchQuery ? `No stacks match "${searchQuery}"` : 'Start building your infrastructure by creating your first stack'}
+                      {searchQuery ? t('shell.noStacksMatch', { query: searchQuery }) : t('shell.noStacksStart')}
                     </p>
                     <Button onClick={handleCreateNewStack}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Create Your First Stack
+                      {t('shell.createFirstStack')}
                     </Button>
                   </div>
                 </CardContent>
@@ -459,12 +478,12 @@ export function DashboardClient() {
                             <CardTitle className="text-lg">{stack.name}</CardTitle>
                             <Badge className={getStatusColor(metrics.status)}>
                               {getStatusIcon(metrics.status)}
-                              <span className="ml-1 capitalize">{metrics.status}</span>
+                              <span className="ml-1">{getStatusLabel(metrics.status)}</span>
                             </Badge>
-                            {stack.isPublic && <Badge variant="outline">Public</Badge>}
+                            {stack.isPublic && <Badge variant="outline">{t('shell.public')}</Badge>}
                           </div>
                           <CardDescription>
-                            {stack.description || 'No description provided'}
+                            {stack.description || t('shell.noDescriptionProvided')}
                           </CardDescription>
                         </div>
                         
@@ -472,30 +491,30 @@ export function DashboardClient() {
                           {metrics.status === 'running' && (
                             <Button variant="outline" size="sm" onClick={() => router.push(`/stacks/${stack.id}`)}>
                               <Pause className="h-3 w-3 mr-1" />
-                              Stop
+                              {t('shell.stop')}
                             </Button>
                           )}
                           {metrics.status === 'stopped' && (
                             <Button variant="outline" size="sm" onClick={() => router.push(`/stacks/${stack.id}`)}>
                               <Play className="h-3 w-3 mr-1" />
-                              Start
+                              {t('shell.start')}
                             </Button>
                           )}
                           <Button variant="outline" size="sm" onClick={() => handleViewStack(stack)}>
                             <Eye className="h-3 w-3 mr-1" />
-                            View
+                            {t('common.view')}
                           </Button>
                           <Button size="sm" onClick={() => handleLoadStack(stack)}>
                             <Edit className="h-3 w-3 mr-1" />
-                            Edit
+                            {t('common.edit')}
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleShareStack(stack)}>
                             <Share className="h-3 w-3 mr-1" />
-                            Share
+                            {t('common.share')}
                           </Button>
                           <Button variant="ghost" size="sm" onClick={() => handleSubmitTemplate(stack)}>
                             <Upload className="h-3 w-3 mr-1" />
-                            Template
+                            {t('shell.template')}
                           </Button>
                         </div>
                       </div>
@@ -505,37 +524,37 @@ export function DashboardClient() {
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
                         <div className="text-center">
                           <div className="text-2xl font-bold text-foreground">{metrics.services}</div>
-                          <div className="text-xs text-muted-foreground">Services</div>
+                          <div className="text-xs text-muted-foreground">{t('shell.servicesLabel')}</div>
                         </div>
                         {metrics.cpuUsage !== undefined && (
                           <div className="text-center">
                             <div className="text-2xl font-bold text-foreground">{metrics.cpuUsage}%</div>
-                            <div className="text-xs text-muted-foreground">CPU</div>
+                            <div className="text-xs text-muted-foreground">{t('shell.cpu')}</div>
                           </div>
                         )}
                         {metrics.memoryUsage !== undefined && (
                           <div className="text-center">
                             <div className="text-2xl font-bold text-foreground">{metrics.memoryUsage}%</div>
-                            <div className="text-xs text-muted-foreground">Memory</div>
+                            <div className="text-xs text-muted-foreground">{t('shell.memory')}</div>
                           </div>
                         )}
                         <div className="text-center">
                           <div className="text-2xl font-bold text-foreground">
-                            {metrics.lastDeployed ? formatDate(metrics.lastDeployed).split(' ')[0] : 'Never'}
+                            {metrics.lastDeployed ? formatDate(metrics.lastDeployed).split(' ')[0] : t('shell.never')}
                           </div>
-                          <div className="text-xs text-muted-foreground">Last Deploy</div>
+                          <div className="text-xs text-muted-foreground">{t('shell.lastDeploy')}</div>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap gap-2">
                         {stack.services.slice(0, 5).map((service, index) => (
                           <Badge key={index} variant="secondary" className="text-xs">
-                            {service.service?.name ?? 'Service'}
+                            {service.service?.name ?? t('shell.serviceFallback')}
                           </Badge>
                         ))}
                         {stack.services.length > 5 && (
                           <Badge variant="outline" className="text-xs">
-                            +{stack.services.length - 5} more
+                            {t('shell.moreCount', { count: stack.services.length - 5 })}
                           </Badge>
                         )}
                       </div>
@@ -563,37 +582,37 @@ export function DashboardClient() {
             <DialogHeader>
               <DialogTitle>{selectedStack.name}</DialogTitle>
               <DialogDescription>
-                {selectedStack.description || 'Stack details and configuration'}
+                {selectedStack.description || t('shell.stackDetailsFallback')}
               </DialogDescription>
             </DialogHeader>
             
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <h4 className="font-medium mb-2">Services ({selectedStack.services.length})</h4>
+                  <h4 className="font-medium mb-2">{t('shell.servicesWithCount', { count: selectedStack.services.length })}</h4>
                   <div className="space-y-1">
                     {selectedStack.services.map((service, index) => (
                       <div key={index} className="flex items-center gap-2 text-sm">
                         <div className="w-2 h-2 bg-success rounded-full"></div>
-                        {service.service?.name ?? 'Service'}
+                        {service.service?.name ?? t('shell.serviceFallback')}
                       </div>
                     ))}
                   </div>
                 </div>
                 <div>
-                  <h4 className="font-medium mb-2">Status</h4>
+                  <h4 className="font-medium mb-2">{t('shell.status')}</h4>
                   <div className="space-y-2">
                     <div className="flex items-center gap-2">
                       <Badge className={getStatusColor(getStackMetrics(selectedStack).status)}>
                         {getStatusIcon(getStackMetrics(selectedStack).status)}
-                        <span className="ml-1 capitalize">{getStackMetrics(selectedStack).status}</span>
+                        <span className="ml-1">{getStatusLabel(getStackMetrics(selectedStack).status)}</span>
                       </Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">
-                      Created: {formatDate(selectedStack.createdAt || new Date())}
+                      {t('shell.createdAt', { date: formatDate(selectedStack.createdAt || new Date()) })}
                     </p>
                     <p className="text-sm text-muted-foreground">
-                      Updated: {formatDate(selectedStack.updatedAt || new Date())}
+                      {t('shell.updatedAt', { date: formatDate(selectedStack.updatedAt || new Date()) })}
                     </p>
                   </div>
                 </div>
@@ -602,15 +621,15 @@ export function DashboardClient() {
               <div className="flex gap-2 pt-4">
                 <Button onClick={() => handleLoadStack(selectedStack)}>
                   <Edit className="h-4 w-4 mr-2" />
-                  Edit Stack
+                  {t('shell.editStack')}
                 </Button>
                 <Button variant="outline" onClick={() => handleExportStack(selectedStack)}>
                   <Download className="h-4 w-4 mr-2" />
-                  Export
+                  {t('common.export')}
                 </Button>
                 <Button variant="outline" onClick={() => handleShareStack(selectedStack)}>
                   <Share className="h-4 w-4 mr-2" />
-                  Share
+                  {t('common.share')}
                 </Button>
               </div>
             </div>
@@ -660,7 +679,7 @@ export function DashboardClient() {
         className="sr-only"
         id="dashboard-announcements"
       >
-        {searchQuery && `Showing ${filteredStacks.length} stacks for "${searchQuery}"`}
+        {searchQuery && t('shell.showingStacksFor', { count: filteredStacks.length, query: searchQuery })}
       </div>
     </div>
   );

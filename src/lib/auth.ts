@@ -3,6 +3,7 @@ import type { NextAuthOptions } from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { prisma } from "./prisma"
 import { verifyPassword } from "./password"
+import { isLockedOut, recordFailure, recordSuccess } from "./auth-throttle"
 
 /**
  * NextAuth configuration: credentials (email + password) against the users
@@ -18,11 +19,15 @@ export const authOptions: NextAuthOptions = {
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null
-        const user = await prisma.users.findUnique({
-          where: { email: credentials.email.toLowerCase().trim() },
-        })
-        if (!user?.passwordHash) return null
-        if (!verifyPassword(credentials.password, user.passwordHash)) return null
+        const email = credentials.email.toLowerCase().trim()
+        // Throttle online brute force / credential stuffing per email.
+        if (isLockedOut(email)) return null
+        const user = await prisma.users.findUnique({ where: { email } })
+        if (!user?.passwordHash || !verifyPassword(credentials.password, user.passwordHash)) {
+          recordFailure(email)
+          return null
+        }
+        recordSuccess(email)
         return { id: user.id, email: user.email, name: user.name, role: (user as any).role ?? 'user' }
       },
     }),

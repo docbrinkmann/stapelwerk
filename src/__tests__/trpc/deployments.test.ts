@@ -63,6 +63,35 @@ describe('tRPC Deployments Router', () => {
       const listAfter = await caller.deployments.listTargets({})
       expect(listAfter.targets.length).toBe(0)
     })
+
+    it('rejects a remote SSH target without the liability acknowledgment', async () => {
+      const caller = await createCaller('user-1')
+      await expect(
+        caller.deployments.createTarget({
+          name: 'HomeLab',
+          type: 'docker',
+          provider: 'ssh',
+          location: 'remote',
+          host: '192.168.1.20',
+          sshUser: 'deploy',
+        }),
+      ).rejects.toThrow(/acknowledge the deploy-key liability/i)
+    })
+
+    it('accepts a remote SSH target once the liability is acknowledged, and records the timestamp', async () => {
+      const caller = await createCaller('user-1')
+      const created = await caller.deployments.createTarget({
+        name: 'HomeLab',
+        type: 'docker',
+        provider: 'ssh',
+        location: 'remote',
+        host: '192.168.1.20',
+        sshUser: 'deploy',
+        riskAcknowledged: true,
+      })
+      expect(created.location).toBe('remote')
+      expect((created as { riskAcknowledgedAt?: Date | null }).riskAcknowledgedAt).toBeTruthy()
+    })
   })
 
   describe('overrides upsert/list', () => {

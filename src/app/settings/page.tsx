@@ -10,28 +10,30 @@ import {
   ChevronRight
 } from "lucide-react"
 import Link from "next/link"
+import { useT } from "@/lib/i18n/client"
 
 // ponytail: only pages that exist; add sections back when their pages ship
 const settingsSections = [
   {
-    title: "Profile",
-    description: "Manage your profile information and preferences",
+    titleKey: "catalog.settingsProfile",
+    descriptionKey: "catalog.settingsProfileDesc",
     href: "/settings/profile",
     icon: User,
   },
   {
-    title: "Appearance",
-    description: "Customize the look and feel of the application",
+    titleKey: "catalog.settingsAppearance",
+    descriptionKey: "catalog.settingsAppearanceDesc",
     href: "/settings/appearance",
     icon: Palette,
   },
-]
+] as const
 
 export default function SettingsPage() {
+  const t = useT()
   return (
-    <SettingsLayout 
-      title="General Settings" 
-      description="Manage your account settings and preferences"
+    <SettingsLayout
+      title={t('catalog.settingsGeneralTitle')}
+      description={t('catalog.settingsGeneralDesc')}
     >
       <div className="space-y-6">
         {/* Quick Settings Overview */}
@@ -51,9 +53,9 @@ export default function SettingsPage() {
                   <ChevronRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-1" />
                 </div>
                 <div>
-                  <h3 className="font-medium">{section.title}</h3>
+                  <h3 className="font-medium">{t(section.titleKey)}</h3>
                   <p className="text-sm text-muted-foreground">
-                    {section.description}
+                    {t(section.descriptionKey)}
                   </p>
                 </div>
               </Link>

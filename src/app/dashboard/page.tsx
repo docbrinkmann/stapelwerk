@@ -6,6 +6,7 @@ import { createTRPCContext } from '@/server/trpc';
 import { DashboardClient } from './components/DashboardClient';
 import { DashboardSkeleton } from './components/DashboardSkeleton';
 import { StatsCardsLive, RecentActivityLive, QuickActions } from '@/components/dashboard';
+import { getT } from '@/lib/i18n/server';
 import './dashboard.css';
 
 // Page metadata
@@ -99,16 +100,17 @@ async function DashboardServerComponent() {
 }
 
 // Main Dashboard Page Component
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const t = await getT();
   return (
     <section className="space-y-6" aria-labelledby="dashboard-title">
       {/* Page Header */}
       <div>
         <h1 id="dashboard-title" className="text-3xl font-bold tracking-tight">
-          Dashboard
+          {t('shell.navDashboard')}
         </h1>
         <p className="text-muted-foreground">
-          Manage your stacks, monitor deployments, and track your infrastructure
+          {t('shell.dashboardIntro')}
         </p>
       </div>
 

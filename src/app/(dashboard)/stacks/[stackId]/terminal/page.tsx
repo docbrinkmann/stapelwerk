@@ -15,11 +15,13 @@ import {
 import { TerminalPanel } from '@/components/terminal'
 import { trpc } from '@/trpc/react-client'
 import { Info } from 'lucide-react'
+import { useT } from '@/lib/i18n/client'
 import '@xterm/xterm/css/xterm.css'
 
 const WS_BASE = process.env.NEXT_PUBLIC_WS_URL ?? 'ws://localhost:3001'
 
 export default function StackTerminalPage() {
+  const t = useT()
   const params = useParams()
   const stackId = params.stackId as string
   const { data: session } = useSession()
@@ -81,7 +83,7 @@ export default function StackTerminalPage() {
             termRef.current?.write(msg.payload.data)
           }
         } else if (msg.type === 'error') {
-          setError(msg.payload?.message ?? 'Terminal error')
+          setError(msg.payload?.message ?? t('ops.terminalError'))
         }
       } catch {
         // ignore malformed frames
@@ -97,9 +99,9 @@ export default function StackTerminalPage() {
 
     ws.onerror = () => {
       setIsConnecting(false)
-      setError('Could not reach the terminal server. Is `npm run ws:dev` running?')
+      setError(t('ops.terminalServerUnreachable'))
     }
-  }, [stackId, userId, serviceSlug])
+  }, [stackId, userId, serviceSlug, t])
 
   // Reconnect into the chosen service's container when the selection changes.
   const reconnectTo = useCallback((slug: string) => {
@@ -143,19 +145,19 @@ export default function StackTerminalPage() {
     <div className="space-y-6 h-full">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-xl font-semibold">Terminal</h2>
+          <h2 className="text-xl font-semibold">{t('ops.tabTerminal')}</h2>
           <p className="text-muted-foreground">
-            Access shell terminal for your stack services
+            {t('ops.terminalSubtitle')}
           </p>
         </div>
         {services.length > 0 && (
           <div className="space-y-1.5">
             <Label htmlFor="term-service" className="text-xs text-muted-foreground">
-              Service
+              {t('ops.serviceLabel')}
             </Label>
             <Select value={serviceSlug} onValueChange={reconnectTo}>
               <SelectTrigger id="term-service" className="w-56">
-                <SelectValue placeholder="Select a service" />
+                <SelectValue placeholder={t('ops.selectService')} />
               </SelectTrigger>
               <SelectContent>
                 {services.map((s) => (
@@ -171,7 +173,7 @@ export default function StackTerminalPage() {
 
       <div className="h-[500px]">
         <TerminalPanel
-          title={`Terminal - Stack ${stackId.slice(0, 8)}`}
+          title={t('ops.terminalTitle', { id: stackId.slice(0, 8) })}
           sessionId={sessionIdRef.current ?? undefined}
           isConnecting={isConnecting}
           isConnected={isConnected}
@@ -186,20 +188,17 @@ export default function StackTerminalPage() {
         <CardHeader className="py-3">
           <CardTitle className="text-sm flex items-center gap-2">
             <Info className="h-4 w-4" />
-            Terminal Info
+            {t('ops.terminalInfo')}
           </CardTitle>
         </CardHeader>
         <CardContent className="py-3">
           <p className="text-sm text-muted-foreground">
-            Connected through the BuildMyStack WebSocket server. When the stack
-            is deployed on this server, the session runs a real shell inside the
-            selected service&apos;s container; otherwise it falls back to a safe
-            echo mode. You can only reach containers of your own stacks.
+            {t('ops.terminalInfoBody')}
           </p>
           <ul className="mt-3 space-y-1 text-sm text-muted-foreground">
-            <li>• <strong>Ctrl+C</strong> - Interrupt current process</li>
-            <li>• <strong>Ctrl+L</strong> - Clear screen</li>
-            <li>• <strong>Tab</strong> - Auto-complete (when connected)</li>
+            <li>• <strong>Ctrl+C</strong> - {t('ops.shortcutInterrupt')}</li>
+            <li>• <strong>Ctrl+L</strong> - {t('ops.shortcutClear')}</li>
+            <li>• <strong>Tab</strong> - {t('ops.shortcutAutocomplete')}</li>
           </ul>
         </CardContent>
       </Card>

@@ -92,6 +92,7 @@ export interface DbStackServiceRow {
     portMappings: string | null;
     volumeMounts: string | null;
     dependsOn: string | null;
+    networkMode?: string | null;
   } | null;
 }
 
@@ -128,6 +129,7 @@ export function dbStackServicesToPersisted(
         portMappings: normalizePorts(cfg?.portMappings),
         volumeMounts: normalizeVolumeMounts(cfg?.volumeMounts),
         dependsOn: normalizeDependsOn(cfg?.dependsOn),
+        networkMode: cfg?.networkMode ?? undefined,
       },
     };
     // The prisma row types are richer than the compose contract needs; the

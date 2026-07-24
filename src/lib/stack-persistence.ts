@@ -1,6 +1,6 @@
 import { stringify as yamlStringify, parse as yamlParse } from 'yaml';
 import { trpc } from '@/utils/trpc';
-import type { StackService, StackServiceConfiguration, ServiceDependency } from '@/types/stack';
+import type { StackService, StackServiceConfiguration, ServiceDependency, PortMapping } from '@/types/stack';
 import type { Service, ServiceEnvVar, ServiceVolume } from '@/types/service';
 
 export interface PersistedStack {
@@ -158,6 +158,28 @@ function healthcheckFor(
 const APP_NETWORK = 'appnet';
 
 /**
+ * Services that act as a VPN gateway when another container routes through them
+ * (`network_mode: service:<slug>`). They need NET_ADMIN + the tun device to
+ * establish the tunnel. Keying the capability on the VPN slug (not merely on
+ * "is a route target") avoids granting NET_ADMIN to a non-VPN target.
+ */
+const VPN_SLUGS = new Set(['gluetun', 'wireguard']);
+
+/** Render a config's port mappings to compose `host:container[/proto]` strings. */
+function renderPortStrings(portMappings: PortMapping[] | undefined): string[] {
+  return (portMappings ?? []).map((port) => {
+    const proto = port.protocol && port.protocol !== 'tcp' ? `/${port.protocol}` : '';
+    return `${port.hostPort}:${port.containerPort}${proto}`;
+  });
+}
+
+/** Parse a `network_mode: service:<slug>` value → the target slug, or null. */
+function routeTargetSlug(networkMode: string | undefined): string | null {
+  const m = typeof networkMode === 'string' ? networkMode.match(/^service:(.+)$/) : null;
+  return m ? m[1] : null;
+}
+
+/**
  * Build a real, deployable docker-compose document from a stack and return the
  * serialized YAML plus any secrets that were auto-generated for required secret
  * env vars. Merges catalog metadata (env/volumes) with per-service user config.
@@ -177,6 +199,23 @@ export function generateComposeWithSecrets(
     if (ss.service?.slug) idToSlug.set(ss.serviceId, ss.service.slug);
   }
 
+  // Pre-pass: resolve `network_mode: service:<slug>` routing. A routed service
+  // (e.g. qBittorrent → gluetun) publishes NO ports of its own — they must be
+  // published by the VPN target — and does not join the app-network. Collect
+  // each routed service's ports so we can move them onto the target below.
+  const slugsInStack = new Set<string>();
+  for (const ss of stack.services) if (ss.service?.slug) slugsInStack.add(ss.service.slug);
+  const routedPortsByTarget = new Map<string, string[]>();
+  for (const ss of stack.services) {
+    const target = routeTargetSlug(ss.configuration?.networkMode);
+    if (target && slugsInStack.has(target)) {
+      const ports = renderPortStrings(ss.configuration?.portMappings);
+      if (ports.length) {
+        routedPortsByTarget.set(target, [...(routedPortsByTarget.get(target) ?? []), ...ports]);
+      }
+    }
+  }
+
   for (const stackService of stack.services) {
     const service = stackService.service;
     const config = stackService.configuration ?? {
@@ -187,10 +226,14 @@ export function generateComposeWithSecrets(
     };
     const slug = service.slug;
 
+    // Per-stack image tag override (from the builder's Image section) wins over
+    // the catalog default — so an applied "update available" reaches the export.
+    const overrideTag = (config as { imageTag?: string }).imageTag;
     // dockerImage may already include a tag (e.g. "postgres:18-alpine").
     const imageHasTag = service.dockerImage?.split('/').pop()?.includes(':');
-    const image =
-      imageHasTag || !service.version
+    const image = overrideTag
+      ? `${parseImageRef(service.dockerImage).image}:${overrideTag}`
+      : imageHasTag || !service.version
         ? service.dockerImage
         : `${service.dockerImage}:${service.version}`;
 
@@ -200,12 +243,20 @@ export function generateComposeWithSecrets(
       restart: 'unless-stopped',
     };
 
-    // Ports: host:container[/proto] from the user's port mappings.
-    if (config.portMappings?.length) {
-      svc.ports = config.portMappings.map(port => {
-        const proto = port.protocol && port.protocol !== 'tcp' ? `/${port.protocol}` : '';
-        return `${port.hostPort}:${port.containerPort}${proto}`;
-      });
+    // Route through a VPN container? Then this service gets `network_mode:
+    // service:<vpn>`, publishes NO ports of its own (they move to the VPN
+    // target), and does not join the app-network.
+    const routedTarget =
+      slugsInStack.has(routeTargetSlug(config.networkMode) ?? '')
+        ? routeTargetSlug(config.networkMode)
+        : null;
+
+    // Ports: host:container[/proto] from the user's port mappings — unless
+    // routed, in which case the VPN target publishes them.
+    if (routedTarget) {
+      svc.network_mode = config.networkMode;
+    } else if (config.portMappings?.length) {
+      svc.ports = renderPortStrings(config.portMappings);
     }
 
     // Environment: catalog metadata merged with user overrides; generate
@@ -283,13 +334,28 @@ export function generateComposeWithSecrets(
         }
       }
     }
+    // A routed service must start after its VPN gateway.
+    if (routedTarget && !depNames.includes(routedTarget)) depNames.push(routedTarget);
     if (depNames.length) svc.depends_on = depNames;
 
     // Healthcheck for well-known service families.
     const healthcheck = healthcheckFor(slug, image, environment);
     if (healthcheck) svc.healthcheck = healthcheck;
 
-    svc.networks = [APP_NETWORK];
+    // A routed service inherits the VPN target's network namespace — it must
+    // NOT also declare its own network membership.
+    if (!routedTarget) svc.networks = [APP_NETWORK];
+
+    // VPN gateway: needs NET_ADMIN + the tun device, and publishes the ports of
+    // every container routed through it (so their UIs stay reachable).
+    if (VPN_SLUGS.has(slug)) {
+      svc.cap_add = ['NET_ADMIN'];
+      svc.devices = ['/dev/net/tun:/dev/net/tun'];
+      const inherited = routedPortsByTarget.get(slug);
+      if (inherited?.length) {
+        svc.ports = [...((svc.ports as string[]) ?? []), ...inherited];
+      }
+    }
 
     services[slug] = svc;
   }

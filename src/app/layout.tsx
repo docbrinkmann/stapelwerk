@@ -31,12 +31,15 @@ export const viewport: Viewport = {
 
 import { getServerSession } from 'next-auth/next'
 import { defaultAuthOptions } from '@/lib/auth'
+import { getServerLocale } from '@/lib/i18n/server'
 
 export default async function RootLayout({ children }: LayoutProps) {
   const session = await getServerSession(defaultAuthOptions)
+  // Locale from the bms_locale cookie: SSR + first client render agree (no flash).
+  const locale = await getServerLocale()
 
   return (
-    <html lang="en" className={inter.variable} suppressHydrationWarning>
+    <html lang={locale} className={inter.variable} suppressHydrationWarning>
       <head>
         {/* Task 4.3: Preload critical Inter font for LCP optimization */}
         <link
@@ -48,7 +51,7 @@ export default async function RootLayout({ children }: LayoutProps) {
         />
       </head>
       <body className={`min-h-screen bg-background text-foreground ${inter.className}`}>
-        <ProvidersRoot session={session}>
+        <ProvidersRoot session={session} initialLocale={locale}>
           {children}
         </ProvidersRoot>
       </body>

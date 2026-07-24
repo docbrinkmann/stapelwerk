@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react'
 import { useServiceBrowserStore } from '@/store/service-browser'
+import { useT } from '@/lib/i18n/client'
 import './SearchBar.css'
 
 interface SearchBarProps {
@@ -12,11 +13,13 @@ interface SearchBarProps {
 
 export const SearchBar: React.FC<SearchBarProps> = ({
   className = '',
-  placeholder = 'Search services...',
+  placeholder,
   debounceMs = 300,
   disabled = false,
   autoFocus = false,
 }) => {
+  const t = useT()
+  const effectivePlaceholder = placeholder ?? t('catalog.searchServicesPlaceholder')
   const { searchQuery, setSearchQuery, clearSearch, uiState, searchResultsCount } = useServiceBrowserStore() as any
   const [inputValue, setInputValue] = useState(searchQuery)
   const [isFocused, setIsFocused] = useState(false)
@@ -95,12 +98,12 @@ export const SearchBar: React.FC<SearchBarProps> = ({
     >
       {/* Visually hidden description for accessibility */}
       <p id="search-description" className="sr-only">
-        Search for container services by name, description, or category
+        {t('catalog.searchDescription')}
       </p>
 
       <div className="search-bar__icon-container">
         {isLoading ? (
-          <span className="search-bar__spinner" aria-label="Searching..." role="status" />
+          <span className="search-bar__spinner" aria-label={t('catalog.searching')} role="status" />
         ) : (
           <svg
             className="search-bar__icon"
@@ -113,7 +116,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
             strokeWidth="2"
             strokeLinecap="round"
             strokeLinejoin="round"
-            aria-label="Search"
+            aria-label={t('common.search')}
           >
             <circle cx="11" cy="11" r="8" />
             <path d="m21 21-4.3-4.3" />
@@ -125,14 +128,14 @@ export const SearchBar: React.FC<SearchBarProps> = ({
         ref={inputRef}
         type="search"
         className={`search-bar__input ${isFocused ? 'search-bar__input--focused' : ''}`}
-        placeholder={placeholder}
+        placeholder={effectivePlaceholder}
         value={inputValue}
         onChange={handleInputChange}
         onKeyDown={handleKeyDown}
         onFocus={() => setIsFocused(true)}
         onBlur={() => setIsFocused(false)}
         disabled={disabled || isLoading}
-        aria-label="Search services"
+        aria-label={t('catalog.searchServicesAria')}
         autoFocus={autoFocus}
         autoComplete="off"
         spellCheck="false"
@@ -145,7 +148,7 @@ export const SearchBar: React.FC<SearchBarProps> = ({
           type="button"
           className="search-bar__clear-button"
           onClick={handleClearClick}
-          aria-label="Clear search"
+          aria-label={t('catalog.clearSearch')}
           tabIndex={0}
         >
           <svg
@@ -167,15 +170,15 @@ export const SearchBar: React.FC<SearchBarProps> = ({
       )}
 
       {hasError && (
-        <div id="search-error" className="search-bar__error-message" role="alert" aria-label="Search error">
-          Search failed. Please try again.
+        <div id="search-error" className="search-bar__error-message" role="alert" aria-label={t('catalog.searchErrorAria')}>
+          {t('catalog.searchFailed')}
         </div>
       )}
 
       {/* Live region for announcing results count to screen readers when available */}
       {typeof searchResultsCount === 'number' && (
-        <div aria-label="Search results" aria-live="polite">
-          {searchResultsCount} services found
+        <div aria-label={t('catalog.searchResultsAria')} aria-live="polite">
+          {t('catalog.servicesFoundCount', { count: searchResultsCount })}
         </div>
       )}
     </div>

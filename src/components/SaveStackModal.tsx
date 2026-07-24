@@ -6,8 +6,10 @@ import { Textarea } from '@/components/ui/textarea'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { Loader2, Save } from 'lucide-react'
+import { useT } from '@/lib/i18n/client'
 import { trpc } from '@/trpc/react-client'
 import { stackConfigToApiShape } from '@/lib/stack-persistence'
+import { useStackBuilderStore } from '@/stores/stack-builder'
 import type { StackService } from '@/types/stack'
 
 interface SaveStackModalProps {
@@ -24,7 +26,13 @@ export const SaveStackModal: React.FC<SaveStackModalProps> = ({
   stackServices,
   onSaved,
 }) => {
-  const [stackName, setStackName] = useState('')
+  const t = useT()
+  // Prefill from the builder draft's current name so re-opening shows it, and
+  // write the chosen name back on save (the "Stack name is required" check reads
+  // the store name — without this it never clears after saving).
+  const storeName = useStackBuilderStore(s => s.name)
+  const updateName = useStackBuilderStore(s => s.updateName)
+  const [stackName, setStackName] = useState(storeName ?? '')
   const [description, setDescription] = useState('')
   const [isPublic, setIsPublic] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
@@ -43,13 +51,14 @@ const createStackMutation = trpc.stacks.create.useMutation({
   })
 
   const handleSave = async () => {
-    if (!stackName.trim()) return
+    const name = stackName.trim()
+    if (!name) return
 
     setIsSaving(true)
-    
+
     try {
       await createStackMutation.mutateAsync({
-        name: stackName.trim(),
+        name,
         description: description.trim(),
         isPublic,
         services: stackServices.map((service, index) => ({
@@ -60,6 +69,8 @@ const createStackMutation = trpc.stacks.create.useMutation({
           configuration: stackConfigToApiShape(service.configuration),
         })),
       })
+      // Name the builder draft too, so the "Stack name is required" check clears.
+      updateName(name)
     } catch (error) {
       console.error('Error saving stack:', error)
     } finally {
@@ -77,16 +88,16 @@ const createStackMutation = trpc.stacks.create.useMutation({
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md" data-testid="save-stack-modal">
         <DialogHeader>
-          <DialogTitle>Save Your Stack</DialogTitle>
+          <DialogTitle>{t('deploy.save.title')}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           {/* Stack Name */}
           <div className="space-y-2">
-            <Label htmlFor="stack-name">Stack Name *</Label>
+            <Label htmlFor="stack-name">{t('deploy.save.nameLabel')}</Label>
             <Input
               id="stack-name"
-              placeholder="My Development Stack"
+              placeholder={t('deploy.save.namePlaceholder')}
               value={stackName}
               onChange={(e) => setStackName(e.target.value)}
               disabled={isSaving}
@@ -95,10 +106,10 @@ const createStackMutation = trpc.stacks.create.useMutation({
 
           {/* Description */}
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('common.description')}</Label>
             <Textarea
               id="description"
-              placeholder="Describe what this stack is for..."
+              placeholder={t('deploy.save.descriptionPlaceholder')}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               disabled={isSaving}
@@ -115,22 +126,27 @@ const createStackMutation = trpc.stacks.create.useMutation({
               disabled={isSaving}
             />
             <Label htmlFor="is-public" className="text-sm">
-              Make this stack public (visible to other users)
+              {t('deploy.save.publicLabel')}
             </Label>
           </div>
 
           {/* Stack Summary */}
           <div className="bg-muted rounded-lg p-3">
             <p className="text-sm font-medium text-foreground mb-2">
-              Stack Summary
+              {t('deploy.save.summary')}
             </p>
             <p className="text-sm text-muted-foreground">
-              {stackServices.length} service{stackServices.length !== 1 ? 's' : ''}:
+              {t(
+                stackServices.length === 1
+                  ? 'deploy.save.serviceCountOne'
+                  : 'deploy.save.serviceCountOther',
+                { count: stackServices.length },
+              )}
             </p>
             <ul className="text-sm text-muted-foreground mt-1">
               {stackServices.map((stackService) => (
                 <li key={stackService.id} className="flex items-center">
-                  • {stackService.service?.name ?? 'Service'}
+                  • {stackService.service?.name ?? t('deploy.save.serviceFallback')}
                 </li>
               ))}
             </ul>
@@ -139,7 +155,7 @@ const createStackMutation = trpc.stacks.create.useMutation({
           {/* Error Display */}
           {createStackMutation.error && (
             <div className="text-sm text-destructive bg-destructive/10 p-2 rounded">
-              Failed to save stack: {createStackMutation.error.message}
+              {t('deploy.save.error', { message: createStackMutation.error.message })}
             </div>
           )}
         </div>
@@ -150,7 +166,7 @@ const createStackMutation = trpc.stacks.create.useMutation({
             onClick={handleClose}
             disabled={isSaving}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
           <Button
             onClick={handleSave}
@@ -159,12 +175,12 @@ const createStackMutation = trpc.stacks.create.useMutation({
             {isSaving ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Saving...
+                {t('deploy.save.saving')}
               </>
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Save Stack
+                {t('deploy.save.submit')}
               </>
             )}
           </Button>

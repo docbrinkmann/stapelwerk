@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { Copy, Check, KeyRound, FileCode2, Rocket } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { useT } from '@/lib/i18n/client';
 import { useStackBuilderStore } from '@/stores/stack-builder';
 import { type PersistedStack } from '@/lib/stack-persistence';
 import { buildComposeBundle } from '@/lib/deploy/handoff';
@@ -18,6 +19,7 @@ import { DeployExportModal } from './DeployExportModal';
  * panel toggle, …) does not spam fresh random passwords.
  */
 export function StackComposePreview() {
+  const t = useT();
   const name = useStackBuilderStore(state => state.name);
   const description = useStackBuilderStore(state => state.description);
   const isPublic = useStackBuilderStore(state => state.isPublic);
@@ -39,7 +41,7 @@ export function StackComposePreview() {
       <div className="flex h-full items-center justify-center p-8 text-center text-muted-foreground">
         <div>
           <FileCode2 className="mx-auto mb-3 h-8 w-8 opacity-50" />
-          <p className="text-sm">Add services to see a live docker-compose preview.</p>
+          <p className="text-sm">{t('deploy.preview.empty')}</p>
         </div>
       </div>
     );
@@ -65,9 +67,9 @@ export function StackComposePreview() {
               data-testid="open-deploy-export"
             >
               <Rocket className="mr-1 h-3.5 w-3.5" />
-              Deploy / Export
+              {t('deploy.title')}
             </Button>
-            <CopyButton value={composeYaml} label="Copy YAML" />
+            <CopyButton value={composeYaml} label={t('deploy.preview.copyYaml')} />
           </div>
         </div>
         <pre
@@ -91,6 +93,7 @@ export function StackComposePreview() {
 }
 
 function GeneratedSecretsBox({ secrets }: { secrets: [string, string][] }) {
+  const t = useT();
   const dotenv = secrets.map(([key, value]) => `${key.replace(/[.\-]/g, '_').toUpperCase()}=${value}`).join('\n');
 
   return (
@@ -101,12 +104,12 @@ function GeneratedSecretsBox({ secrets }: { secrets: [string, string][] }) {
       <div className="mb-2 flex items-center justify-between">
         <div className="flex items-center gap-2 text-sm font-medium text-foreground">
           <KeyRound className="h-4 w-4 text-warning" />
-          Generated passwords — save these
+          {t('deploy.secrets.title')}
         </div>
-        <CopyButton value={dotenv} label="Copy all" />
+        <CopyButton value={dotenv} label={t('deploy.secrets.copyAll')} />
       </div>
       <p className="mb-3 text-xs text-muted-foreground">
-        These are generated fresh for the preview and are already inlined in the compose above. Store them somewhere safe.
+        {t('deploy.secrets.previewHint')}
       </p>
       <ul className="space-y-1.5">
         {secrets.map(([key, value]) => (
@@ -117,7 +120,7 @@ function GeneratedSecretsBox({ secrets }: { secrets: [string, string][] }) {
             <span className="truncate text-muted-foreground">
               <span className="text-foreground">{key}</span> = {value}
             </span>
-            <CopyButton value={value} label="Copy" iconOnly />
+            <CopyButton value={value} label={t('common.copy')} iconOnly />
           </li>
         ))}
       </ul>
@@ -126,6 +129,7 @@ function GeneratedSecretsBox({ secrets }: { secrets: [string, string][] }) {
 }
 
 function CopyButton({ value, label, iconOnly = false }: { value: string; label: string; iconOnly?: boolean }) {
+  const t = useT();
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
@@ -147,7 +151,7 @@ function CopyButton({ value, label, iconOnly = false }: { value: string; label: 
       title={label}
     >
       {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-      {!iconOnly && <span className="ml-1">{copied ? 'Copied' : label}</span>}
+      {!iconOnly && <span className="ml-1">{copied ? t('common.copied') : label}</span>}
     </Button>
   );
 }

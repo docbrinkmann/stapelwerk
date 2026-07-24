@@ -12,10 +12,11 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useT } from "@/lib/i18n/client"
 
 /**
  * Nav Main Component
- * 
+ *
  * Primary navigation menu for the sidebar.
  * Highlights active route and provides tooltips in collapsed mode.
  */
@@ -31,10 +32,11 @@ interface NavMainProps {
 
 export function NavMain({ items }: NavMainProps) {
   const pathname = usePathname()
+  const t = useT()
 
   return (
     <SidebarGroup>
-      <SidebarGroupLabel>Navigation</SidebarGroupLabel>
+      <SidebarGroupLabel>{t("shell.navGroupLabel")}</SidebarGroupLabel>
       <SidebarMenu>
         {items.map((item) => {
           const isActive = pathname === item.url || pathname?.startsWith(`${item.url}/`)

@@ -2,10 +2,12 @@ import { describe, it, expect } from 'vitest';
 import { parse as yamlParse } from 'yaml';
 import {
   buildComposeBundle,
+  buildDeployScript,
   buildEnvFile,
   buildReadme,
   getDeployTargets,
   normalizeEnvKey,
+  stackSlug,
 } from '../handoff';
 import type { PersistedStack } from '@/lib/stack-persistence';
 import type { Service } from '@/types/service';
@@ -48,7 +50,12 @@ function buildStack(): PersistedStack {
 
 describe('buildComposeBundle', () => {
   it('returns compose YAML, a reference .env, and the generated secrets', () => {
-    const { composeYaml, envFile, secrets } = buildComposeBundle(buildStack());
+    const { composeYaml, envFile, secrets, deployScript } = buildComposeBundle(buildStack());
+
+    // The bundle also ships the key-sovereign deploy.sh.
+    expect(deployScript).toContain('#!/usr/bin/env sh');
+    expect(deployScript).toContain('PROJECT="bms-db-stack"');
+    expect(deployScript).toContain('docker compose -p $PROJECT up -d');
 
     // Compose is present and parseable, with the generated password inlined.
     const doc = yamlParse(composeYaml);
@@ -93,7 +100,9 @@ describe('getDeployTargets', () => {
   it('provides ordered instructions for every handoff target', () => {
     const targets = getDeployTargets();
     const ids = targets.map(t => t.id);
-    expect(ids).toEqual(expect.arrayContaining(['portainer', 'coolify', 'dokploy', 'docker-compose']));
+    expect(ids).toEqual(
+      expect.arrayContaining(['portainer', 'coolify', 'dokploy', 'openship', 'docker-compose']),
+    );
 
     for (const target of targets) {
       expect(target.title).toBeTruthy();
@@ -110,6 +119,35 @@ describe('getDeployTargets', () => {
     // Panel targets reference their web editor flow.
     expect(targets.find(t => t.id === 'portainer')?.steps.some(s => /Stacks|Add stack/.test(s.title))).toBe(true);
     expect(targets.find(t => t.id === 'coolify')?.steps.some(s => /Docker Compose/.test(s.title))).toBe(true);
+    // Openship is a compose-based panel target too.
+    expect(targets.find(t => t.id === 'openship')?.steps.some(s => /Docker Compose|Openship/.test(s.title))).toBe(true);
+  });
+});
+
+describe('buildDeployScript', () => {
+  it('is a POSIX script that drives the user\'s own SSH and never leaks a key or phones home', () => {
+    const script = buildDeployScript(buildStack());
+
+    // Shape: a runnable, fail-fast POSIX script using the operator's own ssh/scp.
+    expect(script.startsWith('#!/usr/bin/env sh')).toBe(true);
+    expect(script).toContain('set -eu');
+    expect(script).toContain('scp "$DIR/docker-compose.yml"');
+    expect(script).toContain('PROJECT="bms-db-stack"');
+    expect(script).toContain('docker compose -p $PROJECT up -d');
+
+    // Key-sovereign by construction: it takes the SSH target from the operator's
+    // own argv and NEVER reads, embeds, or transmits a private key.
+    expect(script).toContain('TARGET="${1:-}"');
+    expect(script).not.toMatch(/PRIVATE KEY|DEPLOY_SSH_KEY|id_rsa|id_ed25519|-i /);
+
+    // No phone-home: the only network egress is ssh/scp to the operator's $TARGET.
+    expect(script).not.toMatch(/curl|wget|https?:\/\//);
+  });
+
+  it('slugifies stack names into safe compose-project names', () => {
+    expect(stackSlug('My Media Server!')).toBe('my-media-server');
+    expect(stackSlug('   ')).toBe('stack');
+    expect(stackSlug('a__b')).toBe('a-b');
   });
 });
 

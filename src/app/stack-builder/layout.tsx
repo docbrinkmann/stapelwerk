@@ -2,6 +2,7 @@ import { AppSidebar } from "@/components/layout/app-sidebar"
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import ThemeToggle from "@/components/ui/theme-toggle"
+import LanguageToggle from "@/components/ui/language-toggle"
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -45,6 +46,7 @@ export default function StackBuilderLayout({
             </BreadcrumbList>
           </Breadcrumb>
           <div className="ml-auto flex items-center gap-2">
+            <LanguageToggle />
             <ThemeToggle />
           </div>
         </header>

@@ -172,6 +172,24 @@ const template = await this.prisma.use_case_templates.findUnique({
       }
     }
 
+    // Curated per-member config baked into the template metadata (VPN routing,
+    // shared /data mount) so an applied template ships CORRECT out of the box.
+    type MemberConfig = {
+      networkMode?: string
+      volumeMounts?: Array<{ hostPath: string; containerPath: string; readOnly?: boolean }>
+      portMappings?: Array<{ containerPort: number; hostPort: number }>
+      environmentVariables?: Record<string, string>
+    }
+    let templateServiceConfigs: Record<string, MemberConfig> = {}
+    try {
+      const meta = template.metadata ? JSON.parse(template.metadata) : {}
+      if (meta && typeof meta.serviceConfigs === 'object' && meta.serviceConfigs) {
+        templateServiceConfigs = meta.serviceConfigs as Record<string, MemberConfig>
+      }
+    } catch {
+      // Malformed metadata → apply plain defaults (no curated wiring).
+    }
+
     // The target stack must exist and be writable by the caller. Mirrors the
     // ownership rule in stacks.ts (`validateStackOwnership`): owner, or a
     // published public stack.
@@ -249,14 +267,24 @@ const servicesRaw = await this.prisma.services.findMany({
           }
         })
 
+        const cfg = templateServiceConfigs[svc.slug] ?? {}
+        // Both persist in the record shape the API/DB use:
+        // volumeMounts { containerPath: hostPath }, portMappings { containerPort: hostPort }.
+        const volumeMountsRecord = Array.isArray(cfg.volumeMounts)
+          ? Object.fromEntries(cfg.volumeMounts.map(v => [v.containerPath, v.hostPath]))
+          : {}
+        const portMappingsRecord = Array.isArray(cfg.portMappings)
+          ? Object.fromEntries(cfg.portMappings.map(p => [String(p.containerPort), String(p.hostPort)]))
+          : {}
         await tx.stack_service_configurations.create({
           data: {
             id: randomUUID(),
             stackServiceId: stackService.id,
-            environmentVariables: '{}',
-            portMappings: '{}',
-            volumeMounts: '{}',
+            environmentVariables: JSON.stringify(cfg.environmentVariables ?? {}),
+            portMappings: JSON.stringify(portMappingsRecord),
+            volumeMounts: JSON.stringify(volumeMountsRecord),
             dependsOn: '[]',
+            networkMode: cfg.networkMode ?? null,
             updatedAt: new Date()
           }
         })

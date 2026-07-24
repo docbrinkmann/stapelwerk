@@ -110,7 +110,8 @@ const readServiceEnvMeta = (service: Service): ServiceEnvVar[] => {
   return [];
 };
 
-const createDefaultConfiguration = (service: Service): StackServiceConfiguration => {
+// Exported: the configuration panel's Reset restores exactly these defaults.
+export const createDefaultConfiguration = (service: Service): StackServiceConfiguration => {
   // Services from the API may have ports as numbers or objects ({ containerPort, protocol, ... })
   const rawPorts = (service.ports ?? []) as Array<number | { containerPort?: number }>;
   const portNumbers = rawPorts

@@ -4,9 +4,11 @@ import { trpc } from '@/trpc/react-client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { TrendingUp, CheckCircle2, XCircle, Loader2, Clock, Rocket } from 'lucide-react'
+import { useT } from '@/lib/i18n/client'
 
 /** Real deployment analytics for the dashboard Analytics tab. */
 export function AnalyticsPanel() {
+  const t = useT()
   const stats = trpc.analytics.getDeploymentStats.useQuery(undefined, { retry: false })
 
   if (stats.isLoading) {
@@ -22,7 +24,7 @@ export function AnalyticsPanel() {
       <Card>
         <CardContent className="py-8 text-center text-muted-foreground">
           <TrendingUp className="mx-auto mb-2 h-8 w-8" />
-          Analytics are unavailable right now.
+          {t('shell.analyticsUnavailable')}
         </CardContent>
       </Card>
     )
@@ -30,11 +32,11 @@ export function AnalyticsPanel() {
 
   const d = stats.data
   const cards = [
-    { label: 'Total Deployments', value: d.total, icon: Rocket },
-    { label: 'Completed', value: d.completed, icon: CheckCircle2 },
-    { label: 'Failed', value: d.failed, icon: XCircle },
-    { label: 'Running', value: d.running, icon: Loader2 },
-    { label: 'Pending', value: d.pending, icon: Clock },
+    { label: t('shell.totalDeployments'), value: d.total, icon: Rocket },
+    { label: t('shell.statusCompleted'), value: d.completed, icon: CheckCircle2 },
+    { label: t('shell.statusFailed'), value: d.failed, icon: XCircle },
+    { label: t('common.running'), value: d.running, icon: Loader2 },
+    { label: t('shell.statusPending'), value: d.pending, icon: Clock },
   ]
 
   return (
@@ -54,7 +56,7 @@ export function AnalyticsPanel() {
       </div>
       {d.total === 0 && (
         <p className="text-sm text-muted-foreground">
-          No deployments yet — deploy a stack to start collecting analytics.
+          {t('shell.noDeployments')}
         </p>
       )}
     </div>

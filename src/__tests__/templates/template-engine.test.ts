@@ -404,6 +404,56 @@ describe('TemplateEngine', () => {
       })
     })
 
+    it('applies curated per-member config from metadata (VPN routing + shared mount)', async () => {
+      const mockTemplate = {
+        id: 'tpl-media-server',
+        isActive: true,
+        serviceIds: JSON.stringify([10, 11]),
+        // The media template ships qBittorrent routed through Gluetun and
+        // sharing one /data mount so it's leak-proof + hardlink-correct.
+        metadata: JSON.stringify({
+          serviceConfigs: {
+            qbittorrent: {
+              networkMode: 'service:gluetun',
+              // Its Web UI port must be declared so the generator moves it onto
+              // gluetun (a routed container can't publish ports itself).
+              portMappings: [{ containerPort: 8080, hostPort: 8080 }],
+              volumeMounts: [{ hostPath: '/srv/media', containerPath: '/data' }],
+            },
+          },
+        }),
+        services: [
+          { id: 10, name: 'Gluetun', slug: 'gluetun' },
+          { id: 11, name: 'qBittorrent', slug: 'qbittorrent' },
+        ],
+      }
+
+      mockPrisma.useCaseTemplate.findUnique.mockResolvedValue(mockTemplate)
+      mockPrisma.service.findMany.mockResolvedValue(mockTemplate.services)
+      mockPrisma.stack.findUnique.mockResolvedValue({
+        id: 'stack-123', userId: 'user-456', isPublic: false, status: 'draft'
+      })
+      mockPrisma.templateUsage.create.mockResolvedValue({})
+      mockPrisma.useCaseTemplate.update.mockResolvedValue({})
+
+      const result = await engine.applyTemplateToStack('tpl-media-server', 'stack-123', 'user-456')
+      expect(result.success).toBe(true)
+
+      // qBittorrent is written routed through Gluetun with the shared /data mount
+      // AND its port (so the generator can relocate it onto the VPN gateway).
+      expect(mockPrisma.stackServiceConfiguration.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({
+          networkMode: 'service:gluetun',
+          volumeMounts: JSON.stringify({ '/data': '/srv/media' }),
+          portMappings: JSON.stringify({ '8080': '8080' }),
+        })
+      })
+      // Gluetun itself has no curated override → plain defaults, networkMode null.
+      expect(mockPrisma.stackServiceConfiguration.create).toHaveBeenCalledWith({
+        data: expect.objectContaining({ networkMode: null, volumeMounts: '{}' })
+      })
+    })
+
     it('should skip services already present in the stack', async () => {
       const mockTemplate = {
         id: 'tpl-web-dev',

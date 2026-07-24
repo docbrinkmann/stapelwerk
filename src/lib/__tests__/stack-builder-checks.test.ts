@@ -119,3 +119,113 @@ describe('analyzeStack', () => {
     expect(compat?.message).toContain('Traefik')
   })
 })
+
+describe('analyzeStack — VPN kill-switch (the signature check)', () => {
+  it('flags a leak when a download client is not routed through the VPN', () => {
+    const stack = [
+      makeStackService(1, 'gluetun', 'Gluetun'),
+      makeStackService(2, 'qbittorrent', 'qBittorrent'), // NOT routed
+    ]
+    const vpn = analyzeStack(stack).find(c => c.kind === 'vpn')
+    expect(vpn?.severity).toBe('error')
+    expect(vpn?.title).toBe('VPN leak')
+    expect(vpn?.message).toContain('service:gluetun')
+  })
+
+  it('passes when the download client IS routed through the VPN', () => {
+    const stack = [
+      makeStackService(1, 'gluetun', 'Gluetun'),
+      makeStackService(2, 'qbittorrent', 'qBittorrent', { networkMode: 'service:gluetun' }),
+    ]
+    expect(analyzeStack(stack).some(c => c.kind === 'vpn')).toBe(false)
+  })
+
+  it('warns when a download client has no VPN in the stack at all', () => {
+    const stack = [makeStackService(2, 'qbittorrent', 'qBittorrent')]
+    const vpn = analyzeStack(stack).find(c => c.kind === 'vpn')
+    expect(vpn?.severity).toBe('warning')
+    expect(vpn?.title).toBe('No VPN')
+  })
+
+  it('does not raise a VPN check for a stack with no download client', () => {
+    const stack = [
+      makeStackService(1, 'jellyfin', 'Jellyfin'),
+      makeStackService(3, 'sonarr', 'Sonarr'),
+    ]
+    expect(analyzeStack(stack).some(c => c.kind === 'vpn')).toBe(false)
+  })
+})
+
+import { auditToBuilderChecks } from '@/lib/validation/stack-builder-checks'
+import { auditCompose } from '@/lib/deploy/safety-audit'
+
+describe('auditToBuilderChecks', () => {
+  it('surfaces only audit FAILURES as builder errors (advisories stay in the report)', () => {
+    // postgres exposed to the host + no volume (2 fails) + unpinned :latest (warn).
+    const audit = auditCompose({ services: { db: { image: 'postgres:latest', ports: ['5432:5432'] } } })
+    const checks = auditToBuilderChecks(audit)
+    const kinds = checks.map(c => c.kind).sort()
+    // exposed port (port) + no volume (volume) surface; the :latest warn does not.
+    expect(kinds).toEqual(['port', 'volume'])
+    expect(checks.every(c => c.severity === 'error')).toBe(true)
+    expect(checks.find(c => c.kind === 'port')?.message).toMatch(/db —/)
+  })
+
+  it('returns nothing for a clean stack', () => {
+    const audit = auditCompose({
+      services: { db: { image: 'postgres:18-alpine', volumes: ['d:/var/lib/postgresql/data'], environment: { POSTGRES_PASSWORD: 'Xk9-mQ2pLw7Z_aB3' } } },
+    })
+    expect(auditToBuilderChecks(audit)).toEqual([])
+  })
+
+  it('surfaces a default/empty secret as a secret error', () => {
+    const audit = auditCompose({ services: { db: { image: 'postgres:18', volumes: ['d:/x'], environment: { POSTGRES_PASSWORD: 'change_me' } } } })
+    const secretCheck = auditToBuilderChecks(audit).find(c => c.kind === 'secret')
+    expect(secretCheck?.severity).toBe('error')
+
+describe('analyzeStack — jump targets (click a check → fix location)', () => {
+  it('port conflict targets the first service, Ports section', () => {
+    const stack = [
+      makeStackService(1, 'nginx', 'NGINX', { portMappings: [{ containerPort: 80, hostPort: 80 }] }),
+      makeStackService(2, 'caddy', 'Caddy', { portMappings: [{ containerPort: 80, hostPort: 80 }] }),
+    ]
+    expect(analyzeStack(stack).find(c => c.kind === 'port')?.target).toEqual({
+      kind: 'service',
+      stackServiceId: 'ss-1',
+      section: 'ports',
+    })
+  })
+
+  it('shared volume targets the first service, Volumes section', () => {
+    const stack = [
+      makeStackService(1, 'a', 'A', { volumeMounts: [{ hostPath: '/data/x', containerPath: '/a' }] }),
+      makeStackService(2, 'b', 'B', { volumeMounts: [{ hostPath: '/data/x', containerPath: '/b' }] }),
+    ]
+    expect(analyzeStack(stack).find(c => c.kind === 'volume')?.target).toEqual({
+      kind: 'service',
+      stackServiceId: 'ss-1',
+      section: 'volumes',
+    })
+  })
+
+  it('missing dependency targets that service, Dependencies section', () => {
+    const stack = [makeStackService(1, 'app', 'App', { dependsOn: [{ serviceId: 999 }] })]
+    expect(analyzeStack(stack).find(c => c.kind === 'dependency')?.target).toEqual({
+      kind: 'service',
+      stackServiceId: 'ss-1',
+      section: 'dependencies',
+    })
+  })
+
+  it('compatibility advisory targets a service, Ports section', () => {
+    const stack = [
+      makeStackService(1, 'nginx', 'NGINX', { portMappings: [{ containerPort: 80, hostPort: 8081 }] }),
+      makeStackService(2, 'traefik', 'Traefik', { portMappings: [{ containerPort: 80, hostPort: 8082 }] }),
+    ]
+    expect(analyzeStack(stack).find(c => c.kind === 'compatibility')?.target).toEqual({
+      kind: 'service',
+      stackServiceId: 'ss-1',
+      section: 'ports',
+    })
+  })
+})

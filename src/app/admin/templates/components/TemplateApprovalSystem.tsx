@@ -12,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/components/ui/use-toast';
 import { trpc } from '@/utils/trpc';
+import { useT } from '@/lib/i18n/client';
 import {
   CheckCircle2,
   XCircle,
@@ -66,6 +67,7 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
   initialTemplates,
   initialStats
 }) => {
+  const t = useT();
   const router = useRouter();
   const { toast } = useToast();
   
@@ -110,10 +112,10 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
       });
 
       toast({
-        title: isActive ? 'Template Approved' : 'Template Rejected',
+        title: isActive ? t('catalog.templateApprovedTitle') : t('catalog.templateRejectedTitle'),
         description: isActive
-          ? 'The template has been approved and published to the community.'
-          : 'The template has been rejected.',
+          ? t('catalog.templateApprovedDesc')
+          : t('catalog.templateRejectedDesc'),
         variant: 'default'
       });
 
@@ -129,8 +131,8 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
       setShowReviewDialog(false);
     } catch (error) {
       toast({
-        title: 'Error',
-        description: 'Failed to process template review. Please try again.',
+        title: t('common.error'),
+        description: t('catalog.templateReviewFailedDesc'),
         variant: 'destructive'
       });
     }
@@ -181,34 +183,34 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('catalog.pendingReview')}</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-warning">{stats.totalPending}</div>
-            <p className="text-xs text-muted-foreground">Templates awaiting review</p>
+            <p className="text-xs text-muted-foreground">{t('catalog.templatesAwaitingReview')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Approved</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('catalog.approvedLabel')}</CardTitle>
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-success">{stats.totalApproved}</div>
-            <p className="text-xs text-muted-foreground">Published templates</p>
+            <p className="text-xs text-muted-foreground">{t('catalog.publishedTemplates')}</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Rejected</CardTitle>
+            <CardTitle className="text-sm font-medium">{t('catalog.rejectedLabel')}</CardTitle>
             <XCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-destructive">{stats.totalRejected}</div>
-            <p className="text-xs text-muted-foreground">Rejected submissions</p>
+            <p className="text-xs text-muted-foreground">{t('catalog.rejectedSubmissions')}</p>
           </CardContent>
         </Card>
       </div>
@@ -216,8 +218,8 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
       {/* Filters and Search */}
       <Card>
         <CardHeader>
-          <CardTitle>Template Queue</CardTitle>
-          <CardDescription>Review and manage template submissions</CardDescription>
+          <CardTitle>{t('catalog.templateQueue')}</CardTitle>
+          <CardDescription>{t('catalog.templateQueueDesc')}</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4 mb-6">
@@ -225,7 +227,7 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search templates, authors, or descriptions..."
+                  placeholder={t('catalog.searchTemplatesPlaceholder')}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10"
@@ -238,9 +240,9 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
               onChange={(e) => setStatusFilter(e.target.value as any)}
               className="px-3 py-2 border border-input rounded-md bg-background"
             >
-              <option value="all">All Status</option>
-              <option value="pending">Pending</option>
-              <option value="reviewing">Reviewing</option>
+              <option value="all">{t('catalog.allStatus')}</option>
+              <option value="pending">{t('catalog.statusPending')}</option>
+              <option value="reviewing">{t('catalog.statusReviewing')}</option>
             </select>
           </div>
 
@@ -248,9 +250,9 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
             {filteredTemplates.length === 0 ? (
               <div className="text-center py-8">
                 <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <h3 className="text-lg font-medium text-foreground mb-2">No templates found</h3>
+                <h3 className="text-lg font-medium text-foreground mb-2">{t('catalog.noTemplatesFound')}</h3>
                 <p className="text-muted-foreground">
-                  {searchQuery ? `No templates match "${searchQuery}"` : 'No pending templates to review'}
+                  {searchQuery ? t('catalog.noTemplatesMatch', { query: searchQuery }) : t('catalog.noPendingTemplates')}
                 </p>
               </div>
             ) : (
@@ -279,7 +281,7 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
                           </div>
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            <span>Submitted {formatDate(template.submittedAt)}</span>
+                            <span>{t('catalog.submittedOn', { date: formatDate(template.submittedAt) })}</span>
                           </div>
                           <div className="flex items-center gap-2">
                             <Tag className="h-4 w-4" />
@@ -287,7 +289,7 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
                           </div>
                           <div className="flex items-center gap-2">
                             <Layers3 className="h-4 w-4" />
-                            <span>{template.services.length} services</span>
+                            <span>{t('catalog.servicesCount', { count: template.services.length })}</span>
                           </div>
                         </div>
 
@@ -311,14 +313,14 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
                               onClick={() => handleReviewTemplate(template, 'reject')}
                             >
                               <XCircle className="h-4 w-4 mr-1" />
-                              Reject
+                              {t('catalog.reject')}
                             </Button>
                             <Button
                               size="sm"
                               onClick={() => handleReviewTemplate(template, 'approve')}
                             >
                               <CheckCircle2 className="h-4 w-4 mr-1" />
-                              Approve
+                              {t('catalog.approve')}
                             </Button>
                           </>
                         )}
@@ -337,7 +339,7 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {reviewAction === 'approve' ? 'Approve Template' : 'Reject Template'}
+              {reviewAction === 'approve' ? t('catalog.approveTemplate') : t('catalog.rejectTemplate')}
             </DialogTitle>
             <DialogDescription>
               {selectedTemplate?.title}
@@ -348,19 +350,19 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
             <div className="space-y-6">
               {/* Template Details */}
               <div className="border rounded-lg p-4">
-                <h4 className="font-medium mb-3">Template Overview</h4>
+                <h4 className="font-medium mb-3">{t('catalog.templateOverview')}</h4>
                 <div className="grid grid-cols-2 gap-4 text-sm">
                   <div>
-                    <span className="font-medium">Author:</span> {selectedTemplate.author.name}
+                    <span className="font-medium">{t('catalog.authorColon')}</span> {selectedTemplate.author.name}
                   </div>
                   <div>
-                    <span className="font-medium">Category:</span> {selectedTemplate.category}
+                    <span className="font-medium">{t('catalog.categoryColon')}</span> {selectedTemplate.category}
                   </div>
                   <div>
-                    <span className="font-medium">Difficulty:</span> {selectedTemplate.difficulty}
+                    <span className="font-medium">{t('catalog.difficultyColon')}</span> {selectedTemplate.difficulty}
                   </div>
                   <div>
-                    <span className="font-medium">Services:</span> {selectedTemplate.services.length}
+                    <span className="font-medium">{t('catalog.servicesColon')}</span> {selectedTemplate.services.length}
                   </div>
                 </div>
                 
@@ -371,7 +373,7 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
 
               {/* Services Preview */}
               <div className="border rounded-lg p-4">
-                <h4 className="font-medium mb-3">Services ({selectedTemplate.services.length})</h4>
+                <h4 className="font-medium mb-3">{t('catalog.servicesHeadingCount', { count: selectedTemplate.services.length })}</h4>
                 <div className="grid grid-cols-2 gap-2">
                   {selectedTemplate.services.slice(0, 8).map((service, index) => (
                     <div key={index} className="flex items-center gap-2 p-2 bg-muted rounded text-sm">
@@ -381,7 +383,7 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
                   ))}
                   {selectedTemplate.services.length > 8 && (
                     <div className="col-span-2 text-center text-sm text-muted-foreground py-2">
-                      +{selectedTemplate.services.length - 8} more services
+                      {t('catalog.moreServicesCount', { count: selectedTemplate.services.length - 8 })}
                     </div>
                   )}
                 </div>
@@ -390,13 +392,13 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
               {/* Review Notes */}
               <div>
                 <label className="block text-sm font-medium mb-2">
-                  Review Notes {reviewAction === 'reject' && <span className="text-destructive">*</span>}
+                  {t('catalog.reviewNotes')} {reviewAction === 'reject' && <span className="text-destructive">*</span>}
                 </label>
                 <Textarea
                   placeholder={
-                    reviewAction === 'approve' 
-                      ? 'Optional notes for the author and team...'
-                      : 'Please provide feedback on why this template is being rejected...'
+                    reviewAction === 'approve'
+                      ? t('catalog.reviewNotesOptionalPlaceholder')
+                      : t('catalog.reviewNotesRejectPlaceholder')
                   }
                   value={reviewNotes}
                   onChange={(e) => setReviewNotes(e.target.value)}
@@ -408,15 +410,14 @@ const TemplateApprovalSystem: React.FC<TemplateApprovalSystemProps> = ({
                 <Alert>
                   <AlertTriangle className="h-4 w-4" />
                   <AlertDescription>
-                    This template will be rejected and the author will be notified with your feedback. 
-                    Please provide constructive feedback to help them improve.
+                    {t('catalog.rejectAlert')}
                   </AlertDescription>
                 </Alert>
               )}
 
               <div className="flex justify-end gap-3">
                 <Button variant="outline" onClick={() => setShowReviewDialog(false)}>
-                  Cancel
+                  {t('common.cancel')}
                 </Button>
                 <Button
                   onClick={handleSubmitReview}
@@ -427,10 +428,10 @@ reviewTemplateMutation.isPending
                   variant={reviewAction === 'approve' ? 'default' : 'destructive'}
                 >
 {reviewTemplateMutation.isPending
-                    ? 'Processing...'
+                    ? t('catalog.processing')
                     : reviewAction === 'approve'
-                    ? 'Approve Template'
-                    : 'Reject Template'
+                    ? t('catalog.approveTemplate')
+                    : t('catalog.rejectTemplate')
                   }
                 </Button>
               </div>

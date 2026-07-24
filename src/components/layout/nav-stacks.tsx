@@ -13,6 +13,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
+import { useT } from "@/lib/i18n/client"
 
 /**
  * Nav Stacks Component
@@ -28,13 +29,14 @@ interface NavStacksProps {
 }
 
 export function NavStacks({ stacks }: NavStacksProps) {
+  const t = useT()
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Your Stacks</SidebarGroupLabel>
-      <SidebarGroupAction title="Add Stack" asChild>
+      <SidebarGroupLabel>{t("shell.yourStacks")}</SidebarGroupLabel>
+      <SidebarGroupAction title={t("shell.addStack")} asChild>
         <Link href="/stack-builder">
           <Plus className="size-4" />
-          <span className="sr-only">Add Stack</span>
+          <span className="sr-only">{t("shell.addStack")}</span>
         </Link>
       </SidebarGroupAction>
       <SidebarGroupContent>
@@ -53,7 +55,7 @@ export function NavStacks({ stacks }: NavStacksProps) {
             <SidebarMenuButton asChild className="text-sidebar-foreground/70">
               <Link href={"/stacks" as Route}>
                 <MoreHorizontal className="text-sidebar-foreground/70" />
-                <span>Browse All Stacks</span>
+                <span>{t("shell.browseAllStacks")}</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

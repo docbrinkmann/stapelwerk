@@ -1,0 +1,56 @@
+name: Bug report
+description: Something in BuildMyStack isn't working as expected
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please do **not** report security issues here —
+        see [SECURITY.md](../../SECURITY.md) for private disclosure.
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+      placeholder: I composed a stack with nginx + postgres, exported, and `docker compose up` failed with…
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: The smallest sequence that reproduces the problem.
+      placeholder: |
+        1. Add service X to a stack
+        2. Set env Y
+        3. Export / deploy
+        4. See error
+    validations:
+      required: true
+  - type: dropdown
+    id: how-run
+    attributes:
+      label: How are you running BuildMyStack?
+      options:
+        - Self-hosted (docker-compose.selfhost.yml)
+        - Local dev (npm run dev)
+        - Hosted (buildmystack.dev)
+        - Other
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Version/commit, OS, Docker version, browser if relevant.
+      placeholder: "commit abc1234, Ubuntu 24.04, Docker 27.x, Firefox"
+    validations:
+      required: false
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs
+      description: Paste any relevant log output (redact secrets first).
+      render: shell
+    validations:
+      required: false

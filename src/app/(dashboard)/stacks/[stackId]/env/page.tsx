@@ -36,6 +36,7 @@ import {
   Check
 } from 'lucide-react'
 import { useToast } from '@/components/ui/use-toast'
+import { useT } from '@/lib/i18n/client'
 
 interface EnvVar {
   key: string
@@ -52,16 +53,17 @@ function EnvVarRow({
   onEdit: (envVar: EnvVar) => void
   onDelete: (key: string) => void
 }) {
+  const t = useT()
   const [showValue, setShowValue] = useState(false)
   const [copied, setCopied] = useState(false)
 
   const { toast } = useToast()
-  
+
   const handleCopy = async () => {
     await navigator.clipboard.writeText(envVar.value)
     setCopied(true)
     setTimeout(() => setCopied(false), 2000)
-    toast({ title: 'Copied to clipboard' })
+    toast({ title: t('ops.copiedToClipboard') })
   }
 
   const displayValue = showValue 
@@ -84,7 +86,7 @@ function EnvVarRow({
               size="icon"
               className="h-8 w-8"
               onClick={() => setShowValue(!showValue)}
-              aria-label={showValue ? 'Hide value' : 'Show value'}
+              aria-label={showValue ? t('ops.hideValue') : t('ops.showValue')}
             >
               {showValue ? (
                 <EyeOff className="h-4 w-4" />
@@ -98,7 +100,7 @@ function EnvVarRow({
             size="icon"
             className="h-8 w-8"
             onClick={handleCopy}
-            aria-label="Copy value"
+            aria-label={t('ops.copyValue')}
           >
             {copied ? (
               <Check className="h-4 w-4 text-success" />
@@ -111,7 +113,7 @@ function EnvVarRow({
             size="icon"
             className="h-8 w-8"
             onClick={() => onEdit(envVar)}
-            aria-label="Edit variable"
+            aria-label={t('ops.editVariable')}
           >
             <Pencil className="h-4 w-4" />
           </Button>
@@ -120,7 +122,7 @@ function EnvVarRow({
             size="icon"
             className="h-8 w-8 text-destructive hover:text-destructive"
             onClick={() => onDelete(envVar.key)}
-            aria-label="Delete variable"
+            aria-label={t('ops.deleteVariable')}
           >
             <Trash2 className="h-4 w-4" />
           </Button>
@@ -141,16 +143,17 @@ function AddEnvVarDialog({
   onAdd: (envVar: EnvVar) => void
   editingVar: EnvVar | null
 }) {
+  const t = useT()
   const [key, setKey] = useState(editingVar?.key || '')
   const [value, setValue] = useState(editingVar?.value || '')
   const [isSecret, setIsSecret] = useState(editingVar?.isSecret || false)
 
   const { toast } = useToast()
-  
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!key.trim()) {
-      toast({ title: 'Key is required', variant: 'destructive' })
+      toast({ title: t('ops.keyRequired'), variant: 'destructive' })
       return
     }
     onAdd({ key: key.trim(), value, isSecret })
@@ -165,16 +168,16 @@ function AddEnvVarDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>
-            {editingVar ? 'Edit Environment Variable' : 'Add Environment Variable'}
+            {editingVar ? t('ops.editEnvVar') : t('ops.addEnvVar')}
           </DialogTitle>
           <DialogDescription>
-            Environment variables are passed to your services at runtime.
+            {t('ops.envVarDialogDesc')}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="key">Key</Label>
+              <Label htmlFor="key">{t('ops.keyLabel')}</Label>
               <Input
                 id="key"
                 placeholder="VARIABLE_NAME"
@@ -185,10 +188,10 @@ function AddEnvVarDialog({
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="value">Value</Label>
+              <Label htmlFor="value">{t('ops.valueLabel')}</Label>
               <Input
                 id="value"
-                placeholder="value"
+                placeholder={t('ops.valuePlaceholder')}
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 type={isSecret ? 'password' : 'text'}
@@ -204,16 +207,16 @@ function AddEnvVarDialog({
                 className="h-4 w-4 rounded border-border"
               />
               <Label htmlFor="isSecret" className="text-sm">
-                Mark as secret (value will be masked)
+                {t('ops.markAsSecret')}
               </Label>
             </div>
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button type="submit">
-              {editingVar ? 'Save Changes' : 'Add Variable'}
+              {editingVar ? t('ops.saveChanges') : t('ops.addVariable')}
             </Button>
           </DialogFooter>
         </form>
@@ -223,6 +226,7 @@ function AddEnvVarDialog({
 }
 
 export default function StackEnvPage() {
+  const t = useT()
   const params = useParams()
   const stackId = params.stackId as string
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -238,7 +242,7 @@ export default function StackEnvPage() {
 
   const setEnv = trpc.stacks.setEnvVars.useMutation({
     onSuccess: () => { void utils.stacks.getEnvVars.invalidate({ stackId }) },
-    onError: (e) => toast({ title: 'Failed to save', description: e.message, variant: 'destructive' }),
+    onError: (e) => toast({ title: t('ops.saveFailed'), description: e.message, variant: 'destructive' }),
   })
   // Every change persists the full list — the query is the source of truth.
   const persist = (next: EnvVar[]) => setEnv.mutate({ stackId, envVars: next })
@@ -246,14 +250,14 @@ export default function StackEnvPage() {
   const handleAdd = (envVar: EnvVar) => {
     if (editingVar) {
       persist(envVars.map(v => v.key === editingVar.key ? envVar : v))
-      toast({ title: 'Environment variable updated' })
+      toast({ title: t('ops.envVarUpdated') })
     } else {
       if (envVars.some(v => v.key === envVar.key)) {
-        toast({ title: 'Variable with this key already exists', variant: 'destructive' })
+        toast({ title: t('ops.envVarExists'), variant: 'destructive' })
         return
       }
       persist([...envVars, envVar])
-      toast({ title: 'Environment variable added' })
+      toast({ title: t('ops.envVarAdded') })
     }
     setEditingVar(null)
   }
@@ -265,7 +269,7 @@ export default function StackEnvPage() {
 
   const handleDelete = (key: string) => {
     persist(envVars.filter(v => v.key !== key))
-    toast({ title: 'Environment variable deleted' })
+    toast({ title: t('ops.envVarDeleted') })
   }
 
   if (envQuery.isLoading) {
@@ -281,14 +285,14 @@ export default function StackEnvPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-semibold">Environment Variables</h2>
+          <h2 className="text-xl font-semibold">{t('ops.envTitle')}</h2>
           <p className="text-muted-foreground">
-            Configure environment variables for your stack services
+            {t('ops.envSubtitle')}
           </p>
         </div>
         <Button onClick={() => { setEditingVar(null); setDialogOpen(true) }}>
           <Plus className="h-4 w-4 mr-2" />
-          Add Variable
+          {t('ops.addVariable')}
         </Button>
       </div>
 
@@ -296,28 +300,28 @@ export default function StackEnvPage() {
         <CardHeader>
           <CardTitle className="text-lg flex items-center gap-2">
             <Key className="h-5 w-5" />
-            Variables ({envVars.length})
+            {t('ops.variablesCount', { count: envVars.length })}
           </CardTitle>
           <CardDescription>
-            Saved with your stack. Secret values are masked in this list.
+            {t('ops.variablesCardDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent>
           {envVars.length === 0 ? (
             <div className="text-center py-8">
               <Key className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-              <h3 className="text-lg font-semibold">No environment variables</h3>
+              <h3 className="text-lg font-semibold">{t('ops.noEnvVars')}</h3>
               <p className="text-muted-foreground mt-2">
-                Add environment variables to configure your services
+                {t('ops.noEnvVarsHint')}
               </p>
             </div>
           ) : (
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Key</TableHead>
-                  <TableHead>Value</TableHead>
-                  <TableHead className="w-[150px]">Actions</TableHead>
+                  <TableHead>{t('ops.keyLabel')}</TableHead>
+                  <TableHead>{t('ops.valueLabel')}</TableHead>
+                  <TableHead className="w-[150px]">{t('ops.actions')}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
