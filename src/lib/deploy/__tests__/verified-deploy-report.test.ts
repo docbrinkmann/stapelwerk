@@ -86,6 +86,17 @@ describe('signReport / verifyReportSignature (ed25519)', () => {
     expect(verifyReportSignature(r, sig, publicKeyPem)).toBe(true)
   })
 
+  it('accepts an env-shaped key: base64-encoded and \\n-escaped PEM both sign correctly', () => {
+    const { privateKeyPem } = generateSigningKeypair()
+    const publicKeyPem = publicKeyFromPrivate(privateKeyPem)
+    const r = buildReport({ ...base, composeYaml: LEAK_PROOF_COMPOSE })
+    const b64Key = Buffer.from(privateKeyPem, 'utf8').toString('base64')
+    expect(verifyReportSignature(r, signReport(r, b64Key), publicKeyPem)).toBe(true)
+    const escapedKey = privateKeyPem.replace(/\n/g, '\\n')
+    expect(verifyReportSignature(r, signReport(r, escapedKey), publicKeyPem)).toBe(true)
+    expect(publicKeyFromPrivate(b64Key)).toBe(publicKeyPem)
+  })
+
   it('rejects a tampered report (findings flipped after signing)', () => {
     const { privateKeyPem, publicKeyPem } = generateSigningKeypair()
     const r = buildReport({ ...base, composeYaml: LEAK_PROOF_COMPOSE })

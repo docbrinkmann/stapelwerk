@@ -95,7 +95,7 @@ Stapelwerk is **AGPL-3.0 open-core**. A self-hosted build has **every feature an
 Monetization is **patronage + one-time outcomes, not a monthly SaaS**:
 
 - **Free forever** — compose, check, export.
-- **Verified deploy — €29 once** — a provenance-signed report that your stack is deploy-safe by construction: the VPN kill-switch confines the download client (no real-IP leak if the tunnel drops), plus a safety audit — no datastore exposed on the host network, datastores keep their data, no default secrets, images pinned. Verifiable with our public key. You keep and run the compose yourself — free forever; the €29 buys the signed proof, not a hosted deploy (we never hold your keys). Optionally fold in a one-command runtime attestation you run on your own Docker.
+- **Verified deploy — €29 once** — a provenance-signed report that your stack is deploy-safe by construction: the VPN kill-switch confines the download client (no real-IP leak if the tunnel drops), plus a safety audit — no datastore exposed on the host network, datastores keep their data, no default secrets, images pinned. Verifiable with our public key ([`docs/verified-deploy-public-key.pem`](docs/verified-deploy-public-key.pem)). You keep and run the compose yourself — free forever; the €29 buys the signed proof, not a hosted deploy (we never hold your keys). Optionally fold in a one-command runtime attestation you run on your own Docker.
 - **Supporter — €99 / year** — funds development (signed builds, your name in `SUPPORTERS`). A thank-you, not a feature unlock.
 
 (Monthly Pro / Fleet tiers exist in-app, but they aren't the pitch.)

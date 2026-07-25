@@ -100,6 +100,17 @@ services:
       # Deploy SSH key: the app generates it here (ssh-keygen) and the ws process
       # reads the same file (shared deploy-keys volume) to run remote deploys.
       DEPLOY_SSH_KEY_FILE: ${DEPLOY_SSH_KEY_FILE:-}
+
+      # Billing (hosted instance only — the selfhost compose deliberately omits
+      # these: unset BILLING_ENABLED = every feature free, the open-core promise).
+      BILLING_ENABLED: ${BILLING_ENABLED:-}
+      POLAR_ACCESS_TOKEN: ${POLAR_ACCESS_TOKEN:-}
+      POLAR_WEBHOOK_SECRET: ${POLAR_WEBHOOK_SECRET:-}
+      POLAR_PRODUCT_VERIFIED_DEPLOY: ${POLAR_PRODUCT_VERIFIED_DEPLOY:-}
+      POLAR_PRODUCT_PRO: ${POLAR_PRODUCT_PRO:-}
+      POLAR_PRODUCT_FLEET: ${POLAR_PRODUCT_FLEET:-}
+      POLAR_API_BASE: ${POLAR_API_BASE:-}
+      VERIFIED_DEPLOY_SIGNING_KEY: ${VERIFIED_DEPLOY_SIGNING_KEY:-}
     ports:
       - "${APP_PORT:-3000}:3000"
     depends_on:

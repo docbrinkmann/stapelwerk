@@ -126,9 +126,19 @@ export function buildReport(input: {
   }
 }
 
+/**
+ * Env files are line-based, PEMs aren't: accept the key as literal PEM,
+ * PEM with `\n` escape sequences, or base64-encoded PEM (single-line-safe).
+ */
+export function normalizeKeyPem(pem: string): string {
+  const t = pem.trim()
+  if (t.includes('-----BEGIN')) return t.replace(/\\n/g, '\n')
+  return Buffer.from(t, 'base64').toString('utf8')
+}
+
 /** Sign the canonical report with an ed25519 PEM private key; base64 signature. */
 export function signReport(report: VerifiedDeployReport, privateKeyPem: string): string {
-  const key = crypto.createPrivateKey(privateKeyPem)
+  const key = crypto.createPrivateKey(normalizeKeyPem(privateKeyPem))
   // ed25519: the algorithm argument MUST be null (Node signs over the raw message).
   const sig = crypto.sign(null, Buffer.from(canonicalReport(report)), key)
   return sig.toString('base64')
@@ -151,7 +161,7 @@ export function verifyReportSignature(
 /** Derive the publishable ed25519 public key (SPKI PEM) from the private key. */
 export function publicKeyFromPrivate(privateKeyPem: string): string {
   return crypto
-    .createPublicKey(privateKeyPem)
+    .createPublicKey(normalizeKeyPem(privateKeyPem))
     .export({ type: 'spki', format: 'pem' })
     .toString()
 }
