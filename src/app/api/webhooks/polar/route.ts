@@ -4,7 +4,7 @@ import { prisma } from '@/lib/db-utils'
 import { verifyWebhookSignature, webhookEventId, mapEventToPlan, isVerifiedDeployOrder } from '@/lib/billing'
 
 /**
- * Lemon Squeezy subscription webhook.
+ * Polar webhook (Standard Webhooks delivery).
  *
  * Security: HMAC signature verified before anything touches the DB (401 on
  * mismatch). Idempotent: keyed on sha256(rawBody) in `billing_events` so a
@@ -14,10 +14,18 @@ import { verifyWebhookSignature, webhookEventId, mapEventToPlan, isVerifiedDeplo
  */
 export async function POST(req: NextRequest): Promise<NextResponse> {
   const rawBody = await req.text()
-  const signature = req.headers.get('X-Signature')
-  const secret = process.env.LEMONSQUEEZY_WEBHOOK_SECRET
+  const secret = process.env.POLAR_WEBHOOK_SECRET
 
-  if (!verifyWebhookSignature(rawBody, signature, secret)) {
+  const verified = verifyWebhookSignature(
+    rawBody,
+    {
+      id: req.headers.get('webhook-id'),
+      timestamp: req.headers.get('webhook-timestamp'),
+      signature: req.headers.get('webhook-signature'),
+    },
+    secret,
+  )
+  if (!verified) {
     return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
   }
 
@@ -30,8 +38,15 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   let payload: {
-    meta?: { event_name?: string; custom_data?: { user_id?: string } }
-    data?: { attributes?: Record<string, unknown> }
+    type?: string
+    data?: {
+      id?: string
+      product_id?: string
+      status?: string
+      current_period_end?: string | null
+      ends_at?: string | null
+      metadata?: { user_id?: string }
+    }
   }
   try {
     payload = JSON.parse(rawBody)
@@ -39,24 +54,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
     return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 })
   }
 
-  const eventName = payload.meta?.event_name ?? 'unknown'
-  const userId = payload.meta?.custom_data?.user_id
-  const attrs = (payload.data?.attributes ?? {}) as Parameters<typeof mapEventToPlan>[1]
+  const eventType = payload.type ?? 'unknown'
+  const data = payload.data ?? {}
+  const userId = data.metadata?.user_id
 
   // Ledger first (audit + idempotency anchor), then apply the state change.
   await prisma.billing_events.create({
     data: {
       id: crypto.randomUUID(),
-      provider: 'lemonsqueezy',
+      provider: 'polar',
       eventId,
-      type: eventName,
+      type: eventType,
       userId: userId ?? null,
       payload: rawBody,
       processedAt: new Date(),
     },
   })
 
-  const mutation = mapEventToPlan(eventName, attrs)
+  const mutation = mapEventToPlan(eventType, data)
   if (mutation && userId) {
     const user = await prisma.users.findUnique({ where: { id: userId }, select: { id: true } })
     if (user) {
@@ -66,26 +81,24 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       })
     } else {
       // Unknown user: keep the ledger entry for debugging, don't error.
-      console.warn(`[lemonsqueezy] webhook ${eventName} for unknown user ${userId}`)
+      console.warn(`[polar] webhook ${eventType} for unknown user ${userId}`)
     }
   }
 
   // One-time verified-deploy purchase: grant a paid credit the user redeems into
-  // a signed report. Idempotent via the unique LS order id (belt-and-suspenders
-  // with the billing_events guard). No plan change.
-  const orderAttrs = attrs as { first_order_item?: { variant_id?: string | number }; identifier?: string }
-  const variantId = orderAttrs.first_order_item?.variant_id
-  if (isVerifiedDeployOrder(eventName, variantId) && userId) {
+  // a signed report. Idempotent via the unique provider order id (belt-and-
+  // suspenders with the billing_events guard). No plan change.
+  if (isVerifiedDeployOrder(eventType, data.product_id) && userId) {
     const user = await prisma.users.findUnique({ where: { id: userId }, select: { id: true } })
     if (user) {
-      const orderId = orderAttrs.identifier ?? String((payload.data as { id?: unknown })?.id ?? eventId)
+      const orderId = data.id ?? eventId
       await prisma.verified_deploy_reports.upsert({
-        where: { lemonsqueezyOrderId: orderId },
+        where: { providerOrderId: orderId },
         update: {},
-        create: { userId, lemonsqueezyOrderId: orderId, status: 'paid', updatedAt: new Date() },
+        create: { userId, providerOrderId: orderId, status: 'paid', updatedAt: new Date() },
       })
     } else {
-      console.warn(`[lemonsqueezy] verified-deploy order for unknown user ${userId}`)
+      console.warn(`[polar] verified-deploy order for unknown user ${userId}`)
     }
   }
 

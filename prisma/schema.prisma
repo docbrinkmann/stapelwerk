@@ -499,7 +499,7 @@ model users {
 // route). Raw payload kept for debugging/audit.
 model billing_events {
   id          String   @id @default(cuid())
-  provider    String   @default("lemonsqueezy")
+  provider    String   @default("polar")
   eventId     String   @unique
   type        String
   userId      String?
@@ -510,16 +510,16 @@ model billing_events {
 }
 
 // The one-time "verified deploy" purchase + its signed report artifact. A row is
-// created as a paid credit by the Lemon Squeezy order webhook (or free, on
+// created as a paid credit by the Polar order webhook (or free, on
 // self-host), then filled in when the user generates the signed leak-proof report
 // for a specific stack. Composing/checking/exporting stay free; this is the trust
 // artifact. See src/lib/deploy/verified-deploy-report.ts.
 model verified_deploy_reports {
   id                  String    @id @default(cuid())
   userId              String
-  // Set when paid via a Lemon Squeezy one-time order; null for self-host (billing
+  // Set when paid via a Polar one-time order; null for self-host (billing
   // off) free reports. Unique so the order webhook is idempotent.
-  lemonsqueezyOrderId String?   @unique
+  providerOrderId     String?   @unique
   // Set when the report is generated for a specific stack.
   stackId             String?
   // "paid" (credit, not yet generated) | "leak-proof" | "leak" | "no-download-client"

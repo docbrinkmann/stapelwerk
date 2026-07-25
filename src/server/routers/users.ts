@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { createTRPCRouter, protectedProcedure } from '../trpc'
 import { isBillingEnabled, resolvePlan } from '@/lib/plans'
+import { customerPortalUrl } from '@/lib/billing'
 
 // ponytail: profile = display name only; add fields when they exist in the schema
 export const usersRouter = createTRPCRouter({
@@ -17,20 +18,14 @@ export const usersRouter = createTRPCRouter({
       return { ...rest, billingEnabled: false as const }
     }
 
-    // The customer-portal URL lives on the latest subscription webhook payload.
+    // Polar portals open via a short-lived customer session; only worth the
+    // API call once the user has any billing history with us.
     let manageUrl: string | null = null
     const lastEvent = await ctx.prisma.billing_events.findFirst({
-      where: { userId: ctx.userId!, type: { not: 'subscription_expired' } },
-      orderBy: { processedAt: 'desc' },
+      where: { userId: ctx.userId! },
+      select: { id: true },
     })
-    if (lastEvent) {
-      try {
-        const portal = JSON.parse(lastEvent.payload)?.data?.attributes?.urls?.customer_portal
-        if (typeof portal === 'string') manageUrl = portal
-      } catch {
-        // malformed stored payload — no portal link, not fatal
-      }
-    }
+    if (lastEvent) manageUrl = await customerPortalUrl(ctx.userId!)
 
     return {
       id: user.id,

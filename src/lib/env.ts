@@ -46,7 +46,6 @@ const envSchema = z.object({
   npm_package_version: z.string().optional(),
   
   // Custom configuration
-  CUSTOM_KEY: z.string().optional(),
 })
 
 // Type-safe environment variables

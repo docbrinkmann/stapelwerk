@@ -314,6 +314,9 @@ ghcr-publish:
   image: docker:27
   services:
     - docker:27-dind
+  # Release tags are only cut from commits whose branch pipelines are already
+  # green — don't re-run the whole gate chain in front of the image build.
+  needs: []
   before_script: []
   cache: []
   script:

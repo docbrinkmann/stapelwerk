@@ -23,11 +23,11 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-
  * boot the stack on our infra — the proof is structural + signed.
  */
 export const verifiedDeployRouter = createTRPCRouter({
-  // Price + hosted checkout URL (null on self-host / when LS isn't configured).
-  checkout: protectedProcedure.query(({ ctx }) => ({
+  // Price + hosted checkout URL (null on self-host / when Polar isn't configured).
+  checkout: protectedProcedure.query(async ({ ctx }) => ({
     price: VERIFIED_DEPLOY_PRICE,
     billingEnabled: isBillingEnabled(),
-    url: isBillingEnabled() ? verifiedDeployCheckoutUrl(ctx.userId!) : null,
+    url: isBillingEnabled() ? await verifiedDeployCheckoutUrl(ctx.userId!) : null,
   })),
 
   // The ed25519 public key that signs reports, so anyone can verify one. Public —
