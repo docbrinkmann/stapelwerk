@@ -146,7 +146,7 @@ Add these variables in GitLab project → **Settings** → **CI/CD** → **Varia
 | `SERVER_USER` | Variable | your-username | ✓ | ✗ |
 | `DATABASE_URL` | Variable | postgresql://... | ✓ | ✓ |
 | `NEXTAUTH_SECRET` | Variable | generated-secret | ✓ | ✓ |
-| `NEXTAUTH_URL` | Variable | https://stapelwerk.minilab.live | ✓ | ✗ |
+| `NEXTAUTH_URL` | Variable | https://app.stapelwerk.dev | ✓ | ✗ |
 
 ## Initial Deployment Test
 

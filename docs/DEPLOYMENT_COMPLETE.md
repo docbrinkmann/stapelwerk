@@ -6,7 +6,7 @@ All deployment tasks for Stapelwerk Docker and GitLab Pages deployment have been
 
 **Deployment Date**: 2025-10-14  
 **Docker Host**: gitlab.minilab.live  
-**Production URL**: https://stapelwerk.minilab.live  
+**Production URL**: https://app.stapelwerk.dev  
 **GitLab Pages**: https://sebastian.gitlab.io/stapelwerk  
 
 ---
@@ -190,7 +190,7 @@ ssh root@gitlab.minilab.live
 # Install certbot and get certificates
 # Follow: docs/SSL_SETUP.md
 
-sudo certbot certonly --nginx -d stapelwerk.minilab.live
+sudo certbot certonly --nginx -d app.stapelwerk.dev
 ```
 
 ### 3. Configure GitLab CI/CD

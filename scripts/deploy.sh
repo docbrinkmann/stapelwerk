@@ -108,7 +108,7 @@ echo -e "${GREEN}✓${NC} Cleanup complete"
 echo -e "\n${GREEN}========================================${NC}"
 echo -e "${GREEN}✅ Deployment successful!${NC}"
 echo -e "${GREEN}========================================${NC}"
-echo "Application: https://stapelwerk.minilab.live"
+echo "Application: https://app.stapelwerk.dev"
 echo "Image: $CI_REGISTRY_IMAGE:$IMAGE_TAG"
 echo "Deployed at: $(date)"
 

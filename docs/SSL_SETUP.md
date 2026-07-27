@@ -4,7 +4,7 @@ This guide covers setting up free SSL certificates for Stapelwerk using Let's En
 
 ## Prerequisites
 
-- Domain name pointing to your server (stapelwerk.minilab.live)
+- Domain name pointing to your server (app.stapelwerk.dev)
 - Nginx installed and running
 - Ports 80 and 443 open in firewall
 
@@ -29,7 +29,7 @@ This method automatically configures Nginx for you.
 
 ```bash
 # Obtain and install certificate
-sudo certbot --nginx -d stapelwerk.minilab.live
+sudo certbot --nginx -d app.stapelwerk.dev
 
 # Follow the prompts:
 # - Enter email address for renewal notifications
@@ -75,10 +75,10 @@ sudo systemctl reload nginx
 
 ```bash
 # Get certificate only (don't modify nginx yet)
-sudo certbot certonly --nginx -d stapelwerk.minilab.live
+sudo certbot certonly --nginx -d app.stapelwerk.dev
 
 # Or use webroot method
-sudo certbot certonly --webroot -w /var/www/certbot -d stapelwerk.minilab.live
+sudo certbot certonly --webroot -w /var/www/certbot -d app.stapelwerk.dev
 ```
 
 ### Step 5: Update Nginx Configuration
@@ -109,16 +109,16 @@ sudo systemctl reload nginx
 sudo certbot certificates
 
 # Should show:
-# - Certificate Name: stapelwerk.minilab.live
+# - Certificate Name: app.stapelwerk.dev
 # - Expiry Date: ~90 days from now
-# - Certificate Path: /etc/letsencrypt/live/stapelwerk.minilab.live/fullchain.pem
+# - Certificate Path: /etc/letsencrypt/live/app.stapelwerk.dev/fullchain.pem
 ```
 
 ### Test HTTPS
 
 ```bash
 # Test from command line
-curl -I https://stapelwerk.minilab.live
+curl -I https://app.stapelwerk.dev
 
 # Should return:
 # HTTP/2 200
@@ -127,7 +127,7 @@ curl -I https://stapelwerk.minilab.live
 
 ### Test in Browser
 
-Visit: `https://stapelwerk.minilab.live`
+Visit: `https://app.stapelwerk.dev`
 
 - Should show secure connection (lock icon)
 - No certificate warnings
@@ -137,7 +137,7 @@ Visit: `https://stapelwerk.minilab.live`
 
 ```bash
 # Use SSL Labs (takes a few minutes)
-# Visit: https://www.ssllabs.com/ssltest/analyze.html?d=stapelwerk.minilab.live
+# Visit: https://www.ssllabs.com/ssltest/analyze.html?d=app.stapelwerk.dev
 
 # Expected grade: A or A+
 ```
@@ -171,7 +171,7 @@ sudo certbot renew --dry-run
 sudo certbot renew
 
 # Renew specific certificate
-sudo certbot renew --cert-name stapelwerk.minilab.live
+sudo certbot renew --cert-name app.stapelwerk.dev
 ```
 
 ### Renewal Hook (Optional)
@@ -217,7 +217,7 @@ sudo ufw status
 
 ```bash
 # Check if certificate exists
-sudo ls -la /etc/letsencrypt/live/stapelwerk.minilab.live/
+sudo ls -la /etc/letsencrypt/live/app.stapelwerk.dev/
 
 # Should see: fullchain.pem, privkey.pem, chain.pem
 ```
@@ -241,7 +241,7 @@ sudo nginx -t
 
 ```bash
 # Check DNS resolution
-dig stapelwerk.minilab.live
+dig app.stapelwerk.dev
 
 # Check if nginx is listening
 sudo netstat -tlnp | grep nginx
@@ -259,15 +259,15 @@ Wait 1 week or use staging environment for testing:
 
 ```bash
 # Use staging server (for testing only)
-sudo certbot --staging --nginx -d stapelwerk.minilab.live
+sudo certbot --staging --nginx -d app.stapelwerk.dev
 ```
 
 ### Permission Denied Errors
 
 ```bash
 # Fix certificate permissions
-sudo chmod 0644 /etc/letsencrypt/live/stapelwerk.minilab.live/fullchain.pem
-sudo chmod 0600 /etc/letsencrypt/live/stapelwerk.minilab.live/privkey.pem
+sudo chmod 0644 /etc/letsencrypt/live/app.stapelwerk.dev/fullchain.pem
+sudo chmod 0600 /etc/letsencrypt/live/app.stapelwerk.dev/privkey.pem
 ```
 
 ## Monitoring
@@ -283,7 +283,7 @@ Certbot sends email notifications to the address you provided during setup.
 sudo certbot certificates | grep Expiry
 
 # Or
-echo | openssl s_client -servername stapelwerk.minilab.live -connect stapelwerk.minilab.live:443 2>/dev/null | openssl x509 -noout -dates
+echo | openssl s_client -servername app.stapelwerk.dev -connect app.stapelwerk.dev:443 2>/dev/null | openssl x509 -noout -dates
 ```
 
 ### Renewal Log

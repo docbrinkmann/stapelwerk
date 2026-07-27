@@ -172,3 +172,27 @@ describe('isVerifiedDeployOrder', () => {
     expect(isVerifiedDeployOrder('order.paid', VD)).toBe(false)
   })
 })
+
+describe('POLAR_API_BASE', () => {
+  it('falls back to the production base when the env var is unset OR empty (compose passes "")', async () => {
+    process.env.POLAR_API_BASE = ''
+    process.env.POLAR_ACCESS_TOKEN = 'polar_oat_test'
+    process.env.POLAR_PRODUCT_VERIFIED_DEPLOY = VD
+    const fetchMock = vi.fn(async () => ({ ok: true, json: async () => ({ url: 'https://polar.sh/checkout/x' }) }))
+    vi.stubGlobal('fetch', fetchMock)
+    await createCheckout('verified-deploy', 'u')
+    expect((fetchMock.mock.calls[0] as unknown as [string])[0]).toBe('https://api.polar.sh/v1/checkouts/')
+  })
+})
+
+describe('verifyWebhookSignature — Polar key derivations', () => {
+  it('accepts a signature keyed with the RAW utf8 secret (Polar SDK convention)', () => {
+    const body = '{"a":1}'
+    const rawKeySig = 'v1,' + createHmac('sha256', Buffer.from(SECRET, 'utf8'))
+      .update(`msg_1.${NOW}.${body}`, 'utf8').digest('base64')
+    expect(verifyWebhookSignature(body, { id: 'msg_1', timestamp: String(NOW), signature: rawKeySig }, SECRET, NOW)).toBe(true)
+    const strippedKeySig = 'v1,' + createHmac('sha256', Buffer.from(SECRET.replace(/^whsec_/, ''), 'utf8'))
+      .update(`msg_1.${NOW}.${body}`, 'utf8').digest('base64')
+    expect(verifyWebhookSignature(body, { id: 'msg_1', timestamp: String(NOW), signature: strippedKeySig }, SECRET, NOW)).toBe(true)
+  })
+})

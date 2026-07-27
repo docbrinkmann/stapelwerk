@@ -74,7 +74,7 @@ services:
       NEXTAUTH_URL: ${NEXTAUTH_URL:?NEXTAUTH_URL is required}
       
       # Application
-      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://stapelwerk.minilab.live}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-https://app.stapelwerk.dev}
       
       # Sentry (optional)
       SENTRY_DSN: ${SENTRY_DSN:-}
@@ -89,7 +89,7 @@ services:
       REDIS_URL_FILE: ${REDIS_URL_FILE:-}
       
       # Other environment variables
-      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://stapelwerk.minilab.live}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:-https://app.stapelwerk.dev}
 
       # Direct-deploy bridge: the app container has no Docker socket, so it
       # delegates `docker compose` to the websocket service over the shared

@@ -9,7 +9,7 @@
 set -e
 
 # Configuration
-APP_URL="${APP_URL:-https://stapelwerk.minilab.live}"
+APP_URL="${APP_URL:-https://app.stapelwerk.dev}"
 TIMEOUT=10
 
 # Colors
@@ -43,7 +43,7 @@ fi
 
 # Test 3: SSL Certificate
 echo -n "Testing SSL certificate... "
-if echo | openssl s_client -servername stapelwerk.minilab.live -connect stapelwerk.minilab.live:443 2>/dev/null | grep -q "Verify return code: 0"; then
+if echo | openssl s_client -servername app.stapelwerk.dev -connect app.stapelwerk.dev:443 2>/dev/null | grep -q "Verify return code: 0"; then
     echo -e "${GREEN}✓${NC}"
 else
     echo -e "${YELLOW}⚠${NC} (Warning: Certificate verification issue)"

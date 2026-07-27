@@ -30,7 +30,7 @@ We have three levels of automated tests for deployment verification:
 bash scripts/smoke-test.sh
 
 # With custom URL
-APP_URL=https://stapelwerk.minilab.live bash scripts/smoke-test.sh
+APP_URL=https://app.stapelwerk.dev bash scripts/smoke-test.sh
 ```
 
 ### Example Output:
@@ -143,7 +143,7 @@ All integration tests passed successfully! ✓
 bash scripts/e2e-test.sh
 
 # With custom configuration
-APP_URL=https://stapelwerk.minilab.live \
+APP_URL=https://app.stapelwerk.dev \
 PAGES_URL=https://sebastian.gitlab.io/stapelwerk \
 CONTAINER_NAME=stapelwerk-app \
 bash scripts/e2e-test.sh
@@ -356,7 +356,7 @@ If tests fail:
 3. **Test components individually**:
    ```bash
    # Test health endpoint directly
-   curl -v https://stapelwerk.minilab.live/api/health
+   curl -v https://app.stapelwerk.dev/api/health
    
    # Check container status
    ssh root@gitlab.minilab.live "docker ps"

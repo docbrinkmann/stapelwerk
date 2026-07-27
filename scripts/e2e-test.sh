@@ -16,7 +16,7 @@ NC='\033[0m' # No Color
 
 # Configuration
 DOCKER_HOST="${DOCKER_HOST:-ssh://root@gitlab.minilab.live}"
-APP_URL="${APP_URL:-https://stapelwerk.minilab.live}"
+APP_URL="${APP_URL:-https://app.stapelwerk.dev}"
 PAGES_URL="${PAGES_URL:-https://sebastian.gitlab.io/stapelwerk}"
 CONTAINER_NAME="${CONTAINER_NAME:-stapelwerk-app}"
 TIMEOUT=30
@@ -140,7 +140,7 @@ test_ssl_certificate() {
     if curl -s --insecure -v "$APP_URL" 2>&1 | grep -q "SSL certificate verify ok"; then
         test_passed "SSL certificate is valid"
     else
-        expiry=$(echo | openssl s_client -servername stapelwerk.minilab.live -connect stapelwerk.minilab.live:443 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
+        expiry=$(echo | openssl s_client -servername app.stapelwerk.dev -connect app.stapelwerk.dev:443 2>/dev/null | openssl x509 -noout -enddate 2>/dev/null | cut -d= -f2)
         if [ -n "$expiry" ]; then
             test_passed "SSL certificate is valid (expires: $expiry)"
         else

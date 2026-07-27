@@ -79,22 +79,22 @@ docker stats --no-stream stapelwerk-app
 
 #### Health Endpoints
 
-- [ ] Main health endpoint: https://stapelwerk.minilab.live/api/health
+- [ ] Main health endpoint: https://app.stapelwerk.dev/api/health
   ```bash
-  curl https://stapelwerk.minilab.live/api/health
+  curl https://app.stapelwerk.dev/api/health
   # Expected: {"status": "ok", "timestamp": "..."}
   ```
 
-- [ ] Database health: https://stapelwerk.minilab.live/api/health/db
+- [ ] Database health: https://app.stapelwerk.dev/api/health/db
   ```bash
-  curl https://stapelwerk.minilab.live/api/health/db
+  curl https://app.stapelwerk.dev/api/health/db
   # Expected: {"database": "connected", ...}
   ```
 
 #### Core Functionality
 
-- [ ] Home page loads: https://stapelwerk.minilab.live/
-- [ ] API routes respond: https://stapelwerk.minilab.live/api/status
+- [ ] Home page loads: https://app.stapelwerk.dev/
+- [ ] API routes respond: https://app.stapelwerk.dev/api/status
 - [ ] Authentication works (if applicable)
 - [ ] Database queries execute successfully
 - [ ] File uploads work (if applicable)
@@ -114,10 +114,10 @@ docker stats --no-stream stapelwerk-app
 
 ```bash
 # Check SSL certificate
-echo | openssl s_client -servername stapelwerk.minilab.live -connect stapelwerk.minilab.live:443 2>/dev/null | openssl x509 -noout -dates
+echo | openssl s_client -servername app.stapelwerk.dev -connect app.stapelwerk.dev:443 2>/dev/null | openssl x509 -noout -dates
 
 # Test SSL labs (manual check)
-# Visit: https://www.ssllabs.com/ssltest/analyze.html?d=stapelwerk.minilab.live
+# Visit: https://www.ssllabs.com/ssltest/analyze.html?d=app.stapelwerk.dev
 ```
 
 - [ ] SSL certificate is valid
@@ -129,7 +129,7 @@ echo | openssl s_client -servername stapelwerk.minilab.live -connect stapelwerk.
 
 ```bash
 # Check security headers
-curl -I https://stapelwerk.minilab.live/
+curl -I https://app.stapelwerk.dev/
 ```
 
 Verify presence of:
@@ -159,7 +159,7 @@ sudo ss -tulpn | grep LISTEN
 
 ```bash
 # Test home page response time
-curl -w "@curl-format.txt" -o /dev/null -s https://stapelwerk.minilab.live/
+curl -w "@curl-format.txt" -o /dev/null -s https://app.stapelwerk.dev/
 
 # Create curl-format.txt:
 cat > curl-format.txt << 'EOF'
@@ -183,10 +183,10 @@ EOF
 
 ```bash
 # Simple load test with Apache Bench
-ab -n 1000 -c 10 https://stapelwerk.minilab.live/
+ab -n 1000 -c 10 https://app.stapelwerk.dev/
 
 # Or use wrk
-wrk -t4 -c100 -d30s https://stapelwerk.minilab.live/
+wrk -t4 -c100 -d30s https://app.stapelwerk.dev/
 ```
 
 ### Database Verification
@@ -323,7 +323,7 @@ docker images | grep stapelwerk
 bash /opt/stapelwerk/scripts/rollback.sh <PREVIOUS_TAG>
 
 # Verify application still works
-curl https://stapelwerk.minilab.live/api/health
+curl https://app.stapelwerk.dev/api/health
 
 # Roll forward to latest
 bash /opt/stapelwerk/scripts/deploy.sh

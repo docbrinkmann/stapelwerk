@@ -134,7 +134,7 @@ deploy:docker:
       EOF
   environment:
     name: production
-    url: https://stapelwerk.minilab.live
+    url: https://app.stapelwerk.dev
   only:
     - main
   when: manual

@@ -10,8 +10,9 @@
 import { createHmac, createHash, timingSafeEqual } from 'crypto'
 import type { PlanId } from '@/lib/plans'
 
+// `||` not `??`: compose passes POLAR_API_BASE through as an EMPTY string when unset.
 export const POLAR_API_BASE = (): string =>
-  (process.env.POLAR_API_BASE ?? 'https://api.polar.sh').replace(/\/+$/, '')
+  (process.env.POLAR_API_BASE || 'https://api.polar.sh').replace(/\/+$/, '')
 
 /** Standard-Webhooks headers as delivered by Polar. */
 export interface WebhookHeaders {
@@ -41,24 +42,33 @@ export function verifyWebhookSignature(
   const ts = Number(timestamp)
   if (!Number.isFinite(ts) || Math.abs(nowSeconds - ts) > WEBHOOK_TOLERANCE_SECONDS) return false
 
-  let key: Buffer
+  // Key derivation is ambiguous in the wild: Standard Webhooks says the part
+  // after `whsec_` is base64 and the HMAC key is its decoded bytes, but Polar
+  // hands out secrets meant to be fed to the SDK base64-ENcoded first — i.e.
+  // the key is the raw UTF-8 bytes of the (full or stripped) secret string.
+  // Accept any of these derivations; each is an equally strong HMAC key, and
+  // every comparison stays constant-time.
+  const stripped = secret.replace(/^whsec_/, '')
+  const keys: Buffer[] = [Buffer.from(secret, 'utf8'), Buffer.from(stripped, 'utf8')]
   try {
-    key = Buffer.from(secret.replace(/^whsec_/, ''), 'base64')
+    const decoded = Buffer.from(stripped, 'base64')
+    if (decoded.length > 0) keys.push(decoded)
   } catch {
-    return false
+    /* not base64 — the utf8 candidates remain */
   }
-  if (key.length === 0) return false
 
-  const expected = createHmac('sha256', key)
-    .update(`${id}.${timestamp}.${rawBody}`, 'utf8')
-    .digest('base64')
-  const expectedBuf = Buffer.from(expected, 'utf8')
-
-  for (const candidate of signature.split(' ')) {
-    const [version, sig] = candidate.split(',', 2)
-    if (version !== 'v1' || !sig) continue
-    const sigBuf = Buffer.from(sig, 'utf8')
-    if (sigBuf.length === expectedBuf.length && timingSafeEqual(sigBuf, expectedBuf)) return true
+  const signedContent = `${id}.${timestamp}.${rawBody}`
+  for (const key of keys) {
+    const expectedBuf = Buffer.from(
+      createHmac('sha256', key).update(signedContent, 'utf8').digest('base64'),
+      'utf8',
+    )
+    for (const candidate of signature.split(' ')) {
+      const [version, sig] = candidate.split(',', 2)
+      if (version !== 'v1' || !sig) continue
+      const sigBuf = Buffer.from(sig, 'utf8')
+      if (sigBuf.length === expectedBuf.length && timingSafeEqual(sigBuf, expectedBuf)) return true
+    }
   }
   return false
 }

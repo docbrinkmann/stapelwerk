@@ -47,8 +47,8 @@ CI_REGISTRY_IMAGE="$CI_REGISTRY/$GITLAB_USERNAME/stapelwerk"
 read -p "Server IP address [***************]: " SERVER_HOST
 SERVER_HOST=${SERVER_HOST:-***************}
 
-read -p "Application domain [stapelwerk.minilab.live]: " APP_DOMAIN
-APP_DOMAIN=${APP_DOMAIN:-stapelwerk.minilab.live}
+read -p "Application domain [app.stapelwerk.dev]: " APP_DOMAIN
+APP_DOMAIN=${APP_DOMAIN:-app.stapelwerk.dev}
 
 # Database configuration
 POSTGRES_DB="stapelwerk"

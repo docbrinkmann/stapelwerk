@@ -46,7 +46,7 @@ Go to: **GitLab Project → Settings → CI/CD → Variables → Expand → Add 
 | `SERVER_USER` | Variable | Your server username | ✅ Yes | ❌ No | ✅ Yes |
 | `DATABASE_URL` | Variable | From .env.production | ✅ Yes | ✅ Yes | ❌ No |
 | `NEXTAUTH_SECRET` | Variable | From .env.production | ✅ Yes | ✅ Yes | ❌ No |
-| `NEXTAUTH_URL` | Variable | `https://stapelwerk.minilab.live` | ✅ Yes | ❌ No | ✅ Yes |
+| `NEXTAUTH_URL` | Variable | `https://app.stapelwerk.dev` | ✅ Yes | ❌ No | ✅ Yes |
 | `CI_REGISTRY` | Variable | `registry.gitlab.minilab.live` | ✅ Yes | ❌ No | ✅ Yes |
 | `CI_REGISTRY_IMAGE` | Variable | `registry.gitlab.minilab.live/username/stapelwerk` | ✅ Yes | ❌ No | ✅ Yes |
 
