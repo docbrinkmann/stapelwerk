@@ -200,7 +200,7 @@
     "eslint": "^9.39.1",
     "eslint-config-next": "^16.0.7",
     "happy-dom": "^20.0.8",
-    "jest-axe": "^10.0.0",
+    "jest-axe": "^11.0.0",
     "jsdom": "^23.0.0",
     "lighthouse": "^13.0.1",
     "marked": "^15.0.4",
