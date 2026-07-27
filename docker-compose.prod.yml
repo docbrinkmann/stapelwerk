@@ -222,6 +222,15 @@ services:
     networks:
       - app-network
 
+  # Public marketing landing (stapelwerk.dev) — static files only, no app surface.
+  landing:
+    image: nginx:1.27-alpine
+    restart: unless-stopped
+    volumes:
+      - ./landing:/usr/share/nginx/html:ro
+    ports:
+      - "${LANDING_PORT:-3997}:80"
+
   redis:
     image: redis:7-alpine
     container_name: stapelwerk_redis
