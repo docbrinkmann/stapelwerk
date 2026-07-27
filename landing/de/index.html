@@ -1,23 +1,23 @@
 <!doctype html>
-<html lang="en">
+<html lang="de">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Stapelwerk — your media server, wired right the first time</title>
-<meta name="description" content="Guided Docker stack composer for self-hosters. Compose a Jellyfin + *arr media server, verify the VPN kill-switch by construction, export a compose file that runs anywhere. AGPL-3.0, free forever.">
-<meta property="og:title" content="Stapelwerk — your media server, wired right the first time">
-<meta property="og:description" content="Compose, check, verify — before you deploy. Leak-proof VPN kill-switch by construction, deploy safety audit, signed verified-deploy report.">
-<meta property="og:url" content="https://stapelwerk.dev">
-<link rel="canonical" href="https://stapelwerk.dev/">
+<title>Stapelwerk — dein Media-Server, beim ersten Mal richtig verkabelt</title>
+<meta name="description" content="Geführter Docker-Stack-Composer für Self-Hoster. Stelle einen Jellyfin + *arr Media-Server zusammen, verifiziere den VPN-Kill-Switch by construction und exportiere eine Compose-Datei, die überall läuft. AGPL-3.0, für immer kostenlos.">
+<meta property="og:title" content="Stapelwerk — dein Media-Server, beim ersten Mal richtig verkabelt">
+<meta property="og:description" content="Zusammenstellen, prüfen, verifizieren — vor dem Deploy. Leak-sicherer VPN-Kill-Switch by construction, Deploy-Safety-Audit, signierter Verified-Deploy-Report.">
+<meta property="og:url" content="https://stapelwerk.dev/de/">
+<link rel="canonical" href="https://stapelwerk.dev/de/">
 <link rel="alternate" hreflang="en" href="https://stapelwerk.dev/">
 <link rel="alternate" hreflang="de" href="https://stapelwerk.dev/de/">
 <link rel="alternate" hreflang="x-default" href="https://stapelwerk.dev/">
-<meta property="og:locale" content="en_US">
+<meta property="og:locale" content="de_DE">
 <meta property="og:type" content="website">
 <meta property="og:image" content="https://stapelwerk.dev/og.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Stapelwerk — your media server, wired right the first time">
-<meta name="twitter:description" content="Compose, check, verify — before you deploy. Leak-proof VPN kill-switch by construction, signed verified-deploy report.">
+<meta name="twitter:title" content="Stapelwerk — dein Media-Server, beim ersten Mal richtig verkabelt">
+<meta name="twitter:description" content="Zusammenstellen, prüfen, verifizieren — vor dem Deploy. Leak-sicherer VPN-Kill-Switch by construction, signierter Verified-Deploy-Report.">
 <meta name="twitter:image" content="https://stapelwerk.dev/og.png">
 <script type="application/ld+json">
 {
@@ -43,7 +43,7 @@
    "applicationCategory": "DeveloperApplication",
    "operatingSystem": "Docker, Linux, Web",
    "url": "https://app.stapelwerk.dev/",
-   "description": "Guided Docker stack composer for self-hosters: compose a Jellyfin + *arr media server, verify the VPN kill-switch by construction, export a compose file that runs anywhere.",
+   "description": "Geführter Docker-Stack-Composer für Self-Hoster: Jellyfin + *arr Media-Server zusammenstellen, VPN-Kill-Switch by construction verifizieren, Compose-Datei exportieren, die überall läuft.",
    "license": "https://www.gnu.org/licenses/agpl-3.0.html",
    "offers": [
     {
@@ -74,26 +74,26 @@
    "mainEntity": [
     {
      "@type": "Question",
-     "name": "What is Stapelwerk?",
+     "name": "Was ist Stapelwerk?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "Stapelwerk is a guided Docker stack composer for self-hosters. It composes a media server stack (Jellyfin, Sonarr, Radarr, Prowlarr, qBittorrent, Gluetun), checks compatibility, ports, resources and the VPN kill-switch before deploy, and exports a clean docker-compose.yml you can run anywhere."
+      "text": "Stapelwerk ist ein geführter Docker-Stack-Composer für Self-Hoster. Er stellt einen Media-Server-Stack zusammen (Jellyfin, Sonarr, Radarr, Prowlarr, qBittorrent, Gluetun), prüft Kompatibilität, Ports, Ressourcen und den VPN-Kill-Switch vor dem Deploy und exportiert eine saubere docker-compose.yml, die überall läuft."
      }
     },
     {
      "@type": "Question",
-     "name": "How does Stapelwerk verify the VPN kill-switch?",
+     "name": "Wie verifiziert Stapelwerk den VPN-Kill-Switch?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "By construction: the download client runs inside the VPN container's network namespace (network_mode: service:gluetun), publishes no ports of its own and depends on the gateway. If a stack has a download client and a VPN but is not routed through it, Stapelwerk raises a hard VPN-leak error before deploy."
+      "text": "By construction: Der Download-Client läuft im Netzwerk-Namespace des VPN-Containers (network_mode: service:gluetun), veröffentlicht keine eigenen Ports und hängt vom Gateway ab. Hat ein Stack einen Download-Client und ein VPN, ist aber nicht durchgeroutet, wirft Stapelwerk vor dem Deploy einen harten VPN-Leak-Fehler."
      }
     },
     {
      "@type": "Question",
-     "name": "What does the 29 euro verified deploy include?",
+     "name": "Was beinhaltet das Verified Deploy für 29 Euro?",
      "acceptedAnswer": {
       "@type": "Answer",
-      "text": "A one-time, per-stack ed25519-signed report attesting what was verified in your compose: the kill-switch confinement plus a safety audit (no datastore exposed on the host network, volumes for stateful services, no default secrets, pinned images). It is verifiable with Stapelwerk's published public key. The compose itself stays free."
+      "text": "Einen einmaligen, pro Stack ed25519-signierten Report, der attestiert, was in deiner Compose verifiziert wurde: die Kill-Switch-Einsperrung plus ein Safety-Audit (kein Datastore im Host-Netz exponiert, Volumes für stateful Services, keine Default-Secrets, gepinnte Images). Prüfbar mit Stapelwerks veröffentlichtem Public Key. Die Compose selbst bleibt kostenlos."
      }
     }
    ]
@@ -209,23 +209,23 @@
     Stapelwerk
   </a>
   <div class="nav-links">
-    <a class="hide-m" href="#how">How it works</a>
+    <a class="hide-m" href="#how">So funktioniert’s</a>
     <a class="hide-m" href="#verified">Verified deploy</a>
-    <a class="hide-m" href="#pricing">Pricing</a>
+    <a class="hide-m" href="#pricing">Preise</a>
     <a href="https://github.com/docbrinkmann/stapelwerk">GitHub</a>
-    <a class="lang-toggle" href="/de/" title="Deutsche Version" data-lang-switch>DE</a>
-    <a class="btn btn-acc btn-sm" href="https://app.stapelwerk.dev">Open the app</a>
+    <a class="lang-toggle" href="/" title="English version" data-lang-switch>EN</a>
+    <a class="btn btn-acc btn-sm" href="https://app.stapelwerk.dev">App öffnen</a>
   </div>
 </div></nav>
 
 <header><div class="wrap">
-  <span class="kicker">AGPL-3.0 · free forever to compose, check &amp; export</span>
-  <h1>Your Jellyfin + *arr media server, <em>wired right the first time.</em></h1>
-  <p class="sub">Stapelwerk is a guided Docker stack composer that <b>checks your stack before it ever boots</b> — the VPN kill-switch verified by construction, no port collisions, no default secrets — and hands you a clean <code>docker-compose.yml</code> you can run anywhere.</p>
+  <span class="kicker">AGPL-3.0 · Zusammenstellen, Prüfen &amp; Export für immer kostenlos</span>
+  <h1>Dein Jellyfin + *arr Media-Server, <em>beim ersten Mal richtig verkabelt.</em></h1>
+  <p class="sub">Stapelwerk ist ein geführter Docker-Stack-Composer, der <b>deinen Stack prüft, bevor er je bootet</b> — VPN-Kill-Switch by construction verifiziert, keine Port-Kollisionen, keine Default-Secrets — und dir eine saubere <code>docker-compose.yml</code> gibt, die überall läuft.</p>
   <div class="cta-row">
-    <a class="btn btn-acc" href="https://app.stapelwerk.dev">Open the app</a>
-    <a class="btn btn-ghost" href="https://github.com/docbrinkmann/stapelwerk">View source on GitHub</a>
-    <span class="cta-note">No sign-up wall for self-hosting: <code>git clone</code> and every feature is yours, no gates.</span>
+    <a class="btn btn-acc" href="https://app.stapelwerk.dev">App öffnen</a>
+    <a class="btn btn-ghost" href="https://github.com/docbrinkmann/stapelwerk">Quellcode auf GitHub</a>
+    <span class="cta-note">Kein Account-Zwang beim Self-Hosting: <code>git clone</code> — und jedes Feature gehört dir, ohne Gates.</span>
   </div>
 
   <div class="term" role="img" aria-label="Stapelwerk check output for a media stack">
@@ -241,121 +241,121 @@ resources      <span class="g">✓ fits your Pi 4 (3.1 / 4 GB)</span>
 </div></header>
 
 <section id="problem"><div class="wrap">
-  <div class="eyebrow">The 2 a.m. mistake</div>
-  <h2>The classic media-stack failure: the VPN is <i>next to</i> your torrent client, not <i>around</i> it.</h2>
-  <p class="lead">A torrent client running beside a VPN container looks safe — until the tunnel drops and your real IP leaks. It's the most common wiring mistake in self-hosted media stacks, and you usually find out the hard way. Stapelwerk encodes the fix once and verifies it on every build:</p>
+  <div class="eyebrow">Der 2-Uhr-nachts-Fehler</div>
+  <h2>Der Klassiker unter den Media-Stack-Fehlern: das VPN steht <i>neben</i> deinem Torrent-Client, nicht <i>um ihn herum</i>.</h2>
+  <p class="lead">Ein Torrent-Client neben einem VPN-Container sieht sicher aus — bis der Tunnel abreißt und deine echte IP leakt. Es ist der häufigste Verkabelungsfehler in selbstgehosteten Media-Stacks, und meistens merkst du es auf die harte Tour. Stapelwerk kodiert den Fix einmal und verifiziert ihn bei jedem Build:</p>
   <ul class="checks">
     <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>The download client runs <b>inside the VPN container's network namespace</b> (<code>network_mode: service:gluetun</code>), publishes <b>no ports of its own</b>, and depends on the gateway.</span></li>
+      <span>Der Download-Client läuft <b>im Netzwerk-Namespace des VPN-Containers</b> (<code>network_mode: service:gluetun</code>), veröffentlicht <b>keine eigenen Ports</b> und hängt vom Gateway ab.</span></li>
     <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span>Gluetun gets <code>cap_add: [NET_ADMIN]</code> + <code>/dev/net/tun</code> and owns the routed ports.</span></li>
+      <span>Gluetun bekommt <code>cap_add: [NET_ADMIN]</code> + <code>/dev/net/tun</code> und besitzt die gerouteten Ports.</span></li>
     <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#f87171" stroke-width="1.5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#f87171" stroke-width="1.8" stroke-linecap="round"/></svg>
-      <span>If a build has a download client and a VPN but isn't routed, Stapelwerk raises a hard <b>"VPN leak" error with the exact fix</b> — before deploy, not at 2 a.m.</span></li>
+      <span>Hat ein Build einen Download-Client und ein VPN, ist aber nicht durchgeroutet, wirft Stapelwerk einen harten <b>„VPN-Leak“-Fehler mit dem exakten Fix</b> — vor dem Deploy, nicht um 2 Uhr nachts.</span></li>
   </ul>
-  <p class="lead" style="margin-top:26px">It isn't advice that <i>looks</i> right — an LLM can type that. It's a <b>checked, versioned, runnable artifact</b>: the wiring rules live in code and are enforced on every single build.</p>
+  <p class="lead" style="margin-top:26px">Das ist kein Ratschlag, der richtig <i>aussieht</i> — den tippt dir auch ein LLM. Es ist ein <b>geprüftes, versioniertes, lauffähiges Artefakt</b>: Die Verkabelungsregeln leben im Code und werden bei jedem einzelnen Build erzwungen.</p>
 </div></section>
 
 <section id="how"><div class="wrap">
-  <div class="eyebrow">How it works</div>
-  <h2>Compose from a curated catalog. Get checked as you build. Own the output.</h2>
+  <div class="eyebrow">So funktioniert’s</div>
+  <h2>Stelle aus einem kuratierten Katalog zusammen. Werde beim Bauen geprüft. Besitze das Ergebnis.</h2>
   <div class="grid g3">
     <div class="card">
       <div class="step-n">01</div>
-      <h3>Pick a use case, not a blank file</h3>
-      <p>The Media Server template ships pre-wired: Jellyfin + Sonarr / Radarr / Prowlarr + qBittorrent + Gluetun, download client already confined to the tunnel. Add or swap services from a curated catalog.</p>
+      <h3>Wähle einen Use Case, kein leeres File</h3>
+      <p>Das Media-Server-Template kommt fertig verkabelt: Jellyfin + Sonarr / Radarr / Prowlarr + qBittorrent + Gluetun, der Download-Client bereits im Tunnel eingesperrt. Ergänze oder tausche Services aus dem kuratierten Katalog.</p>
     </div>
     <div class="card">
       <div class="step-n">02</div>
-      <h3>Checks run while you build</h3>
-      <p>Compatibility, port collisions, required dependencies, resource budget ("does this fit my Pi 4?"), and the kill-switch check — live, with a jump-to-fix for every finding.</p>
+      <h3>Checks laufen, während du baust</h3>
+      <p>Kompatibilität, Port-Kollisionen, Pflicht-Abhängigkeiten, Ressourcen-Budget („passt das auf meinen Pi 4?“) und der Kill-Switch-Check — live, mit Sprung-zur-Behebung für jeden Fund.</p>
     </div>
     <div class="card">
       <div class="step-n">03</div>
-      <h3>Export &amp; run anywhere</h3>
-      <p>A secret-secured <code>docker-compose.yml</code> plus a key-sovereign <code>deploy.sh</code> that runs on <b>your</b> machine over <b>your</b> SSH — or hand it to Coolify, Portainer, Dokploy or Openship. No lock-in, ever.</p>
+      <h3>Exportieren &amp; überall laufen lassen</h3>
+      <p>Eine Secret-gesicherte <code>docker-compose.yml</code> plus ein schlüssel-souveränes <code>deploy.sh</code>, das auf <b>deinem</b> Rechner über <b>dein</b> SSH läuft — oder übergib an Coolify, Portainer, Dokploy oder Openship. Kein Lock-in, niemals.</p>
     </div>
   </div>
 
-  <div class="demo"><video src="demo.mp4" poster="og.png" autoplay loop muted playsinline preload="metadata" aria-label="30-second demo: template to checked compose export"></video></div>
+  <div class="demo"><video src="/demo.mp4" poster="/og.png" autoplay loop muted playsinline preload="metadata" aria-label="30-second demo: template to checked compose export"></video></div>
 </div></section>
 
 <section id="verified"><div class="wrap">
-  <div class="eyebrow">The €29 verified deploy</div>
-  <h2>A signed proof that your stack is deploy-safe — by construction.</h2>
-  <p class="lead">One time, per stack: Stapelwerk generates an <b>ed25519-signed report</b> attesting what was actually verified in your compose — a provenance artifact you can keep, share, and check against our <a href="https://github.com/docbrinkmann/stapelwerk/blob/main/docs/verified-deploy-public-key.pem" style="color:var(--acc)">published public key</a>.</p>
+  <div class="eyebrow">Das €29 Verified Deploy</div>
+  <h2>Ein signierter Nachweis, dass dein Stack deploy-sicher ist — by construction.</h2>
+  <p class="lead">Einmalig, pro Stack: Stapelwerk erzeugt einen <b>ed25519-signierten Report</b>, der attestiert, was in deiner Compose tatsächlich verifiziert wurde — ein Provenienz-Artefakt, das du behalten, teilen und gegen unseren <a href="https://github.com/docbrinkmann/stapelwerk/blob/main/docs/verified-deploy-public-key.pem" style="color:var(--acc)">veröffentlichten Public Key</a> prüfen kannst.</p>
   <ul class="checks">
     <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span><b>Kill-switch confined:</b> the download client cannot reach the network except through the VPN — no real-IP leak if the tunnel drops.</span></li>
+      <span><b>Kill-Switch eingesperrt:</b> Der Download-Client erreicht das Netz nur durch das VPN — kein Real-IP-Leak, wenn der Tunnel abreißt.</span></li>
     <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span><b>No datastore exposed on the host network</b> — your Postgres / Redis / Mongo ports stay internal.</span></li>
+      <span><b>Kein Datastore im Host-Netz exponiert</b> — deine Postgres- / Redis- / Mongo-Ports bleiben intern.</span></li>
     <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span><b>Datastores keep their data</b> — stateful services have volumes; no default or empty secrets; images pinned.</span></li>
+      <span><b>Datastores behalten ihre Daten</b> — stateful Services haben Volumes; keine Default- oder leeren Secrets; Images gepinnt.</span></li>
     <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span><b>You keep the compose and run it yourself</b> — free forever. The €29 buys the signed proof, not a hosted deploy. We never hold your SSH keys.</span></li>
+      <span><b>Die Compose behältst du und betreibst sie selbst</b> — für immer kostenlos. Die €29 kaufen den signierten Nachweis, kein Hosted-Deploy. Deine SSH-Keys halten wir nie.</span></li>
   </ul>
   <div class="honest">
-    <b>Honest scope:</b> the report attests the <i>configuration</i> is safe by construction — it names exactly what was checked and marks everything else "not checked". It is not a promise about software you install later or CVEs discovered tomorrow. On local-socket deploys you can additionally run a runtime attestation that boots the stack and confirms traffic actually dies when the VPN drops.
+    <b>Ehrlicher Geltungsbereich:</b> Der Report attestiert, dass die <i>Konfiguration</i> by construction sicher ist — er benennt exakt, was geprüft wurde, und markiert alles andere als „not checked“. Er ist kein Versprechen über Software, die du später installierst, oder CVEs von morgen. Bei Local-Socket-Deploys kannst du zusätzlich eine Runtime-Attestierung laufen lassen, die den Stack bootet und bestätigt, dass der Traffic wirklich stirbt, wenn das VPN abreißt.
   </div>
 </div></section>
 
 <section id="pricing"><div class="wrap">
-  <div class="eyebrow">Pricing</div>
-  <h2>Patronage and one-time outcomes — not another monthly SaaS.</h2>
+  <div class="eyebrow">Preise</div>
+  <h2>Patronage und einmalige Ergebnisse — kein weiteres Monats-SaaS.</h2>
   <div class="grid g3 price-cards">
     <div class="card price">
-      <h3>Free forever</h3>
+      <h3>Für immer kostenlos</h3>
       <div class="amount">€0</div>
-      <div class="per">no account needed to self-host</div>
+      <div class="per">Self-Hosting ohne Account</div>
       <ul>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Compose from templates &amp; catalog</span></li>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>All checks, incl. the kill-switch</span></li>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Export compose + <code>deploy.sh</code> + handoff guides</span></li>
+        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Zusammenstellen aus Templates &amp; Katalog</span></li>
+        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Alle Checks, inkl. Kill-Switch</span></li>
+        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Export: Compose + <code>deploy.sh</code> + Handoff-Guides</span></li>
       </ul>
-      <a class="btn btn-ghost" href="https://app.stapelwerk.dev">Start composing</a>
+      <a class="btn btn-ghost" href="https://app.stapelwerk.dev">Loslegen</a>
     </div>
     <div class="card price hot">
       <h3>Verified deploy</h3>
       <div class="amount">€29</div>
-      <div class="per">one time, per stack</div>
+      <div class="per">einmalig, pro Stack</div>
       <ul>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>ed25519-signed deploy-safety report</span></li>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Kill-switch + safety audit, attested</span></li>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Verifiable with our public key</span></li>
+        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>ed25519-signierter Deploy-Safety-Report</span></li>
+        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Kill-Switch + Safety-Audit, attestiert</span></li>
+        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Prüfbar mit unserem Public Key</span></li>
       </ul>
-      <a class="btn btn-acc" href="https://app.stapelwerk.dev">Get verified</a>
+      <a class="btn btn-acc" href="https://app.stapelwerk.dev">Verifizieren lassen</a>
     </div>
     <div class="card price">
       <h3>Supporter</h3>
       <div class="amount">€99</div>
-      <div class="per">per year — a thank-you, not a feature unlock</div>
+      <div class="per">pro Jahr — ein Dankeschön, kein Feature-Unlock</div>
       <ul>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Funds independent development</span></li>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Your name in <code>SUPPORTERS</code></span></li>
+        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Finanziert unabhängige Entwicklung</span></li>
+        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Dein Name in <code>SUPPORTERS</code></span></li>
       </ul>
-      <a class="btn btn-ghost" href="https://app.stapelwerk.dev">Become a supporter</a>
+      <a class="btn btn-ghost" href="https://app.stapelwerk.dev">Supporter werden</a>
     </div>
   </div>
-  <div class="selfhost"><b>The self-host promise:</b> a self-hosted Stapelwerk has <b>every feature and zero gates</b> — signed reports included, free. Plan limits exist only on the hosted instance. That's what AGPL-3.0 open-core means here.</div>
+  <div class="selfhost"><b>Das Self-Host-Versprechen:</b> Ein selbstgehostetes Stapelwerk hat <b>jedes Feature und null Gates</b> — signierte Reports inklusive, kostenlos. Plan-Limits gibt es nur auf der Hosted-Instanz. Genau das bedeutet AGPL-3.0-Open-Core hier.</div>
 </div></section>
 
 <section id="faq"><div class="wrap">
   <div class="eyebrow">FAQ</div>
-  <h2>Common questions</h2>
+  <h2>Häufige Fragen</h2>
   <div class="grid g3" style="margin-top:30px">
-    <div class="card"><h3 style="margin-top:0">What is Stapelwerk?</h3>
-      <p>Stapelwerk is a guided Docker stack composer for self-hosters. It composes a media server stack (Jellyfin, Sonarr, Radarr, Prowlarr, qBittorrent, Gluetun), checks compatibility, ports, resources and the VPN kill-switch before deploy, and exports a clean <code>docker-compose.yml</code> you can run anywhere.</p></div>
-    <div class="card"><h3 style="margin-top:0">How does Stapelwerk verify the VPN kill-switch?</h3>
-      <p>By construction: the download client runs inside the VPN container&#39;s network namespace (<code>network_mode: service:gluetun</code>), publishes no ports of its own and depends on the gateway. If a stack has a download client and a VPN but is not routed through it, Stapelwerk raises a hard VPN-leak error before deploy.</p></div>
-    <div class="card"><h3 style="margin-top:0">What does the €29 verified deploy include?</h3>
-      <p>A one-time, per-stack ed25519-signed report attesting what was verified in your compose: the kill-switch confinement plus a safety audit — no datastore exposed on the host network, volumes for stateful services, no default secrets, pinned images. Verifiable with our published public key. The compose itself stays free.</p></div>
+    <div class="card"><h3 style="margin-top:0">Was ist Stapelwerk?</h3>
+      <p>Stapelwerk ist ein geführter Docker-Stack-Composer für Self-Hoster. Er stellt einen Media-Server-Stack zusammen (Jellyfin, Sonarr, Radarr, Prowlarr, qBittorrent, Gluetun), prüft Kompatibilität, Ports, Ressourcen und den VPN-Kill-Switch vor dem Deploy und exportiert eine saubere <code>docker-compose.yml</code>, die überall läuft.</p></div>
+    <div class="card"><h3 style="margin-top:0">Wie verifiziert Stapelwerk den VPN-Kill-Switch?</h3>
+      <p>By construction: Der Download-Client läuft im Netzwerk-Namespace des VPN-Containers (<code>network_mode: service:gluetun</code>), veröffentlicht keine eigenen Ports und hängt vom Gateway ab. Hat ein Stack einen Download-Client und ein VPN, ist aber nicht durchgeroutet, wirft Stapelwerk vor dem Deploy einen harten VPN-Leak-Fehler.</p></div>
+    <div class="card"><h3 style="margin-top:0">Was beinhaltet das Verified Deploy für €29?</h3>
+      <p>Einen einmaligen, pro Stack ed25519-signierten Report, der attestiert, was in deiner Compose verifiziert wurde: die Kill-Switch-Einsperrung plus ein Safety-Audit — kein Datastore im Host-Netz exponiert, Volumes für stateful Services, keine Default-Secrets, gepinnte Images. Prüfbar mit unserem veröffentlichten Public Key. Die Compose selbst bleibt kostenlos.</p></div>
   </div>
 </div></section>
 
 <section id="origin"><div class="wrap">
-  <div class="eyebrow">Why “Stapelwerk”?</div>
+  <div class="eyebrow">Warum „Stapelwerk“?</div>
   <div class="origin">
     <svg width="40" height="40" viewBox="0 0 32 32" aria-hidden="true" style="flex:none"><rect x="4" y="20" width="24" height="6" rx="1.5" fill="#e8b64c"/><rect x="7" y="12" width="18" height="6" rx="1.5" fill="#d0d4dc"/><rect x="10" y="4" width="12" height="6" rx="1.5" fill="#848b98"/></svg>
-    <p><i>(SHTAH-pel-verk)</i> — <b>Stapel</b> is German for <b>stack</b>, and a <b>Stapellauf</b> is the moment a shipyard launches a correctly built ship. Stapelwerk is the works where your stack gets built, checked and verified — <b>before</b> it launches.</p>
+    <p><b>Stapel</b> wie in <b>Stack</b> — und der <b>Stapellauf</b> ist der Moment, in dem eine Werft ein korrekt gebautes Schiff zu Wasser lässt. Stapelwerk ist das Werk, in dem dein Stack gebaut, geprüft und verifiziert wird — <b>bevor</b> er vom Stapel läuft.</p>
   </div>
 </div></section>
 
@@ -370,15 +370,15 @@ resources      <span class="g">✓ fits your Pi 4 (3.1 / 4 GB)</span>
 
 <script>
 (function(){
-  var KEY='stapelwerk_lang', here='en', other='/de/';
+  var KEY='stapelwerk_lang', here='de', other='/';
   document.querySelectorAll('[data-lang-switch]').forEach(function(a){
-    a.addEventListener('click',function(){try{localStorage.setItem(KEY,'de')}catch(e){}});
+    a.addEventListener('click',function(){try{localStorage.setItem(KEY,'en')}catch(e){}});
   });
   try{
     var pref=localStorage.getItem(KEY);
     if(!pref){
       var nav=(navigator.language||'').slice(0,2).toLowerCase();
-      if(nav==='de' && !sessionStorage.getItem('stapelwerk_lang_auto')){
+      if(false){
         sessionStorage.setItem('stapelwerk_lang_auto','1');
         location.replace(other); return;
       }
