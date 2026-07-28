@@ -104,100 +104,139 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='20' width='24' height='6' rx='1.5' fill='%23e8b64c'/%3E%3Crect x='7' y='12' width='18' height='6' rx='1.5' fill='%23d0d4dc'/%3E%3Crect x='10' y='4' width='12' height='6' rx='1.5' fill='%23848b98'/%3E%3C/svg%3E">
 <style>
   :root{
-    --bg:#0b0c0e; --bg2:#101216; --card:#15181d; --line:#242832;
-    --text:#e8eaf0; --mut:#9aa1af; --dim:#6b7280;
-    --acc:#e8b64c; --acc-ink:#1a1503;
-    --ok:#4ade80; --bad:#f87171;
+    --bg:#0c0d0f; --panel:#101215; --ink:#e9ebef; --mut:#98a0ad; --dim:#646c78;
+    --line:#262b33; --rule:#333a44; --acc:#e8b64c; --acc-ink:#171204;
+    --ok:#5fce8a; --bad:#ee7f7f;
     --mono:ui-monospace,'SF Mono',SFMono-Regular,Menlo,Consolas,monospace;
+    --sans:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html{scroll-behavior:smooth}
-  body{background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+  @media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+  body{background:var(--bg);color:var(--ink);font:16px/1.65 var(--sans);-webkit-font-smoothing:antialiased}
+  ::selection{background:var(--acc);color:var(--acc-ink)}
   a{color:inherit}
-  .wrap{max-width:1060px;margin:0 auto;padding:0 24px}
-  /* nav */
-  nav{position:sticky;top:0;z-index:10;background:rgba(11,12,14,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
-  .nav-in{display:flex;align-items:center;gap:28px;height:60px}
-  .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;text-decoration:none;letter-spacing:.2px}
-  .logo svg{flex:none}
-  .nav-links{display:flex;gap:22px;margin-left:auto;align-items:center}
-  .nav-links a{text-decoration:none;color:var(--mut);font-size:14.5px}
-  .nav-links a:hover{color:var(--text)}
-  .btn{display:inline-block;padding:10px 18px;border-radius:9px;font-weight:600;font-size:15px;text-decoration:none;border:1px solid transparent;cursor:pointer}
-  .btn-acc{background:var(--acc);color:var(--acc-ink)}
-  .btn-acc:hover{filter:brightness(1.07)}
-  .btn-ghost{border-color:var(--line);color:var(--text)}
-  .btn-ghost:hover{border-color:var(--dim)}
-  .btn-sm{padding:7px 14px;font-size:14px}
-  .lang-toggle{font:600 12.5px var(--mono);letter-spacing:.08em;border:1px solid var(--line);border-radius:7px;padding:6px 10px;text-decoration:none;color:var(--mut)}
-  .lang-toggle:hover{color:var(--text);border-color:var(--dim)}
-  /* hero */
-  header{padding:84px 0 40px;background:
-    radial-gradient(700px 340px at 75% -60px, rgba(232,182,76,.09), transparent 65%)}
-  .kicker{display:inline-block;font:600 12.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--acc);border:1px solid rgba(232,182,76,.35);border-radius:99px;padding:7px 13px;margin-bottom:22px}
-  h1{font-size:clamp(30px,4.6vw,50px);line-height:1.12;letter-spacing:-.02em;max-width:820px}
-  h1 em{font-style:normal;color:var(--acc)}
-  .sub{margin:20px 0 30px;color:var(--mut);font-size:clamp(16px,1.9vw,19px);max-width:680px}
-  .cta-row{display:flex;gap:14px;flex-wrap:wrap;align-items:center}
-  .cta-note{color:var(--dim);font-size:13.5px;width:100%}
-  /* terminal */
-  .term{margin:52px 0 0;background:#0d1117;border:1px solid var(--line);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px -30px rgba(0,0,0,.8)}
-  .term-bar{display:flex;gap:7px;padding:11px 14px;border-bottom:1px solid var(--line)}
-  .term-bar i{width:11px;height:11px;border-radius:50%;background:#2c313c}
-  .term pre{padding:20px 22px;font:13.5px/1.75 var(--mono);color:#c7cdd8;overflow-x:auto}
-  .g{color:var(--ok)} .r{color:var(--bad)} .c{color:var(--dim)} .y{color:var(--acc)}
-  /* sections */
-  section{padding:76px 0;border-top:1px solid var(--line)}
-  .eyebrow{font:600 12.5px/1 var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--acc);margin-bottom:14px}
-  h2{font-size:clamp(24px,3vw,34px);letter-spacing:-.015em;line-height:1.2;max-width:720px}
+  :focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:2px}
+  .wrap{max-width:1020px;margin:0 auto;padding:0 24px}
+  code{font:.85em var(--mono);background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:1px 6px;white-space:nowrap}
+
+  /* ── nav: schmale Werkleiste ── */
+  nav{position:sticky;top:0;z-index:10;background:rgba(12,13,15,.92);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+  .nav-in{display:flex;align-items:center;gap:8px;height:58px}
+  .logo{display:flex;align-items:center;gap:10px;font:700 15px/1 var(--mono);letter-spacing:.06em;text-decoration:none;padding:12px 12px 12px 0}
+  .nav-links{display:flex;gap:2px;margin-left:auto;align-items:center}
+  .nav-links a{text-decoration:none;color:var(--mut);font:500 13.5px var(--mono);padding:12px 11px}
+  .nav-links a:hover{color:var(--ink)}
+  .lang-toggle{border:1px solid var(--line);border-radius:4px;margin:0 6px}
+  .btn{display:inline-block;padding:11px 18px;font:600 14px var(--mono);letter-spacing:.02em;text-decoration:none;border:1px solid var(--acc);color:var(--acc);border-radius:4px;background:transparent}
+  .btn:hover{background:var(--acc);color:var(--acc-ink)}
+  .btn-solid{background:var(--acc);color:var(--acc-ink)}
+  .btn-solid:hover{filter:brightness(1.08)}
+  .btn-ghost{border-color:var(--rule);color:var(--ink)}
+  .btn-ghost:hover{border-color:var(--mut);background:transparent;color:var(--ink)}
+
+  /* ── Spec-Header pro Sektion ── */
+  .spec{display:flex;align-items:baseline;gap:14px;border-bottom:1px solid var(--rule);padding-bottom:10px;margin-bottom:26px}
+  .spec .no{font:700 13px var(--mono);color:var(--acc);letter-spacing:.08em}
+  .spec .lbl{font:600 12.5px var(--mono);letter-spacing:.16em;text-transform:uppercase;color:var(--dim)}
+  .spec .fill{flex:1;border-bottom:1px dashed var(--line);transform:translateY(-4px)}
+
+  section{padding:64px 0}
+  h2{font:700 clamp(22px,3vw,30px)/1.25 var(--sans);letter-spacing:-.015em;max-width:760px}
   .lead{color:var(--mut);margin-top:14px;max-width:700px}
-  .grid{display:grid;gap:18px;margin-top:38px}
-  .g3{grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
-  .g2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:24px}
-  .card h3{font-size:17px;margin:14px 0 8px}
-  .card p{color:var(--mut);font-size:14.8px}
-  .card .ic{width:38px;height:38px;border-radius:9px;background:var(--bg2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center}
-  .card code, .lead code, li code{font:13px var(--mono);background:var(--bg2);border:1px solid var(--line);border-radius:5px;padding:2px 6px;color:#d7dbe4;white-space:nowrap}
-  /* steps */
-  .step-n{font:700 13px var(--mono);color:var(--acc)}
-  /* checklist */
-  ul.checks{list-style:none;margin-top:26px;display:grid;gap:12px;max-width:760px}
-  ul.checks li{display:flex;gap:12px;align-items:flex-start;color:var(--mut);font-size:15.5px}
+  .lead b,li b,p b{color:var(--ink)}
+
+  /* ── Hero: linksbündig, Lineal statt Glow ── */
+  header{padding:64px 0 56px;border-bottom:1px solid var(--line)}
+  .ruler{display:flex;align-items:flex-end;gap:0;height:14px;margin-bottom:34px;border-bottom:1px solid var(--rule)}
+  .ruler i{flex:1;border-left:1px solid var(--line);height:6px}
+  .ruler i:nth-child(5n+1){height:13px;border-left-color:var(--rule)}
+  .meta-row{display:flex;flex-wrap:wrap;gap:10px 26px;font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:26px}
+  .meta-row b{color:var(--acc);font-weight:600}
+  h1{font:750 clamp(32px,5vw,54px)/1.08 var(--sans);letter-spacing:-.025em;max-width:840px}
+  h1 em{font-style:normal;color:var(--acc)}
+  .sub{margin:22px 0 30px;color:var(--mut);font-size:clamp(16px,1.8vw,18.5px);max-width:640px}
+  .cta-row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+  .cta-note{color:var(--dim);font-size:13px;font-family:var(--mono);width:100%;margin-top:8px}
+
+  /* ── Terminal als technische Zeichnung ── */
+  .term{position:relative;margin:56px 0 0;background:#0a0f14;border:1px solid var(--rule)}
+  .term::before,.term::after,
+  .term .rm::before,.term .rm::after{content:"";position:absolute;width:14px;height:14px;border:1px solid var(--dim)}
+  .term::before{top:-7px;left:-7px;border-width:0 1px 1px 0}
+  .term::after{top:-7px;right:-7px;border-width:0 0 1px 1px}
+  .term .rm::before{bottom:-7px;left:-7px;border-width:1px 1px 0 0}
+  .term .rm::after{bottom:-7px;right:-7px;border-width:1px 0 0 1px}
+  .term-bar{display:flex;justify-content:space-between;padding:9px 14px;border-bottom:1px solid var(--line);font:500 11.5px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+  .term pre{padding:20px 22px;font:13.5px/1.75 var(--mono);color:#c9cfd9;overflow-x:auto}
+  .g{color:var(--ok)} .r{color:var(--bad)} .c{color:var(--dim)} .y{color:var(--acc)}
+
+  /* ── Checkliste ── */
+  ul.checks{list-style:none;margin-top:26px;display:grid;gap:0;max-width:780px}
+  ul.checks li{display:flex;gap:14px;align-items:flex-start;color:var(--mut);font-size:15.5px;padding:14px 2px;border-bottom:1px dashed var(--line)}
+  ul.checks li:first-child{border-top:1px dashed var(--line)}
   ul.checks li svg{flex:none;margin-top:4px}
-  ul.checks li b{color:var(--text);font-weight:600}
-  /* video */
-  .demo{margin-top:38px;border:1px solid var(--line);border-radius:13px;overflow:hidden;box-shadow:0 24px 60px -30px rgba(0,0,0,.8)}
+
+  /* ── Schritte als Spez-Liste ── */
+  ol.steps{list-style:none;margin-top:8px;max-width:820px}
+  ol.steps li{display:grid;grid-template-columns:64px 1fr;gap:18px;padding:22px 0;border-bottom:1px solid var(--line)}
+  ol.steps .n{font:700 22px var(--mono);color:var(--acc)}
+  ol.steps .n small{display:block;font:500 10.5px var(--mono);letter-spacing:.14em;color:var(--dim);margin-top:4px;text-transform:uppercase}
+  ol.steps h3{font:650 17px/1.3 var(--sans);margin-bottom:6px}
+  ol.steps p{color:var(--mut);font-size:15px}
+
+  .demo{margin-top:48px;border:1px solid var(--rule)}
   .demo video{display:block;width:100%;height:auto}
-  /* pricing */
-  .price-cards{align-items:stretch}
-  .price h3{font-size:16px;margin:0 0 4px}
-  .price .amount{font-size:34px;font-weight:750;letter-spacing:-.02em;margin:10px 0 2px}
-  .price .per{color:var(--dim);font-size:13.5px;margin-bottom:16px}
-  .price ul{list-style:none;display:grid;gap:9px;margin:16px 0 22px}
-  .price li{display:flex;gap:9px;color:var(--mut);font-size:14.5px;align-items:flex-start}
-  .price li svg{flex:none;margin-top:4px}
-  .price.hot{border-color:rgba(232,182,76,.5);position:relative}
-  .price.hot::before{content:"the pitch";position:absolute;top:-11px;left:20px;background:var(--acc);color:var(--acc-ink);font:700 11px/1 var(--mono);letter-spacing:.08em;text-transform:uppercase;padding:5px 10px;border-radius:99px}
-  .selfhost{margin-top:26px;border-left:3px solid var(--ok);background:var(--card);border-radius:0 12px 12px 0;padding:18px 22px;color:var(--mut);font-size:15px;max-width:760px}
-  .selfhost b{color:var(--text)}
-  /* honest box */
-  .honest{margin-top:34px;border:1px dashed var(--line);border-radius:12px;padding:20px 24px;color:var(--mut);font-size:14.5px;max-width:760px}
-  .honest b{color:var(--text)}
-  /* origin */
-  .origin{display:flex;gap:20px;align-items:flex-start;background:var(--card);border:1px solid var(--line);border-radius:13px;padding:26px;margin-top:34px;max-width:820px}
-  .origin p{color:var(--mut);font-size:15.5px}
-  .origin b{color:var(--text)}
-  /* footer */
-  footer{border-top:1px solid var(--line);padding:44px 0 60px;color:var(--dim);font-size:14px}
-  .foot{display:flex;flex-wrap:wrap;gap:12px 28px;align-items:center}
-  .foot a{color:var(--mut);text-decoration:none}
-  .foot a:hover{color:var(--text)}
+  .demo-cap{font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--dim);padding:9px 12px;border-top:1px solid var(--line)}
+
+  /* ── Verified: Stempel ── */
+  .verify-grid{display:grid;grid-template-columns:1fr auto;gap:34px;align-items:start}
+  .stamp{width:158px;height:158px;flex:none;transform:rotate(-8deg);opacity:.92;margin-top:8px}
+  .footnote{margin-top:30px;max-width:760px;color:var(--mut);font-size:14px;border-top:1px solid var(--rule);padding-top:12px}
+  .footnote .fn{color:var(--acc);font-family:var(--mono)}
+
+  /* ── Preisliste als Tabelle ── */
+  .pricetable{margin-top:34px;border:1px solid var(--rule);width:100%;border-collapse:collapse}
+  .pricetable th{font:600 11.5px var(--mono);letter-spacing:.14em;text-transform:uppercase;color:var(--dim);text-align:left;padding:12px 18px;border-bottom:1px solid var(--rule);background:var(--panel)}
+  .pricetable td{padding:18px;border-bottom:1px solid var(--line);vertical-align:top}
+  .pricetable tr:last-child td{border-bottom:none}
+  .pricetable .price{font:700 24px var(--mono);letter-spacing:-.02em;white-space:nowrap;font-variant-numeric:tabular-nums}
+  .pricetable .per{display:block;font:400 12px var(--mono);color:var(--dim);margin-top:3px;letter-spacing:.02em}
+  .pricetable .what b{display:block;font-size:16px;margin-bottom:4px;color:var(--ink)}
+  .pricetable .what span{color:var(--mut);font-size:14.5px}
+  .pricetable .act{text-align:right;white-space:nowrap}
+  .pricetable tr.hot td{background:rgba(232,182,76,.05);border-left:3px solid var(--acc)}
+  .selfhost{margin-top:22px;max-width:780px;color:var(--mut);font-size:14.5px;font-family:var(--mono);line-height:1.7}
+  .selfhost b{color:var(--ok)}
+
+  /* ── FAQ als Definitionsliste ── */
+  dl.faq{margin-top:8px;max-width:820px}
+  dl.faq dt{font:650 16.5px var(--sans);padding:20px 0 8px;border-top:1px solid var(--line)}
+  dl.faq dt:first-child{border-top:none}
+  dl.faq dt::before{content:"?";font:700 13px var(--mono);color:var(--acc);margin-right:10px}
+  dl.faq dd{color:var(--mut);font-size:15px;padding-bottom:20px;max-width:760px}
+
+  /* ── Origin ── */
+  .origin{border-left:3px solid var(--acc);padding:6px 0 6px 22px;max-width:760px;margin-top:8px}
+  .origin p{color:var(--mut);font-size:16px}
+
+  footer{border-top:1px solid var(--rule);padding:36px 0 56px;color:var(--dim);font-size:13.5px;font-family:var(--mono)}
+  .foot{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center}
+  .foot a{color:var(--mut);text-decoration:none;padding:6px 0}
+  .foot a:hover{color:var(--ink)}
   .foot .spacer{flex:1}
-  @media (max-width:640px){
+
+  @media (max-width:680px){
     .nav-links a.hide-m{display:none}
-    header{padding-top:56px}
-    section{padding:56px 0}
+    header{padding-top:40px}
+    section{padding:48px 0}
+    .verify-grid{grid-template-columns:1fr}
+    .stamp{margin:6px auto 0}
+    .pricetable thead{display:none}
+    .pricetable, .pricetable tbody, .pricetable tr, .pricetable td{display:block;width:100%}
+    .pricetable td{border-bottom:none;padding:6px 16px}
+    .pricetable tr{border-bottom:1px solid var(--line);padding:12px 0}
+    .pricetable .act{text-align:left;padding-bottom:18px}
   }
 </style>
 </head>
@@ -205,8 +244,8 @@
 
 <nav><div class="wrap nav-in">
   <a class="logo" href="#">
-    <svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="20" width="24" height="6" rx="1.5" fill="#e8b64c"/><rect x="7" y="12" width="18" height="6" rx="1.5" fill="#d0d4dc"/><rect x="10" y="4" width="12" height="6" rx="1.5" fill="#848b98"/></svg>
-    Stapelwerk
+    <svg width="20" height="20" viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="20" width="24" height="6" rx="1" fill="#e8b64c"/><rect x="7" y="12" width="18" height="6" rx="1" fill="#d0d4dc"/><rect x="10" y="4" width="12" height="6" rx="1" fill="#848b98"/></svg>
+    STAPELWERK
   </a>
   <div class="nav-links">
     <a class="hide-m" href="#how">How it works</a>
@@ -214,22 +253,23 @@
     <a class="hide-m" href="#pricing">Pricing</a>
     <a href="https://github.com/docbrinkmann/stapelwerk">GitHub</a>
     <a class="lang-toggle" href="/de/" title="Deutsche Version" data-lang-switch>DE</a>
-    <a class="btn btn-acc btn-sm" href="https://app.stapelwerk.dev">Open the app</a>
+    <a class="btn btn-solid" href="https://app.stapelwerk.dev">Open the app</a>
   </div>
 </div></nav>
 
 <header><div class="wrap">
-  <span class="kicker">AGPL-3.0 · free forever to compose, check &amp; export</span>
+  <div class="ruler" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+  <div class="meta-row"><span>Werk № 001</span><span>Docker · Jellyfin · *arr</span><span><b>AGPL-3.0</b> · free forever to compose, check &amp; export</span></div>
   <h1>Your Jellyfin + *arr media server, <em>wired right the first time.</em></h1>
   <p class="sub">Stapelwerk is a guided Docker stack composer that <b>checks your stack before it ever boots</b> — the VPN kill-switch verified by construction, no port collisions, no default secrets — and hands you a clean <code>docker-compose.yml</code> you can run anywhere.</p>
   <div class="cta-row">
-    <a class="btn btn-acc" href="https://app.stapelwerk.dev">Open the app</a>
+    <a class="btn btn-solid" href="https://app.stapelwerk.dev">Open the app</a>
     <a class="btn btn-ghost" href="https://github.com/docbrinkmann/stapelwerk">View source on GitHub</a>
-    <span class="cta-note">No sign-up wall for self-hosting: <code>git clone</code> and every feature is yours, no gates.</span>
+    <span class="cta-note">$ git clone — no sign-up wall for self-hosting: every feature is yours, no gates.</span>
   </div>
 
-  <div class="term" role="img" aria-label="Stapelwerk check output for a media stack">
-    <div class="term-bar"><i></i><i></i><i></i></div>
+  <div class="term" role="img" aria-label="Stapelwerk check output for a media stack"><span class="rm"></span>
+    <div class="term-bar"><span>stapelwerk · build check</span><span>media-server.yml</span></div>
     <pre><span class="c"># Media server · composed &amp; checked</span>
 jellyfin       <span class="g">✓ ready</span>
 sonarr radarr  <span class="g">✓ ready</span>    prowlarr <span class="g">✓ linked</span>
@@ -241,120 +281,115 @@ resources      <span class="g">✓ fits your Pi 4 (3.1 / 4 GB)</span>
 </div></header>
 
 <section id="problem"><div class="wrap">
-  <div class="eyebrow">The 2 a.m. mistake</div>
+  <div class="spec"><span class="no">01</span><span class="lbl">The 2 a.m. mistake</span><span class="fill"></span></div>
   <h2>The classic media-stack failure: the VPN is <i>next to</i> your torrent client, not <i>around</i> it.</h2>
   <p class="lead">A torrent client running beside a VPN container looks safe — until the tunnel drops and your real IP leaks. It's the most common wiring mistake in self-hosted media stacks, and you usually find out the hard way. Stapelwerk encodes the fix once and verifies it on every build:</p>
   <ul class="checks">
-    <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4L16 6" stroke="#5fce8a" stroke-width="2" stroke-linecap="square"/></svg>
       <span>The download client runs <b>inside the VPN container's network namespace</b> (<code>network_mode: service:gluetun</code>), publishes <b>no ports of its own</b>, and depends on the gateway.</span></li>
-    <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4L16 6" stroke="#5fce8a" stroke-width="2" stroke-linecap="square"/></svg>
       <span>Gluetun gets <code>cap_add: [NET_ADMIN]</code> + <code>/dev/net/tun</code> and owns the routed ports.</span></li>
-    <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#f87171" stroke-width="1.5"/><path d="M7 7l6 6M13 7l-6 6" stroke="#f87171" stroke-width="1.8" stroke-linecap="round"/></svg>
+    <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M5 5l10 10M15 5L5 15" stroke="#ee7f7f" stroke-width="2" stroke-linecap="square"/></svg>
       <span>If a build has a download client and a VPN but isn't routed, Stapelwerk raises a hard <b>"VPN leak" error with the exact fix</b> — before deploy, not at 2 a.m.</span></li>
   </ul>
   <p class="lead" style="margin-top:26px">It isn't advice that <i>looks</i> right — an LLM can type that. It's a <b>checked, versioned, runnable artifact</b>: the wiring rules live in code and are enforced on every single build.</p>
 </div></section>
 
 <section id="how"><div class="wrap">
-  <div class="eyebrow">How it works</div>
+  <div class="spec"><span class="no">02</span><span class="lbl">How it works</span><span class="fill"></span></div>
   <h2>Compose from a curated catalog. Get checked as you build. Own the output.</h2>
-  <div class="grid g3">
-    <div class="card">
-      <div class="step-n">01</div>
+  <ol class="steps">
+    <li><div class="n">01<small>compose</small></div><div>
       <h3>Pick a use case, not a blank file</h3>
-      <p>The Media Server template ships pre-wired: Jellyfin + Sonarr / Radarr / Prowlarr + qBittorrent + Gluetun, download client already confined to the tunnel. Add or swap services from a curated catalog.</p>
-    </div>
-    <div class="card">
-      <div class="step-n">02</div>
+      <p>The Media Server template ships pre-wired: Jellyfin + Sonarr / Radarr / Prowlarr + qBittorrent + Gluetun, download client already confined to the tunnel. Add or swap services from a curated catalog.</p></div></li>
+    <li><div class="n">02<small>check</small></div><div>
       <h3>Checks run while you build</h3>
-      <p>Compatibility, port collisions, required dependencies, resource budget ("does this fit my Pi 4?"), and the kill-switch check — live, with a jump-to-fix for every finding.</p>
-    </div>
-    <div class="card">
-      <div class="step-n">03</div>
+      <p>Compatibility, port collisions, required dependencies, resource budget ("does this fit my Pi 4?"), and the kill-switch check — live, with a jump-to-fix for every finding.</p></div></li>
+    <li><div class="n">03<small>launch</small></div><div>
       <h3>Export &amp; run anywhere</h3>
-      <p>A secret-secured <code>docker-compose.yml</code> plus a key-sovereign <code>deploy.sh</code> that runs on <b>your</b> machine over <b>your</b> SSH — or hand it to Coolify, Portainer, Dokploy or Openship. No lock-in, ever.</p>
-    </div>
+      <p>A secret-secured <code>docker-compose.yml</code> plus a key-sovereign <code>deploy.sh</code> that runs on <b>your</b> machine over <b>your</b> SSH — or hand it to Coolify, Portainer, Dokploy or Openship. No lock-in, ever.</p></div></li>
+  </ol>
+  <div class="demo">
+    <video src="demo.mp4" poster="og.png" autoplay loop muted playsinline preload="metadata" aria-label="30-second demo: template to checked compose export"></video>
+    <div class="demo-cap">fig. 1 — template → checks → export, 30 s, real build</div>
   </div>
-
-  <div class="demo"><video src="demo.mp4" poster="og.png" autoplay loop muted playsinline preload="metadata" aria-label="30-second demo: template to checked compose export"></video></div>
 </div></section>
 
 <section id="verified"><div class="wrap">
-  <div class="eyebrow">The €29 verified deploy</div>
-  <h2>A signed proof that your stack is deploy-safe — by construction.</h2>
-  <p class="lead">One time, per stack: Stapelwerk generates an <b>ed25519-signed report</b> attesting what was actually verified in your compose — a provenance artifact you can keep, share, and check against our <a href="https://github.com/docbrinkmann/stapelwerk/blob/main/docs/verified-deploy-public-key.pem" style="color:var(--acc)">published public key</a>.</p>
-  <ul class="checks">
-    <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span><b>Kill-switch confined:</b> the download client cannot reach the network except through the VPN — no real-IP leak if the tunnel drops.</span></li>
-    <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span><b>No datastore exposed on the host network</b> — your Postgres / Redis / Mongo ports stay internal.</span></li>
-    <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span><b>Datastores keep their data</b> — stateful services have volumes; no default or empty secrets; images pinned.</span></li>
-    <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none"><circle cx="10" cy="10" r="9" stroke="#4ade80" stroke-width="1.5"/><path d="M6 10.5l2.5 2.5L14 7.5" stroke="#4ade80" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
-      <span><b>You keep the compose and run it yourself</b> — free forever. The €29 buys the signed proof, not a hosted deploy. We never hold your SSH keys.</span></li>
-  </ul>
-  <div class="honest">
-    <b>Honest scope:</b> the report attests the <i>configuration</i> is safe by construction — it names exactly what was checked and marks everything else "not checked". It is not a promise about software you install later or CVEs discovered tomorrow. On local-socket deploys you can additionally run a runtime attestation that boots the stack and confirms traffic actually dies when the VPN drops.
+  <div class="spec"><span class="no">03</span><span class="lbl">The €29 verified deploy</span><span class="fill"></span></div>
+  <div class="verify-grid">
+    <div>
+      <h2>A signed proof that your stack is deploy-safe — by construction.</h2>
+      <p class="lead">One time, per stack: Stapelwerk generates an <b>ed25519-signed report</b> attesting what was actually verified in your compose — a provenance artifact you can keep, share, and check against our <a href="https://github.com/docbrinkmann/stapelwerk/blob/main/docs/verified-deploy-public-key.pem" style="color:var(--acc)">published public key</a>.</p>
+      <ul class="checks">
+        <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4L16 6" stroke="#5fce8a" stroke-width="2" stroke-linecap="square"/></svg>
+          <span><b>Kill-switch confined:</b> the download client cannot reach the network except through the VPN — no real-IP leak if the tunnel drops.</span></li>
+        <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4L16 6" stroke="#5fce8a" stroke-width="2" stroke-linecap="square"/></svg>
+          <span><b>No datastore exposed on the host network</b> — your Postgres / Redis / Mongo ports stay internal.</span></li>
+        <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4L16 6" stroke="#5fce8a" stroke-width="2" stroke-linecap="square"/></svg>
+          <span><b>Datastores keep their data</b> — stateful services have volumes; no default or empty secrets; images pinned.</span></li>
+        <li><svg width="18" height="18" viewBox="0 0 20 20" fill="none" aria-hidden="true"><path d="M4 10.5l4 4L16 6" stroke="#5fce8a" stroke-width="2" stroke-linecap="square"/></svg>
+          <span><b>You keep the compose and run it yourself</b> — free forever. The €29 buys the signed proof, not a hosted deploy. We never hold your SSH keys.</span></li>
+      </ul>
+    </div>
+    <svg class="stamp" viewBox="0 0 160 160" aria-hidden="true">
+      <defs><path id="tc" d="M80 22 a58 58 0 1 1 -0.01 0"/><path id="bc" d="M22 80 a58 58 0 0 0 116 0"/></defs>
+      <circle cx="80" cy="80" r="74" fill="none" stroke="#e8b64c" stroke-width="2.5"/>
+      <circle cx="80" cy="80" r="66" fill="none" stroke="#e8b64c" stroke-width="1"/>
+      <text font-family="ui-monospace,Menlo,monospace" font-size="12.5" letter-spacing="3" fill="#e8b64c"><textPath href="#tc" startOffset="6%">VERIFIED BY CONSTRUCTION</textPath></text>
+      <text x="80" y="74" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-weight="700" font-size="15" letter-spacing="2" fill="#e8b64c">GEPRÜFT</text>
+      <text x="80" y="94" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="10.5" letter-spacing="1" fill="#e8b64c">ed25519 · signed</text>
+      <text x="80" y="112" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="9" letter-spacing="2" fill="#e8b64c">STAPELWERK</text>
+    </svg>
   </div>
+  <p class="footnote"><span class="fn">*</span> <b>Honest scope:</b> the report attests the <i>configuration</i> is safe by construction — it names exactly what was checked and marks everything else "not checked". It is not a promise about software you install later or CVEs discovered tomorrow. On local-socket deploys you can additionally run a runtime attestation that boots the stack and confirms traffic actually dies when the VPN drops.</p>
 </div></section>
 
 <section id="pricing"><div class="wrap">
-  <div class="eyebrow">Pricing</div>
+  <div class="spec"><span class="no">04</span><span class="lbl">Price list</span><span class="fill"></span></div>
   <h2>Patronage and one-time outcomes — not another monthly SaaS.</h2>
-  <div class="grid g3 price-cards">
-    <div class="card price">
-      <h3>Free forever</h3>
-      <div class="amount">€0</div>
-      <div class="per">no account needed to self-host</div>
-      <ul>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Compose from templates &amp; catalog</span></li>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>All checks, incl. the kill-switch</span></li>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Export compose + <code>deploy.sh</code> + handoff guides</span></li>
-      </ul>
-      <a class="btn btn-ghost" href="https://app.stapelwerk.dev">Start composing</a>
-    </div>
-    <div class="card price hot">
-      <h3>Verified deploy</h3>
-      <div class="amount">€29</div>
-      <div class="per">one time, per stack</div>
-      <ul>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>ed25519-signed deploy-safety report</span></li>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Kill-switch + safety audit, attested</span></li>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Verifiable with our public key</span></li>
-      </ul>
-      <a class="btn btn-acc" href="https://app.stapelwerk.dev">Get verified</a>
-    </div>
-    <div class="card price">
-      <h3>Supporter</h3>
-      <div class="amount">€99</div>
-      <div class="per">per year — a thank-you, not a feature unlock</div>
-      <ul>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Funds independent development</span></li>
-        <li><svg width="16" height="16" viewBox="0 0 20 20" fill="none"><path d="M5 10.5l3 3L15 7" stroke="#4ade80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg><span>Your name in <code>SUPPORTERS</code></span></li>
-      </ul>
-      <a class="btn btn-ghost" href="https://app.stapelwerk.dev">Become a supporter</a>
-    </div>
-  </div>
-  <div class="selfhost"><b>The self-host promise:</b> a self-hosted Stapelwerk has <b>every feature and zero gates</b> — signed reports included, free. Plan limits exist only on the hosted instance. That's what AGPL-3.0 open-core means here.</div>
+  <table class="pricetable">
+    <thead><tr><th>Pos.</th><th>Item</th><th>Price</th><th></th></tr></thead>
+    <tbody>
+      <tr>
+        <td class="pos"><code>1.0</code></td>
+        <td class="what"><b>Free forever</b><span>Compose from templates &amp; catalog · all checks, incl. the kill-switch · export compose + <code>deploy.sh</code> + handoff guides. No account needed to self-host.</span></td>
+        <td class="price">€0</td>
+        <td class="act"><a class="btn btn-ghost" href="https://app.stapelwerk.dev">Start composing</a></td>
+      </tr>
+      <tr class="hot">
+        <td class="pos"><code>2.0</code></td>
+        <td class="what"><b>Verified deploy</b><span>ed25519-signed deploy-safety report · kill-switch + safety audit, attested · verifiable with our public key.</span></td>
+        <td class="price">€29<span class="per">one time, per stack</span></td>
+        <td class="act"><a class="btn btn-solid" href="https://app.stapelwerk.dev">Get verified</a></td>
+      </tr>
+      <tr>
+        <td class="pos"><code>3.0</code></td>
+        <td class="what"><b>Supporter</b><span>Funds independent development · your name in <code>SUPPORTERS</code>. A thank-you, not a feature unlock.</span></td>
+        <td class="price">€99<span class="per">per year</span></td>
+        <td class="act"><a class="btn btn-ghost" href="https://app.stapelwerk.dev">Become a supporter</a></td>
+      </tr>
+    </tbody>
+  </table>
+  <p class="selfhost">// <b>the self-host promise:</b> a self-hosted Stapelwerk has every feature and zero gates — signed reports included, free. Plan limits exist only on the hosted instance. That's what AGPL-3.0 open-core means here.</p>
 </div></section>
 
 <section id="faq"><div class="wrap">
-  <div class="eyebrow">FAQ</div>
+  <div class="spec"><span class="no">05</span><span class="lbl">FAQ</span><span class="fill"></span></div>
   <h2>Common questions</h2>
-  <div class="grid g3" style="margin-top:30px">
-    <div class="card"><h3 style="margin-top:0">What is Stapelwerk?</h3>
-      <p>Stapelwerk is a guided Docker stack composer for self-hosters. It composes a media server stack (Jellyfin, Sonarr, Radarr, Prowlarr, qBittorrent, Gluetun), checks compatibility, ports, resources and the VPN kill-switch before deploy, and exports a clean <code>docker-compose.yml</code> you can run anywhere.</p></div>
-    <div class="card"><h3 style="margin-top:0">How does Stapelwerk verify the VPN kill-switch?</h3>
-      <p>By construction: the download client runs inside the VPN container&#39;s network namespace (<code>network_mode: service:gluetun</code>), publishes no ports of its own and depends on the gateway. If a stack has a download client and a VPN but is not routed through it, Stapelwerk raises a hard VPN-leak error before deploy.</p></div>
-    <div class="card"><h3 style="margin-top:0">What does the €29 verified deploy include?</h3>
-      <p>A one-time, per-stack ed25519-signed report attesting what was verified in your compose: the kill-switch confinement plus a safety audit — no datastore exposed on the host network, volumes for stateful services, no default secrets, pinned images. Verifiable with our published public key. The compose itself stays free.</p></div>
-  </div>
+  <dl class="faq" style="margin-top:26px">
+    <dt>What is Stapelwerk?</dt>
+    <dd>Stapelwerk is a guided Docker stack composer for self-hosters. It composes a media server stack (Jellyfin, Sonarr, Radarr, Prowlarr, qBittorrent, Gluetun), checks compatibility, ports, resources and the VPN kill-switch before deploy, and exports a clean <code>docker-compose.yml</code> you can run anywhere.</dd>
+    <dt>How does Stapelwerk verify the VPN kill-switch?</dt>
+    <dd>By construction: the download client runs inside the VPN container's network namespace (<code>network_mode: service:gluetun</code>), publishes no ports of its own and depends on the gateway. If a stack has a download client and a VPN but is not routed through it, Stapelwerk raises a hard VPN-leak error before deploy.</dd>
+    <dt>What does the €29 verified deploy include?</dt>
+    <dd>A one-time, per-stack ed25519-signed report attesting what was verified in your compose: the kill-switch confinement plus a safety audit — no datastore exposed on the host network, volumes for stateful services, no default secrets, pinned images. Verifiable with our published public key. The compose itself stays free.</dd>
+  </dl>
 </div></section>
 
 <section id="origin"><div class="wrap">
-  <div class="eyebrow">Why “Stapelwerk”?</div>
+  <div class="spec"><span class="no">06</span><span class="lbl">Why "Stapelwerk"?</span><span class="fill"></span></div>
   <div class="origin">
-    <svg width="40" height="40" viewBox="0 0 32 32" aria-hidden="true" style="flex:none"><rect x="4" y="20" width="24" height="6" rx="1.5" fill="#e8b64c"/><rect x="7" y="12" width="18" height="6" rx="1.5" fill="#d0d4dc"/><rect x="10" y="4" width="12" height="6" rx="1.5" fill="#848b98"/></svg>
     <p><i>(SHTAH-pel-verk)</i> — <b>Stapel</b> is German for <b>stack</b>, and a <b>Stapellauf</b> is the moment a shipyard launches a correctly built ship. Stapelwerk is the works where your stack gets built, checked and verified — <b>before</b> it launches.</p>
   </div>
 </div></section>
