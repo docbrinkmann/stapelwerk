@@ -80,9 +80,12 @@ describe('Development Environment', () => {
   })
 
   describe('Environment Variables', () => {
-    it('should have .env.docker file for development', () => {
-      const envDockerPath = resolve(process.cwd(), '.env.docker')
-      expect(existsSync(envDockerPath)).toBe(true)
+    it('should ship a tracked env template for development', () => {
+      // .env.docker is a gitignored local file (absent on a fresh clone / in CI);
+      // the checked-in contract is the template.
+      const envExamplePath = resolve(process.cwd(), '.env.example')
+      expect(existsSync(envExamplePath)).toBe(true)
+      expect(readFileSync(envExamplePath, 'utf-8')).toMatch(/^NEXTAUTH_URL=/m)
     })
 
     it('should have proper database configuration for containers', () => {
