@@ -52,6 +52,14 @@ export function useJobStatus(jobId: string | null | undefined, opts: UseJobStatu
   const isSucceeded = status === 'succeeded'
   const isFailed = status === 'failed'
 
+  const stop = useCallback(() => {
+    setEnabled(false)
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+  }, [])
+
   const fetchOnce = useCallback(async () => {
     if (!jobId || busyRef.current) return
     busyRef.current = true
@@ -80,22 +88,13 @@ export function useJobStatus(jobId: string | null | undefined, opts: UseJobStatu
     } finally {
       busyRef.current = false
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [jobId, opts.stopOnFailure, opts.stopOnSuccess])
+  }, [jobId, opts.stopOnFailure, opts.stopOnSuccess, stop])
 
   const start = useCallback(() => {
     if (timerRef.current) return
     setEnabled(true)
     timerRef.current = setInterval(fetchOnce, intervalMs)
   }, [fetchOnce, intervalMs])
-
-  const stop = useCallback(() => {
-    setEnabled(false)
-    if (timerRef.current) {
-      clearInterval(timerRef.current)
-      timerRef.current = null
-    }
-  }, [])
 
   const refreshNow = useCallback(async () => {
     await fetchOnce()

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/sidebar"
 import { trpc } from "@/utils/trpc"
 import { useT } from "@/lib/i18n/client"
+import { IMPRINT_URL, PRIVACY_URL } from "@/components/footer"
 
 /**
  * App Sidebar Component
@@ -112,6 +113,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <NavStacks stacks={userStacks} />
       </SidebarContent>
       <SidebarFooter>
+        {(IMPRINT_URL || PRIVACY_URL) && (
+          <div className="flex gap-3 px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
+            {IMPRINT_URL && <a href={IMPRINT_URL} className="hover:text-foreground">{t('landing.footerImprint')}</a>}
+            {PRIVACY_URL && <a href={PRIVACY_URL} className="hover:text-foreground">{t('landing.footerPrivacy')}</a>}
+          </div>
+        )}
         <NavUser user={user} />
       </SidebarFooter>
       <SidebarRail />

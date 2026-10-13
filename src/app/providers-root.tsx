@@ -5,6 +5,7 @@ import { usePathname } from 'next/navigation'
 import { SessionProvider } from 'next-auth/react'
 import { ServiceBrowserQueryProvider } from '@/components/providers/query-provider'
 import Header from '@/components/header'
+import Footer from '@/components/footer'
 import { ThemeProvider } from './providers'
 import { loadAppearancePrefs } from '@/lib/appearance'
 import { I18nProvider } from '@/lib/i18n/client'
@@ -46,6 +47,7 @@ export function ProvidersRoot({
         {/* Only show marketing header on non-dashboard routes */}
         {!isDashboardRoute && <Header />}
         {children}
+        {!isDashboardRoute && <Footer />}
       </div>
       <div id="modal-root" />
     </ServiceBrowserQueryProvider>

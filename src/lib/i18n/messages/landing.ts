@@ -31,6 +31,8 @@ export const landingEn = {
   'landing.footerServices': 'Services',
   'landing.footerDocs': 'Docs',
   'landing.signIn': 'Sign in',
+  'landing.footerImprint': 'Imprint',
+  'landing.footerPrivacy': 'Privacy',
 
   // Docs / help page
   'landing.docsTitle': 'Help & Docs',
@@ -120,6 +122,8 @@ export const landingDe: Record<keyof typeof landingEn, string> = {
   'landing.footerServices': 'Services',
   'landing.footerDocs': 'Doku',
   'landing.signIn': 'Anmelden',
+  'landing.footerImprint': 'Impressum',
+  'landing.footerPrivacy': 'Datenschutz',
 
   // Docs / help page
   'landing.docsTitle': 'Hilfe & Doku',

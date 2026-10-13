@@ -37,6 +37,11 @@ ARG NEXT_PUBLIC_WS_URL
 ENV NEXT_PUBLIC_WS_URL=$NEXT_PUBLIC_WS_URL
 ARG NEXT_PUBLIC_APP_URL
 ENV NEXT_PUBLIC_APP_URL=$NEXT_PUBLIC_APP_URL
+# Operator legal pages (hosted instance only; unset = no footer links)
+ARG NEXT_PUBLIC_IMPRINT_URL
+ENV NEXT_PUBLIC_IMPRINT_URL=$NEXT_PUBLIC_IMPRINT_URL
+ARG NEXT_PUBLIC_PRIVACY_URL
+ENV NEXT_PUBLIC_PRIVACY_URL=$NEXT_PUBLIC_PRIVACY_URL
 # Cap the build heap. The build host has 8Gi and NO swap; `next build --webpack`
 # (heavy deps) spiked past available memory alongside the running containers and
 # the OOM killer restarted all of them (2026-07-06). Bounding the heap keeps

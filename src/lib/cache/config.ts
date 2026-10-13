@@ -1,4 +1,4 @@
-import { createClient } from 'redis'
+import { createClient, type RedisClientType } from 'redis'
 
 export interface CacheConfig {
   defaultTTL: number
@@ -17,11 +17,11 @@ export const cacheConfig: CacheConfig = {
 }
 
 // Redis client singleton
-let redisClient: ReturnType<typeof createClient> | null = null
+let redisClient: RedisClientType | null = null
 
 // Track if Redis connection was already attempted and failed
 let redisConnectionFailed = false
-let redisConnectionPromise: Promise<ReturnType<typeof createClient> | null> | null = null
+let redisConnectionPromise: Promise<RedisClientType | null> | null = null
 
 export async function getRedisClient() {
   if (!cacheConfig.enabled) {

@@ -18,8 +18,31 @@ describe('Next.js Application Initialization', () => {
 
     const h1 = screen.getByRole('heading', { level: 1 })
     expect(h1).toHaveTextContent(/Docker stack/i)
-    // Honest footer is rendered on the page
+  })
+
+  it('renders the shared footer without operator legal links by default (self-host)', async () => {
+    const { default: Footer } = await import('../components/footer')
+    render(<Footer />)
+
     expect(screen.getByText(/guided composer for self-hosted docker stacks/i)).toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /imprint/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('link', { name: /privacy/i })).not.toBeInTheDocument()
+  })
+
+  it('links imprint + privacy when the operator configures them', async () => {
+    vi.resetModules()
+    vi.stubEnv('NEXT_PUBLIC_IMPRINT_URL', 'https://stapelwerk.dev/impressum/')
+    vi.stubEnv('NEXT_PUBLIC_PRIVACY_URL', 'https://stapelwerk.dev/datenschutz/')
+    try {
+      const { default: Footer } = await import('../components/footer')
+      render(<Footer />)
+
+      expect(screen.getByRole('link', { name: /imprint/i })).toHaveAttribute('href', 'https://stapelwerk.dev/impressum/')
+      expect(screen.getByRole('link', { name: /privacy/i })).toHaveAttribute('href', 'https://stapelwerk.dev/datenschutz/')
+    } finally {
+      vi.unstubAllEnvs()
+      vi.resetModules()
+    }
   })
 
   it('should render without accessibility violations', async () => {

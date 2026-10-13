@@ -9,10 +9,8 @@ updates:
       time: "04:00"
       timezone: "UTC"
     open-pull-requests-limit: 10
-    reviewers:
-      - "@sebastianlopezlopez"
     assignees:
-      - "@sebastianlopezlopez"
+      - "docbrinkmann"
     commit-message:
       prefix: "deps"
       prefix-development: "deps-dev"
@@ -60,6 +58,18 @@ updates:
       - dependency-name: "node"
         # Ignore major version updates for Node.js in production
         update-types: ["version-update:semver-major"]
+      # Majors that need a dedicated migration rather than a bot bump (reviewed 2026-10):
+      # TS 7 (native compiler) — typescript-eslint supports TypeScript <6.1 only.
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      # ESLint 10 — eslint-config-next's bundled react/jsx-a11y/import plugins cap at ESLint 9.
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      # Prisma 7 — driver adapters + prisma.config.ts; migrate deliberately, not via Dependabot.
+      - dependency-name: "prisma"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@prisma/*"
+        update-types: ["version-update:semver-major"]
 
   # Enable version updates for GitHub Actions
   - package-ecosystem: "github-actions"
@@ -70,10 +80,8 @@ updates:
       time: "04:00"
       timezone: "UTC"
     open-pull-requests-limit: 5
-    reviewers:
-      - "@sebastianlopezlopez"
     assignees:
-      - "@sebastianlopezlopez"
+      - "docbrinkmann"
     commit-message:
       prefix: "ci"
       include: "scope"
@@ -91,10 +99,8 @@ updates:
       time: "04:00"
       timezone: "UTC"
     open-pull-requests-limit: 3
-    reviewers:
-      - "@sebastianlopezlopez"
     assignees:
-      - "@sebastianlopezlopez"
+      - "docbrinkmann"
     commit-message:
       prefix: "docker"
       include: "scope"

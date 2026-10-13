@@ -129,7 +129,7 @@ The entire application is open source; running a self-hosted build unlocks every
 
 ## Status & scope
 
-- **Focus:** the media / \*arr vertical is the beachhead — the Gluetun kill-switch checks are wired and covered by tests. Version `0.1.0`.
+- **Focus:** the media / \*arr vertical is the beachhead — the Gluetun kill-switch checks are wired and covered by tests. Version `0.1.1`.
 - **Not a deploy panel.** Stapelwerk composes and checks, then hands off; always-on host management is Coolify / Dokploy / Openship territory. Direct deploy is an optional convenience, not the product: the key-sovereign `deploy.sh` runs from *your* machine over *your* SSH, and the managed server-side path (Pro/Fleet) uses *our* deploy key that you authorize on your host — we never hold *your* key either way.
 - **No "kept current" / scheduled CVE re-checks** — that feature does not exist; the checks run at compose time.
 - **Roadmap:** the runtime attestation (booting the stack and confirming traffic actually dies when the VPN drops) runs on local-socket deploys; extending it to remote/SSH deploys is next. The compose-time checks verify the *configuration* — see the honest scope in `LAUNCH-RUNBOOK.md`.

@@ -39,6 +39,9 @@ const nextConfig = {
   poweredByHeader: false,
   
   async headers() {
+    // Evaluated at build time (baked into the routes manifest): NEXT_PUBLIC_APP_URL is a
+    // Docker build arg. No placeholder fallback — without an origin, no ACAO is sent (same-origin only).
+    const corsOrigin = process.env.NODE_ENV === 'development' ? '*' : process.env.ALLOWED_ORIGINS || process.env.NEXT_PUBLIC_APP_URL
     return [
       {
         // Apply security headers to all routes
@@ -102,10 +105,7 @@ const nextConfig = {
         // API routes get additional security headers
         source: '/api/(.*)',
         headers: [
-          {
-            key: 'Access-Control-Allow-Origin',
-            value: process.env.NODE_ENV === 'development' ? '*' : process.env.ALLOWED_ORIGINS || 'https://yourdomain.com'
-          },
+          ...(corsOrigin ? [{ key: 'Access-Control-Allow-Origin', value: corsOrigin }] : []),
           {
             key: 'Access-Control-Allow-Methods',
             value: 'GET, POST, PUT, DELETE, OPTIONS'

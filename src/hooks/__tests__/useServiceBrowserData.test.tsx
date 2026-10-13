@@ -24,7 +24,7 @@ vi.mock('@/trpc/client', () => ({
 }))
 
 vi.mock('@/store/service-browser')
-vi.mock('@/hooks/useServiceBrowserUrl', () => ({
+vi.mock('@/hooks/useServiceBrowserURL', () => ({
   useServiceBrowserUrl: () => ({
     isInitialized: true
   })

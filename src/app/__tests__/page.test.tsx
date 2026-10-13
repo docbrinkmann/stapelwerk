@@ -4,6 +4,7 @@ import { render, screen } from '@testing-library/react'
 vi.mock('next/navigation', () => ({ useRouter: () => ({ push: vi.fn() }) }))
 
 import HomePage from '../page'
+import Footer from '@/components/footer'
 
 describe('HomePage', () => {
   it('renders the hero with a real value proposition', () => {
@@ -13,7 +14,8 @@ describe('HomePage', () => {
   })
 
   it('has an honest footer without framework name-dropping', () => {
-    render(<HomePage params={{}} searchParams={{}} />)
+    // The footer is shared by all marketing routes (rendered by ProvidersRoot).
+    render(<Footer />)
     expect(screen.getByText(/guided composer for self-hosted docker stacks/i)).toBeInTheDocument()
     expect(screen.queryByText(/Built with Next\.js/i)).not.toBeInTheDocument()
     expect(screen.getByRole('link', { name: /^Docs$/i })).toBeInTheDocument()

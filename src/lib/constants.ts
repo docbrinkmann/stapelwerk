@@ -2,7 +2,7 @@ import { AppConfig } from '@/types/globals'
 
 export const APP_CONFIG: AppConfig = {
   name: 'Stapelwerk',
-  version: '0.1.0',
+  version: '0.1.1',
   description: 'A guided Docker stack builder for home users, freelancers, and SMEs',
 }
 

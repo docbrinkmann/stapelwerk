@@ -18,6 +18,9 @@ export default async function () {
     throw new Error('[global-setup] prisma generate failed')
   }
 
+  // DB-free suites (the CI unit-tests job) opt out of the schema push entirely.
+  if (process.env.SKIP_DB_SETUP === 'true') return
+
   // Push schema to test DB (idempotent)
   const shouldEnforceDbPush = process.env.CI === 'true' || process.env.FORCE_DB_SETUP === 'true'
   const push = spawnSync(process.platform === 'win32' ? 'npx.cmd' : 'npx', ['prisma', 'db', 'push', '--skip-generate'], {

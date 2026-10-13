@@ -36,10 +36,10 @@ default:
 quality:
   stage: quality
   script:
-    - npm run lint || true
+    - npm run lint
+    # Informational only: the repo predates Prettier (~1k files differ); gating it would mean a repo-wide reformat.
     - npm run format:check || true
-    - npm run type-check || true
-  allow_failure: true
+    - npm run type-check
   rules:
     - when: always
 
@@ -47,24 +47,16 @@ quality:
 unit-tests:
   stage: test
   needs: ["quality"]
-  services:
-    - postgres:15
+  # Real gate: the unit suite needs no database (DB suites run in integration-tests).
   variables:
-    POSTGRES_DB: stapelwerk_test
-    POSTGRES_USER: postgres
-    POSTGRES_PASSWORD: postgres
-    DATABASE_URL: "postgresql://postgres:postgres@postgres:5432/stapelwerk_test"
+    SKIP_DB_SETUP: "true"
   script:
-    - npm run test:setup
-    - npx vitest run --coverage --reporter=default || true
-    - mkdir -p coverage && [ -f coverage/cobertura-coverage.xml ] || touch coverage/.keep
-  coverage: '/All files[^|]*\|[^|]*\s+([\d\.]+)/'
+    - npm run test:unit
   artifacts:
     when: always
     paths:
       - coverage/
     expire_in: 7 days
-  allow_failure: true
   rules:
     - when: always
 
