@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { createTRPCRouter, protectedProcedure } from '../trpc';
+import { adminProcedure, createTRPCRouter, protectedProcedure } from '../trpc';
 import { TRPCError } from '@trpc/server';
 import os from 'os';
 import { countUpStacks } from '@/lib/analytics-metrics';
@@ -10,7 +10,7 @@ import { countUpStacks } from '@/lib/analytics-metrics';
  */
 export const monitoringRouter = createTRPCRouter({
   // Get dashboard metrics and alerts
-  getDashboardData: protectedProcedure
+  getDashboardData: adminProcedure
     .query(async ({ ctx }) => {
       try {
         const userId = ctx.userId!;
@@ -167,7 +167,7 @@ export const monitoringRouter = createTRPCRouter({
     }),
 
   // Get alerts with filtering
-  getAlerts: protectedProcedure
+  getAlerts: adminProcedure
     .input(z.object({
       severity: z.enum(['critical', 'warning', 'info', 'all']).default('all'),
       resolved: z.boolean().optional(),
@@ -212,7 +212,7 @@ export const monitoringRouter = createTRPCRouter({
     }),
 
   // Create a new alert
-  createAlert: protectedProcedure
+  createAlert: adminProcedure
     .input(z.object({
       severity: z.enum(['critical', 'warning', 'info']),
       service: z.string(),
@@ -244,7 +244,7 @@ export const monitoringRouter = createTRPCRouter({
     }),
 
   // Resolve an alert
-  resolveAlert: protectedProcedure
+  resolveAlert: adminProcedure
     .input(z.object({
       id: z.string(),
       notes: z.string().optional()

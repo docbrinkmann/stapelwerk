@@ -376,25 +376,29 @@ async function resolveDeployTarget(
   }
 }
 
+/**
+ * Gate G — on the hosted instance (billing on) direct deploy is admin-only:
+ * neither this server's Docker socket nor our deploy key on a stranger's host.
+ * Everyone else gets the key-sovereign path (Export → deploy.sh on their own
+ * machine). Self-host (billing off) is unaffected.
+ */
+function assertHostedDirectDeploy(user: unknown): void {
+  if (isBillingEnabled() && (user as { role?: string } | undefined)?.role !== 'admin') {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message:
+        'Direct deploy is not available on the hosted instance. Use Export → deploy.sh (runs on your machine over your own SSH), or self-host Stapelwerk.',
+    })
+  }
+}
+
 export const deploymentsRouter = createTRPCRouter({
   // Targets
   createTarget: protectedProcedure
     .input(TargetSchema)
     .mutation(async ({ ctx, input }) => {
       const location = input.location ?? 'local'
-      // Cloud profile: on the hosted instance, only admins may register a local
-      // (Docker-socket-of-our-host) target — free/pro users must never schedule
-      // containers on our infrastructure. Self-host (billing off) is unaffected.
-      if (
-        isBillingEnabled() &&
-        location === 'local' &&
-        (ctx.user as { role?: string } | undefined)?.role !== 'admin'
-      ) {
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Local (this-server) targets are not available on the hosted plan. Add a remote host instead.',
-        })
-      }
+      assertHostedDirectDeploy(ctx.user)
       // Plan gate: remote targets are the priced axis (free 0, pro 2, fleet 10).
       if (location === 'remote') {
         // Liability gate: registering a remote target hands Stapelwerk an SSH
@@ -775,6 +779,8 @@ export const deploymentsRouter = createTRPCRouter({
       targetId: z.string().regex(UUID_REGEX).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
+      // Before anything else: without a targetId this is "this server" (our socket).
+      assertHostedDirectDeploy(ctx.user)
       const { name } = await requireStackOwner(ctx.prisma, input.stackId, ctx.userId)
       // Plan gate: direct deploy is a Pro capability (self-host ⇒ allowed).
       assertDeployCapability(await effectivePlan(ctx.prisma, ctx.userId!))
@@ -823,6 +829,7 @@ export const deploymentsRouter = createTRPCRouter({
       targetId: z.string().regex(UUID_REGEX).optional(),
     }))
     .mutation(async ({ ctx, input }) => {
+      assertHostedDirectDeploy(ctx.user)
       await requireStackOwner(ctx.prisma, input.stackId, ctx.userId)
       const target = await resolveDeployTarget(ctx.prisma, input.targetId, ctx.userId)
       const composeYaml = await assembleStackCompose(ctx.prisma, input.stackId)

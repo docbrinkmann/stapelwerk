@@ -1,6 +1,6 @@
 import { PrismaClient } from '@prisma/client'
 import { hashPassword } from '../src/lib/password'
-import { shouldResetCatalog } from './seed-guard'
+import { shouldResetCatalog, shouldSeedDemoUser } from './seed-guard'
 
 const prisma = new PrismaClient()
 
@@ -1223,27 +1223,32 @@ async function main() {
     })
   }
 
-  // Demo login user for local development; owns the sample stack so the
-  // dashboard and /stacks show data right after signing in.
-  const demoPassword = process.env.SEED_DEMO_PASSWORD || 'demo1234'
-  const demoUser = await prisma.users.upsert({
-    where: { email: 'demo@stapelwerk.dev' },
-    // Single-user setup: the demo user is also the admin (reviews template submissions)
-    update: { passwordHash: hashPassword(demoPassword), role: 'admin' },
-    create: {
-      id: crypto.randomUUID(),
-      email: 'demo@stapelwerk.dev',
-      name: 'Demo User',
-      passwordHash: hashPassword(demoPassword),
-      role: 'admin',
-      updatedAt: new Date(),
-    },
-  })
-  await prisma.stacks.update({
-    where: { id: stack.id },
-    data: { userId: demoUser.id },
-  })
-  console.log(`👤 Demo user: demo@stapelwerk.dev / ${demoPassword}`)
+  // Demo login user for local development and self-host (the initial
+  // single-user admin); owns the sample stack so the dashboard and /stacks show
+  // data right after signing in. Never on the hosted instance — see seed-guard.
+  if (shouldSeedDemoUser()) {
+    const demoPassword = process.env.SEED_DEMO_PASSWORD || 'demo1234'
+    const demoUser = await prisma.users.upsert({
+      where: { email: 'demo@stapelwerk.dev' },
+      // Single-user setup: the demo user is also the admin (reviews template submissions)
+      update: { passwordHash: hashPassword(demoPassword), role: 'admin' },
+      create: {
+        id: crypto.randomUUID(),
+        email: 'demo@stapelwerk.dev',
+        name: 'Demo User',
+        passwordHash: hashPassword(demoPassword),
+        role: 'admin',
+        updatedAt: new Date(),
+      },
+    })
+    await prisma.stacks.update({
+      where: { id: stack.id },
+      data: { userId: demoUser.id },
+    })
+    console.log(`👤 Demo user: demo@stapelwerk.dev / ${demoPassword}`)
+  } else {
+    console.log('👤 Demo user skipped (hosted instance: BILLING_ENABLED=true)')
+  }
 
   console.log('✅ Database seed completed successfully!')
   console.log('📊 Summary:')

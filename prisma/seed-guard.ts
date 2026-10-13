@@ -12,6 +12,16 @@
  *  - HARD-REFUSED in production, so the live catalog + community submissions
  *    (service_imports) can never be destroyed by a deploy that runs the seed.
  */
+/**
+ * Guard for the seeded demo login (demo@stapelwerk.dev, admin, password from
+ * SEED_DEMO_PASSWORD or a documented default). Self-host and dev keep it as the
+ * initial single-user admin. The hosted instance (BILLING_ENABLED=true) never
+ * gets it: it is public-facing, so a known-password admin is an open door.
+ */
+export function shouldSeedDemoUser(env: NodeJS.ProcessEnv = process.env): boolean {
+  return env.BILLING_ENABLED !== 'true'
+}
+
 export function shouldResetCatalog(env: NodeJS.ProcessEnv = process.env): boolean {
   if (env.SEED_RESET !== 'true') return false
   if (env.NODE_ENV === 'production') {

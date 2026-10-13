@@ -505,6 +505,24 @@ describe('TemplateEngine', () => {
       expect(mockPrisma.stackService.create).not.toHaveBeenCalled()
     })
 
+    it("should reject another user's published public stack and a caller without a user id", async () => {
+      // Applying writes services into the stack: public means readable, not writable.
+      mockPrisma.useCaseTemplate.findUnique.mockResolvedValue({
+        id: 'tpl-web-dev',
+        isActive: true,
+        serviceIds: JSON.stringify([1])
+      })
+      mockPrisma.stack.findUnique.mockResolvedValue({
+        id: 'stack-123', userId: 'someone-else', isPublic: true, status: 'public'
+      })
+
+      for (const caller of ['user-456', undefined]) {
+        const result = await engine.applyTemplateToStack('tpl-web-dev', 'stack-123', caller)
+        expect(result).toEqual({ success: false, error: 'Access denied', servicesAdded: 0 })
+      }
+      expect(mockPrisma.stackService.create).not.toHaveBeenCalled()
+    })
+
     it('should handle a missing target stack', async () => {
       mockPrisma.useCaseTemplate.findUnique.mockResolvedValue({
         id: 'tpl-web-dev',

@@ -190,19 +190,18 @@ const template = await this.prisma.use_case_templates.findUnique({
       // Malformed metadata → apply plain defaults (no curated wiring).
     }
 
-    // The target stack must exist and be writable by the caller. Mirrors the
-    // ownership rule in stacks.ts (`validateStackOwnership`): owner, or a
-    // published public stack.
+    // The target stack must exist and belong to the caller: applying writes
+    // services into it, and a published public stack is readable, not writable.
     const stack = await this.prisma.stacks.findUnique({
       where: { id: stackId },
-      select: { id: true, userId: true, isPublic: true, status: true }
+      select: { id: true, userId: true }
     })
 
     if (!stack) {
       return { success: false, error: 'Stack not found', servicesAdded: 0 }
     }
 
-    if (userId && stack.userId !== userId && !(stack.isPublic && stack.status === 'public')) {
+    if (!userId || stack.userId !== userId) {
       return { success: false, error: 'Access denied', servicesAdded: 0 }
     }
 

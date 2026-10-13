@@ -1,6 +1,7 @@
 import { createTRPCRouter } from './trpc'
 import { adminRouter } from './routers/admin'
 import { analyticsRouter } from './routers/analytics'
+import { authRouter } from './routers/auth'
 import { categoriesRouter } from './routers/categories'
 import { communityRouter } from './routers/community'
 import { healthRouter } from './routers/health'
@@ -25,6 +26,7 @@ import { verifiedDeployRouter } from './routers/verified-deploy'
 export const appRouter = createTRPCRouter({
   admin: adminRouter,
   analytics: analyticsRouter,
+  auth: authRouter,
   categories: categoriesRouter,
   community: communityRouter,
   health: healthRouter,

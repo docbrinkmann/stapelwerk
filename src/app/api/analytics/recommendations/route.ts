@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+
+// ponytail: per-request cap against write amplification; no per-user quota.
+const MAX_EVENTS = 200;
 
 interface AnalyticsEvent {
   sessionId: string;
@@ -29,17 +34,26 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // The app is public: anonymous callers must not move counters or forge
+    // feedback. Accept (so the client doesn't retry) but write nothing.
+    const session = await getServerSession(authOptions);
+    const userId = (session?.user as { id?: string } | undefined)?.id;
+    if (!userId) {
+      return NextResponse.json({ success: true, processed: 0 });
+    }
+
     // Process events in batches for better performance
+    const accepted = events.slice(0, MAX_EVENTS);
     const batchSize = 50;
     const batches = [];
     
-    for (let i = 0; i < events.length; i += batchSize) {
-      batches.push(events.slice(i, i + batchSize));
+    for (let i = 0; i < accepted.length; i += batchSize) {
+      batches.push(accepted.slice(i, i + batchSize));
     }
 
     // Store analytics data
     const results = await Promise.allSettled(
-      batches.map(batch => processBatch(batch))
+      batches.map(batch => processBatch(batch, userId))
     );
 
     // Check for any failures
@@ -51,7 +65,7 @@ export async function POST(request: NextRequest) {
     // Return success with processing summary
     return NextResponse.json({
       success: true,
-      processed: events.length,
+      processed: accepted.length,
       batches: batches.length,
       failures: failures.length
     });
@@ -65,20 +79,20 @@ export async function POST(request: NextRequest) {
   }
 }
 
-async function processBatch(events: AnalyticsEvent[]) {
+async function processBatch(events: AnalyticsEvent[], userId: string) {
   // Analytics models are now implemented in the database schema
   // Process events for real-time analytics and tracking
 
   try {
     // Process specific event types for real-time insights
-    await Promise.all(events.map(processEventType));
+    await Promise.all(events.map((event) => processEventType(event, userId)));
   } catch (error) {
     console.error('Event processing error:', error);
     throw error;
   }
 }
 
-async function processEventType(event: AnalyticsEvent) {
+async function processEventType(event: AnalyticsEvent, userId: string) {
   const { eventType, data, sessionId } = event;
 
   try {
@@ -148,7 +162,7 @@ async function processEventType(event: AnalyticsEvent) {
             data: {
               id: (globalThis.crypto?.randomUUID?.() || Math.random().toString(36).slice(2)) as string,
               recommendationId: String(data.recommendationId),
-              userId: event.userId || null,
+              userId, // from the session, never from the body
               sessionId: sessionId,
               action: String(data.feedbackType || 'dismissed'),
               rating: typeof data.rating === 'number' ? data.rating : null,

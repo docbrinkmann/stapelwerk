@@ -1,5 +1,17 @@
 import { describe, it, expect } from 'vitest'
-import { shouldResetCatalog } from '~/prisma/seed-guard'
+import { shouldResetCatalog, shouldSeedDemoUser } from '~/prisma/seed-guard'
+
+describe('shouldSeedDemoUser — no known-password admin on the hosted instance', () => {
+  it('self-host and dev keep the demo login as the initial admin', () => {
+    expect(shouldSeedDemoUser({})).toBe(true)
+    expect(shouldSeedDemoUser({ NODE_ENV: 'production' })).toBe(true)
+    expect(shouldSeedDemoUser({ BILLING_ENABLED: 'false' })).toBe(true)
+  })
+
+  it('the hosted instance (BILLING_ENABLED=true) never seeds it', () => {
+    expect(shouldSeedDemoUser({ BILLING_ENABLED: 'true', NODE_ENV: 'production' })).toBe(false)
+  })
+})
 
 describe('shouldResetCatalog — protects the prod catalog from destructive re-seeds', () => {
   it('is OFF by default so a normal deploy (migrate → seed) never wipes', () => {

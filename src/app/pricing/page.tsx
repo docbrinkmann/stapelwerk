@@ -1,23 +1,15 @@
 "use client"
 
-import { useState } from "react"
 import Link from "next/link"
 import { Check, ShieldCheck } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import { cn } from "@/lib/utils"
-import {
-  PLAN_PRICING,
-  planFeatureBullets,
-  yearlyPrice,
-  SUPPORTER_PRICE_YEARLY,
-  VERIFIED_DEPLOY_PRICE,
-  type PlanId,
-} from "@/lib/plans"
+import { PLAN_PRICING, planFeatureBullets, SUPPORTER_PRICE_YEARLY, VERIFIED_DEPLOY_PRICE } from "@/lib/plans"
 
-const ORDER: PlanId[] = ["free", "pro", "fleet"]
-
+// Gate G: the hosted instance sells no monthly deploy plans (Pro/Fleet) — direct
+// deploy there is admin-only. Offer = free composer + one-time €29 + supporter,
+// same as the landing page.
 export default function PricingPage() {
-  const [yearly, setYearly] = useState(false)
+  const free = PLAN_PRICING.free
 
   return (
     <div className="mx-auto max-w-6xl px-6 py-16">
@@ -28,80 +20,28 @@ export default function PricingPage() {
           Pay for the part that&apos;s hard to get right: a deploy we <span className="text-foreground font-medium">verify</span> —
           leak-proof VPN kill-switch and all.
         </p>
-
-        {/* Billing period toggle */}
-        <div className="mt-8 inline-flex items-center gap-3 rounded-full border border-border bg-card p-1">
-          <button
-            type="button"
-            onClick={() => setYearly(false)}
-            className={cn(
-              "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-              !yearly ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-            aria-pressed={!yearly}
-          >
-            Monthly
-          </button>
-          <button
-            type="button"
-            onClick={() => setYearly(true)}
-            className={cn(
-              "rounded-full px-4 py-1.5 text-sm font-medium transition-colors",
-              yearly ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground",
-            )}
-            aria-pressed={yearly}
-          >
-            Yearly <span className="text-success">·2 months free</span>
-          </button>
-        </div>
       </div>
 
-      <div className="mt-12 grid gap-6 md:grid-cols-3">
-        {ORDER.map((id) => {
-          const p = PLAN_PRICING[id]
-          const price = p.priceMonthly === 0 ? 0 : yearly ? yearlyPrice(p.priceMonthly) : p.priceMonthly
-          const unit = p.priceMonthly === 0 ? "" : yearly ? "/year" : "/month"
-          return (
-            <div
-              key={id}
-              data-testid={`plan-card-${id}`}
-              className={cn(
-                "flex flex-col rounded-xl border bg-card p-6 shadow-sm",
-                p.featured ? "border-primary ring-1 ring-primary" : "border-border",
-              )}
-            >
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-semibold text-foreground">{p.name}</h2>
-                {p.featured && (
-                  <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-                    Most popular
-                  </span>
-                )}
-              </div>
-              <p className="mt-1 text-sm text-muted-foreground">{p.tagline}</p>
-              <div className="mt-4">
-                <span className="text-4xl font-bold text-foreground">€{price}</span>
-                <span className="text-muted-foreground">{unit}</span>
-              </div>
+      <div className="mt-12 flex flex-col rounded-xl border border-border bg-card p-6 shadow-sm" data-testid="plan-card-free">
+        <h2 className="text-xl font-semibold text-foreground">{free.name}</h2>
+        <p className="mt-1 text-sm text-muted-foreground">{free.tagline}</p>
+        <div className="mt-4">
+          <span className="text-4xl font-bold text-foreground">€0</span>
+        </div>
 
-              <ul className="mt-6 flex-1 space-y-2 text-sm">
-                {planFeatureBullets(id).map((b) => (
-                  <li key={b} className="flex items-start gap-2 text-foreground">
-                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
-                    <span>{b}</span>
-                  </li>
-                ))}
-              </ul>
+        <ul className="mt-6 flex-1 space-y-2 text-sm">
+          {planFeatureBullets("free").map((b) => (
+            <li key={b} className="flex items-start gap-2 text-foreground">
+              <Check className="mt-0.5 h-4 w-4 shrink-0 text-success" aria-hidden="true" />
+              <span>{b}</span>
+            </li>
+          ))}
+        </ul>
 
-              <Button asChild className="mt-6 w-full" variant={p.featured ? "default" : "outline"}>
-                {/* routes exist; cast matches the repo's typed-route convention */}
-                <Link href={(id === "free" ? "/auth/signin" : "/settings/billing") as never}>
-                  {id === "free" ? "Get started" : `Choose ${p.name}`}
-                </Link>
-              </Button>
-            </div>
-          )
-        })}
+        <Button asChild className="mt-6 w-full md:w-auto md:self-start" variant="outline">
+          {/* routes exist; cast matches the repo's typed-route convention */}
+          <Link href={"/auth/signup" as never}>Create a free account</Link>
+        </Button>
       </div>
 
       {/* One-time verified deploy — the lead paid outcome (v2 thesis) */}

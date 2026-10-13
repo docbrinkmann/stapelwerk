@@ -16,6 +16,7 @@ const createCaller = async (userId: string) => {
 }
 
 const cleanup = async () => {
+  await prisma.deployment_targets.deleteMany({})
   await prisma.stacks.deleteMany({})
   await prisma.users.deleteMany({})
 }
@@ -70,5 +71,50 @@ describe('billing gate: stacks.create', () => {
     }
     const count = await prisma.stacks.count({ where: { userId: 'u3' } })
     expect(count).toBe(4)
+  })
+})
+
+describe('Gate G: hosted direct deploy is admin-only', () => {
+  const future = new Date(Date.now() + 30 * 24 * 3600 * 1000)
+  const remote = {
+    name: 'Box', type: 'docker' as const, provider: 'docker',
+    location: 'remote' as const, host: 'box.example.com', sshUser: 'deploy', riskAcknowledged: true,
+  }
+  const asAdmin = async (id: string) => {
+    const ctx = await createTRPCContext({ user: { id, role: 'admin' }, req: {} as any, res: {} as any })
+    return appRouter.createCaller(ctx)
+  }
+
+  it('hosted + paying non-admin: no remote target, no local target, no deploy to this server', async () => {
+    process.env.BILLING_ENABLED = 'true'
+    await prisma.users.create({ data: { id: 'g1', email: 'g1@x.co', plan: 'fleet', planValidUntil: future, updatedAt: new Date() } })
+    const caller = await createCaller('g1')
+
+    await expect(caller.deployments.createTarget(remote)).rejects.toMatchObject({ code: 'FORBIDDEN' })
+    await expect(
+      caller.deployments.createTarget({ name: 'Here', type: 'docker', provider: 'docker' }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' })
+    // No targetId = "this server" (our Docker socket) — refused before any stack lookup.
+    await expect(
+      caller.deployments.deployStack({ stackId: crypto.randomUUID() }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' })
+    expect(await prisma.deployment_targets.count({})).toBe(0)
+  })
+
+  it('hosted + admin: remote target allowed (founder testing)', async () => {
+    process.env.BILLING_ENABLED = 'true'
+    // Plan gate still applies to admins; Gate G only adds the role check.
+    await prisma.users.create({ data: { id: 'g2', email: 'g2@x.co', role: 'admin', plan: 'fleet', planValidUntil: future, updatedAt: new Date() } })
+    const caller = await asAdmin('g2')
+    const target = await caller.deployments.createTarget(remote)
+    expect(target).toBeTruthy()
+  })
+
+  it('self-host (billing off): a regular user registers a remote target', async () => {
+    delete process.env.BILLING_ENABLED
+    await prisma.users.create({ data: { id: 'g3', email: 'g3@x.co', updatedAt: new Date() } })
+    const caller = await createCaller('g3')
+    const target = await caller.deployments.createTarget(remote)
+    expect(target).toBeTruthy()
   })
 })

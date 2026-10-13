@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { createTRPCRouter, publicProcedure, adminProcedure } from '@/server/trpc'
+import { createTRPCRouter, publicProcedure, protectedProcedure, adminProcedure } from '@/server/trpc'
 import { TemplateEngine } from '@/server/services/template-engine'
 import type { 
   TemplateCategory, 
@@ -103,13 +103,11 @@ const searchTemplatesSchema = z.object({
 
 const applyTemplateSchema = z.object({
   templateId: z.string().min(1, 'Template ID is required'),
-  stackId: z.string().min(1, 'Stack ID is required'),
-  userId: z.string().optional()
+  stackId: z.string().min(1, 'Stack ID is required')
 })
 
 const rateTemplateSchema = z.object({
   templateId: z.string().min(1, 'Template ID is required'),
-  userId: z.string().min(1, 'User ID is required'),
   rating: z.number().min(1, 'Rating must be at least 1').max(5, 'Rating must be at most 5'),
   comment: z.string().max(500, 'Comment too long').optional()
 })
@@ -263,7 +261,7 @@ export const templatesRouter = createTRPCRouter({
   /**
    * Apply a template to a stack
    */
-  applyToStack: publicProcedure
+  applyToStack: protectedProcedure
     .input(applyTemplateSchema)
     .mutation(async ({ input, ctx }) => {
       const templateEngine = new TemplateEngine(ctx.prisma)
@@ -271,7 +269,7 @@ export const templatesRouter = createTRPCRouter({
       const result = await templateEngine.applyTemplateToStack(
         input.templateId,
         input.stackId,
-        input.userId
+        ctx.userId
       )
 
       return result
@@ -280,12 +278,12 @@ export const templatesRouter = createTRPCRouter({
   /**
    * Rate a template
    */
-  rate: publicProcedure
+  rate: protectedProcedure
     .input(rateTemplateSchema)
     .mutation(async ({ input, ctx }) => {
       const templateEngine = new TemplateEngine(ctx.prisma)
       
-      return await templateEngine.rateTemplate(input)
+      return await templateEngine.rateTemplate({ ...input, userId: ctx.userId })
     }),
 
   /**
@@ -550,12 +548,11 @@ export const templatesRouter = createTRPCRouter({
   /**
    * Fork/copy a template
    */
-  fork: publicProcedure
+  fork: adminProcedure
     .input(z.object({
       sourceTemplateId: z.string().min(1, 'Source template ID is required'),
       newName: z.string().min(1, 'New name is required'),
-      newId: z.string().optional(),
-      createdBy: z.string().optional()
+      newId: z.string().optional()
     }))
     .mutation(async ({ input, ctx }) => {
       const templateEngine = new TemplateEngine(ctx.prisma)
@@ -563,7 +560,7 @@ export const templatesRouter = createTRPCRouter({
         input.sourceTemplateId,
         input.newName,
         input.newId,
-        input.createdBy
+        ctx.userId
       )
     }),
 
@@ -676,26 +673,25 @@ export const templatesRouter = createTRPCRouter({
   /**
    * Advanced rating with helpful votes
    */
-  rateAdvanced: publicProcedure
+  rateAdvanced: protectedProcedure
     .input(rateTemplateSchema.extend({
       helpful: z.boolean().optional()
     }))
     .mutation(async ({ input, ctx }) => {
       const templateEngine = new TemplateEngine(ctx.prisma)
-      return await templateEngine.rateTemplateAdvanced(input)
+      return await templateEngine.rateTemplateAdvanced({ ...input, userId: ctx.userId })
     }),
 
   /**
    * Mark a rating as helpful
    */
-  markRatingHelpful: publicProcedure
+  markRatingHelpful: protectedProcedure
     .input(z.object({
-      ratingId: z.string().min(1, 'Rating ID is required'),
-      userId: z.string().min(1, 'User ID is required')
+      ratingId: z.string().min(1, 'Rating ID is required')
     }))
     .mutation(async ({ input, ctx }) => {
       const templateEngine = new TemplateEngine(ctx.prisma)
-      return await templateEngine.markRatingHelpful(input.ratingId, input.userId)
+      return await templateEngine.markRatingHelpful(input.ratingId, ctx.userId)
     }),
 
   /**
@@ -711,14 +707,13 @@ export const templatesRouter = createTRPCRouter({
   /**
    * Get personalized recommendations for user
    */
-  getPersonalizedRecommendations: publicProcedure
+  getPersonalizedRecommendations: protectedProcedure
     .input(z.object({
-      userId: z.string().min(1, 'User ID is required'),
       limit: z.number().min(1).max(10).default(5)
     }))
     .query(async ({ input, ctx }) => {
       const templateEngine = new TemplateEngine(ctx.prisma)
-      return await templateEngine.getPersonalizedRecommendations(input.userId, input.limit)
+      return await templateEngine.getPersonalizedRecommendations(ctx.userId, input.limit)
     }),
 
   /**

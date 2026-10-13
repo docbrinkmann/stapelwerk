@@ -16,11 +16,15 @@ interface WindowConfig {
   windowMs: number;
 }
 
-const WINDOWS: Record<'api' | 'public' | 'strict' | 'auth', WindowConfig> = {
+const WINDOWS: Record<'api' | 'public' | 'strict' | 'auth' | 'signup' | 'mail', WindowConfig> = {
   api: { limit: 1000, windowMs: 15 * 60_000 },
   public: { limit: 10_000, windowMs: 60 * 60_000 },
   strict: { limit: 100, windowMs: 60_000 },
   auth: { limit: 200, windowMs: 15 * 60_000 },
+  // Account mails: per client IP and per address, so sign-up and password
+  // reset can't be used to flood an inbox.
+  signup: { limit: 10, windowMs: 60 * 60_000 },
+  mail: { limit: 3, windowMs: 60 * 60_000 },
 };
 
 // key -> sorted request timestamps within the current window

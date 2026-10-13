@@ -9,12 +9,16 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { AlertCircle, Layers, Loader2 } from 'lucide-react'
 import { useT } from '@/lib/i18n/client'
+import { trpc } from '@/trpc/react-client'
+import { AuthAlert, AuthLink } from '../auth-card'
 
 function SignInForm() {
   const t = useT()
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams?.get('callbackUrl') || '/dashboard'
+  const passwordSet = searchParams?.get('password') === 'set'
+  const config = trpc.auth.config.useQuery()
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   // Gate submit until hydrated so the client handler is attached.
@@ -72,6 +76,7 @@ function SignInForm() {
               reads values from FormData so mobile autofill works even when the
               password manager doesn't fire React onChange. */}
           <form onSubmit={handleSubmit} className="space-y-4" noValidate>
+            {passwordSet && !error && <AuthAlert tone="success">{t('landing.signinPasswordSet')}</AuthAlert>}
             {error && (
               <div
                 className="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive"
@@ -109,9 +114,16 @@ function SignInForm() {
               {hydrated ? t('landing.signIn') : t('common.loading')}
             </Button>
           </form>
-          <p className="mt-4 text-center text-xs text-muted-foreground">
-            {t('landing.signinDemo')} <span className="font-medium text-foreground">demo@stapelwerk.dev</span> / <span className="font-medium text-foreground">demo1234</span>
-          </p>
+          <div className="mt-4 space-y-2 text-center text-sm text-muted-foreground">
+            <p>
+              <AuthLink href="/auth/forgot-password">{t('landing.signinForgot')}</AuthLink>
+            </p>
+            {config.data?.signupEnabled && (
+              <p>
+                {t('landing.signinNoAccount')} <AuthLink href="/auth/signup">{t('landing.signinCreateAccount')}</AuthLink>
+              </p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>

@@ -479,6 +479,9 @@ model users {
   email             String              @unique
   name              String?
   passwordHash      String?
+  // Self-registered accounts start unverified (null). The default backfills
+  // existing rows on db push and covers seeded/admin-created accounts.
+  emailVerified     DateTime?           @default(now())
   role              String              @default("user")
   // Billing plan (hosted instance only; gating is inert unless BILLING_ENABLED).
   // Additive columns — existing rows default to the free plan.
@@ -490,8 +493,25 @@ model users {
   updatedAt         DateTime
   alerts            alerts[]
   terminal_sessions terminal_sessions[]
+  auth_tokens       auth_tokens[]
 
   @@index([lastActivity])
+}
+
+// Single-use email links (verify_email, reset_password). Only the SHA-256 of
+// the token is stored; the token itself exists only in the sent link.
+model auth_tokens {
+  id        String    @id @default(cuid())
+  userId    String
+  type      String // verify_email, reset_password
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  users users @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
 }
 
 // Provider webhook ledger — idempotency + audit for billing events. Keyed on
