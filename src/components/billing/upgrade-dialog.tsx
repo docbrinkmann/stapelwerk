@@ -5,6 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button"
 import { PLAN_PRICING, planFeatureBullets, type PlanId } from "@/lib/plans"
 import { Check } from "lucide-react"
+import { useT } from "@/lib/i18n/client"
 
 /** The plan-limit context surfaced by the tRPC errorFormatter (data.planLimit). */
 export interface PlanLimitInfo {
@@ -30,18 +31,19 @@ interface UpgradeDialogProps {
 }
 
 export function UpgradeDialog({ open, onOpenChange, info, suggest = "pro" }: UpgradeDialogProps) {
+  const t = useT()
   const target = PLAN_PRICING[suggest]
-  const bullets = planFeatureBullets(suggest)
+  const bullets = planFeatureBullets(suggest, t)
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Upgrade to {target.name}</DialogTitle>
+          <DialogTitle>{t("billing.upgradeTitle", { plan: target.name })}</DialogTitle>
           <DialogDescription>
             {info?.limit != null
-              ? `You've reached your plan's limit of ${info.limit}. ${target.tagline}`
-              : target.tagline}
+              ? `${t("billing.upgradeLimitReached", { limit: info.limit })} ${t(target.tagline)}`
+              : t(target.tagline)}
           </DialogDescription>
         </DialogHeader>
 
@@ -55,15 +57,15 @@ export function UpgradeDialog({ open, onOpenChange, info, suggest = "pro" }: Upg
         </ul>
 
         <p className="text-sm text-muted-foreground">
-          {target.name} is €{target.priceMonthly}/month.
+          {t("billing.upgradePrice", { plan: target.name, price: target.priceMonthly })}
         </p>
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Not now
+            {t("billing.upgradeNotNow")}
           </Button>
           <Button asChild>
-            <Link href={"/pricing" as never} data-testid="upgrade-cta">See plans</Link>
+            <Link href={"/pricing" as never} data-testid="upgrade-cta">{t("billing.upgradeSeePlans")}</Link>
           </Button>
         </DialogFooter>
       </DialogContent>

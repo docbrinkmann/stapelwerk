@@ -37,8 +37,8 @@ describe('Next.js Application Initialization', () => {
       const { default: Footer } = await import('../components/footer')
       render(<Footer />)
 
-      expect(screen.getByRole('link', { name: /imprint/i })).toHaveAttribute('href', 'https://stapelwerk.dev/impressum/')
-      expect(screen.getByRole('link', { name: /privacy/i })).toHaveAttribute('href', 'https://stapelwerk.dev/datenschutz/')
+      expect(screen.getByRole('link', { name: /imprint/i })).toHaveAttribute('href', 'https://stapelwerk.dev/impressum/?lang=en')
+      expect(screen.getByRole('link', { name: /privacy/i })).toHaveAttribute('href', 'https://stapelwerk.dev/datenschutz/?lang=en')
     } finally {
       vi.unstubAllEnvs()
       vi.resetModules()

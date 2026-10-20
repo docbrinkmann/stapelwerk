@@ -17,6 +17,7 @@ import { builderEn, builderDe } from './messages/builder'
 import { deployEn, deployDe } from './messages/deploy'
 import { opsEn, opsDe } from './messages/ops'
 import { catalogEn, catalogDe } from './messages/catalog'
+import { billingEn, billingDe } from './messages/billing'
 
 export const en = {
   ...commonEn,
@@ -26,6 +27,7 @@ export const en = {
   ...deployEn,
   ...opsEn,
   ...catalogEn,
+  ...billingEn,
 } as const
 
 export type MessageKey = keyof typeof en
@@ -38,6 +40,7 @@ export const de: Record<MessageKey, string> = {
   ...deployDe,
   ...opsDe,
   ...catalogDe,
+  ...billingDe,
 }
 
 export type Locale = 'en' | 'de'

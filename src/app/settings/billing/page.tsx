@@ -5,6 +5,7 @@ import { SettingsLayout } from "@/components/settings"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { trpc } from "@/utils/trpc"
+import { useT } from "@/lib/i18n/client"
 
 function formatDate(d: string | Date | null | undefined): string {
   if (!d) return "—"
@@ -12,6 +13,7 @@ function formatDate(d: string | Date | null | undefined): string {
 }
 
 export default function BillingSettingsPage() {
+  const t = useT()
   const me = trpc.users.me.useQuery(undefined, { refetchOnWindowFocus: false })
   const data = me.data as
     | { billingEnabled: boolean; plan?: string; planValidUntil?: string | Date | null; manageUrl?: string | null }
@@ -19,32 +21,32 @@ export default function BillingSettingsPage() {
     | undefined
 
   return (
-    <SettingsLayout title="Billing" description="Your plan and subscription.">
+    <SettingsLayout title={t("billing.settingsTitle")} description={t("billing.settingsDescription")}>
       {me.isLoading ? (
-        <p className="text-sm text-muted-foreground">Loading…</p>
+        <p className="text-sm text-muted-foreground">{t("common.loading")}</p>
       ) : !data?.billingEnabled ? (
         // Self-host build: no gates, no billing.
         <div className="space-y-2">
           <p className="text-sm text-foreground">
-            This is a self-hosted build — <strong>every feature is enabled, with no plan limits</strong>.
+            {t("billing.selfHostPre")} <strong>{t("billing.selfHostStrong")}</strong>.
           </p>
           <p className="text-sm text-muted-foreground">
-            Billing only applies to the hosted instance. Want to support development?{" "}
-            <Link href={"/pricing" as never} className="text-primary hover:underline">See the supporter license</Link>.
+            {t("billing.selfHostSupport")}{" "}
+            <Link href={"/pricing" as never} className="text-primary hover:underline">{t("billing.seeSupporterLicense")}</Link>.
           </p>
         </div>
       ) : (
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-muted-foreground">Current plan</p>
+              <p className="text-sm text-muted-foreground">{t("billing.currentPlan")}</p>
               <p className="text-lg font-semibold capitalize text-foreground" data-testid="current-plan">
                 {data.plan ?? "free"}
               </p>
             </div>
             {(data.plan === "free" || !data.plan) && (
               <Button asChild>
-                <Link href={"/pricing" as never}>Upgrade</Link>
+                <Link href={"/pricing" as never}>{t("billing.upgrade")}</Link>
               </Button>
             )}
           </div>
@@ -54,12 +56,12 @@ export default function BillingSettingsPage() {
               <Separator />
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-muted-foreground">Renews / valid until</p>
+                  <p className="text-sm text-muted-foreground">{t("billing.renewsUntil")}</p>
                   <p className="text-sm text-foreground">{formatDate(data.planValidUntil)}</p>
                 </div>
                 {data.manageUrl && (
                   <Button asChild variant="outline">
-                    <a href={data.manageUrl} target="_blank" rel="noopener noreferrer">Manage subscription</a>
+                    <a href={data.manageUrl} target="_blank" rel="noopener noreferrer">{t("billing.manageSubscription")}</a>
                   </Button>
                 )}
               </div>

@@ -467,85 +467,23 @@ describe('RecommendationAnalyticsService', () => {
   });
 
   describe('Local Storage Management', () => {
-    it('should store events locally with size limits', async () => {
+    it('keeps no local log of sent events and drops the one older builds wrote', async () => {
       const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      
-      // Mock existing local storage with many events
-      const existingEvents = Array.from({ length: 999 }, (_, i) => ({
-        sessionId: 'test-session',
-        timestamp: new Date().toISOString(),
-        eventType: 'test',
-        data: { index: i }
-      }));
-      
-      localStorageMock.getItem.mockReturnValue(JSON.stringify(existingEvents));
-      
-      // Track enough events to trigger flush
+      const fresh = new (recommendationAnalytics.constructor as any)();
+      expect(localStorageMock.removeItem).toHaveBeenCalledWith('recommendation_analytics');
+
       for (let i = 0; i < 10; i++) {
-        recommendationAnalytics.trackRecommendationViewed(
-          'template',
-          `template-${i}`,
-          0.8,
-          i,
-          'recommendation_engine'
-        );
+        fresh.trackRecommendationViewed('template', `template-${i}`, 0.8, i, 'recommendation_engine');
       }
-
-      await vi.runAllTimersAsync();
-      
-      // Should limit stored events to 1000
-      await vi.runAllTimersAsync();
-      
-      expect(localStorageMock.setItem).toHaveBeenCalledWith(
-        'recommendation_analytics',
-        expect.stringMatching(/"index":9/) // Should include recent events
-      );
-      
-      consoleSpy.mockRestore();
-    });
-
-    it('should handle localStorage errors gracefully', async () => {
-      const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-      const consoleWarnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      
-      // Create a fresh instance to avoid affecting the global service during setup
-      const testAnalytics = new (recommendationAnalytics.constructor as any)();
-      
-      // Mock localStorage error for this specific test
-      localStorageMock.setItem.mockImplementation((key, value) => {
-        if (key === 'recommendation_analytics') {
-          throw new Error('Storage quota exceeded');
-        }
-        // Don't recursively call, just return
-        return;
-      });
-      
-      // Track events to trigger flush
-      for (let i = 0; i < 10; i++) {
-        testAnalytics.trackRecommendationViewed(
-          'template',
-          `template-${i}`,
-          0.8,
-          i,
-          'recommendation_engine'
-        );
-      }
-
-      // Use runOnlyPendingTimersAsync, NOT runAllTimersAsync: the fresh
-      // instance registered a periodic flush setInterval under fake timers,
-      // which would reschedule forever and abort the run
+      // runOnlyPendingTimersAsync: the fresh instance's periodic flush would
+      // otherwise reschedule forever under fake timers
       await vi.runOnlyPendingTimersAsync();
 
-      expect(consoleWarnSpy).toHaveBeenCalledWith(
-        'Failed to store analytics locally:',
-        expect.any(Error)
-      );
+      expect(global.fetch).toHaveBeenCalled();
+      expect(localStorageMock.setItem).not.toHaveBeenCalledWith('recommendation_analytics', expect.any(String));
 
-      // Clean up the fresh instance's interval and restore the mock
-      testAnalytics.destroy();
-      localStorageMock.setItem.mockImplementation(() => undefined);
+      fresh.destroy();
       consoleSpy.mockRestore();
-      consoleWarnSpy.mockRestore();
     });
   });
 

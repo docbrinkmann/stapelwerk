@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import SharedStackViewer from './components/SharedStackViewer';
 import { trpc } from '@/lib/trpc/server';
+import { getT } from '@/lib/i18n/server';
 
 interface SharedStackPageProps {
   params: Promise<{
@@ -17,30 +18,31 @@ export async function generateMetadata({
   params 
 }: SharedStackPageProps): Promise<Metadata> {
   const { shareId } = await params
+  const t = await getT()
   try {
     // Fetch stack metadata for SEO
     const sharedStack = await trpc.stacks.getSharedStack({ shareId });
     
     return {
-      title: `${sharedStack.name} | Shared Stack`,
-      description: sharedStack.description || `Explore the ${sharedStack.name} stack configuration`,
+      title: t('catalog.sharedMetaTitle', { name: sharedStack.name }),
+      description: sharedStack.description || t('catalog.sharedMetaDescription', { name: sharedStack.name }),
       openGraph: {
         title: sharedStack.name,
-        description: sharedStack.description || `A shared stack configuration with ${sharedStack.services.length} services`,
+        description: sharedStack.description || t('catalog.sharedOgDescription', { count: sharedStack.services.length }),
         type: 'website',
         images: [
           {
             url: `/api/og/stack/${shareId}`,
             width: 1200,
             height: 630,
-            alt: `${sharedStack.name} stack preview`
+            alt: t('catalog.sharedImageAlt', { name: sharedStack.name })
           }
         ]
       },
       twitter: {
         card: 'summary_large_image',
         title: sharedStack.name,
-        description: sharedStack.description || `A shared stack configuration with ${sharedStack.services.length} services`,
+        description: sharedStack.description || t('catalog.sharedOgDescription', { count: sharedStack.services.length }),
         images: [`/api/og/stack/${shareId}`]
       },
       keywords: [
@@ -54,8 +56,8 @@ export async function generateMetadata({
     };
   } catch (error) {
     return {
-      title: 'Shared Stack Not Found',
-      description: 'The requested shared stack could not be found.'
+      title: t('catalog.sharedNotFoundTitle'),
+      description: t('catalog.sharedNotFoundDescription')
     };
   }
 }

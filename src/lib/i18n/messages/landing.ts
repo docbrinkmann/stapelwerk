@@ -35,6 +35,8 @@ export const landingEn = {
   'landing.footerPrivacy': 'Privacy',
 
   // Docs / help page
+  'landing.docsMetaTitle': 'Help & Docs — Stapelwerk',
+  'landing.docsMetaDescription': 'How to compose, export and deploy a Docker stack with Stapelwerk.',
   'landing.docsTitle': 'Help & Docs',
   'landing.docsIntroPre':
     'Stapelwerk helps you compose a curated, compatibility-checked Docker stack and export a ready-to-run',
@@ -159,6 +161,8 @@ export const landingDe: Record<keyof typeof landingEn, string> = {
   'landing.footerPrivacy': 'Datenschutz',
 
   // Docs / help page
+  'landing.docsMetaTitle': 'Hilfe & Doku — Stapelwerk',
+  'landing.docsMetaDescription': 'Wie du mit Stapelwerk einen Docker-Stack zusammenstellst, exportierst und deployst.',
   'landing.docsTitle': 'Hilfe & Doku',
   'landing.docsIntroPre':
     'Stapelwerk hilft dir, einen kuratierten Docker-Stack mit Kompatibilitäts-Checks zusammenzustellen und eine startklare',

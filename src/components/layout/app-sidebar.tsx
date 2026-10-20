@@ -23,8 +23,8 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 import { trpc } from "@/utils/trpc"
-import { useT } from "@/lib/i18n/client"
-import { IMPRINT_URL, PRIVACY_URL } from "@/components/footer"
+import { useLocale, useT } from "@/lib/i18n/client"
+import { IMPRINT_URL, PRIVACY_URL, legalHref } from "@/components/footer"
 
 /**
  * App Sidebar Component
@@ -49,6 +49,7 @@ import { IMPRINT_URL, PRIVACY_URL } from "@/components/footer"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const t = useT()
+  const locale = useLocale()
   const { data: session } = useSession()
   const user = {
     name: session?.user?.name ?? t("shell.userFallback"),
@@ -122,8 +123,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarFooter>
         {(IMPRINT_URL || PRIVACY_URL) && (
           <div className="flex gap-3 px-2 text-xs text-muted-foreground group-data-[collapsible=icon]:hidden">
-            {IMPRINT_URL && <a href={IMPRINT_URL} className="hover:text-foreground">{t('landing.footerImprint')}</a>}
-            {PRIVACY_URL && <a href={PRIVACY_URL} className="hover:text-foreground">{t('landing.footerPrivacy')}</a>}
+            {IMPRINT_URL && <a href={legalHref(IMPRINT_URL, locale)} className="hover:text-foreground">{t('landing.footerImprint')}</a>}
+            {PRIVACY_URL && <a href={legalHref(PRIVACY_URL, locale)} className="hover:text-foreground">{t('landing.footerPrivacy')}</a>}
           </div>
         )}
         <NavUser user={user} />

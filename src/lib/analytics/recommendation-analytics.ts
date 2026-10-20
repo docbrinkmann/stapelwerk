@@ -127,6 +127,8 @@ class RecommendationAnalyticsService {
     if (typeof window !== 'undefined') {
       const analyticsEnabled = localStorage.getItem('analytics_enabled');
       this.isEnabled = analyticsEnabled !== 'false';
+      // Older builds kept a local copy of every sent event; nothing reads it.
+      localStorage.removeItem('recommendation_analytics');
       
       // Track page view for recommendation system
       if (this.isEnabled) {
@@ -391,11 +393,8 @@ class RecommendationAnalyticsService {
     this.events = [];
 
     try {
-      // Send to analytics backend (could be Google Analytics, PostHog, etc.)
+      // Our own endpoint: it keeps aggregate counters and explicit feedback only
       await this.sendToBackend(eventsToSend);
-      
-      // Store in local storage for offline support
-      this.storeLocally(eventsToSend);
     } catch (error) {
       console.error('Failed to send recommendation analytics:', error);
       // Re-add events back to queue for retry
@@ -417,20 +416,6 @@ class RecommendationAnalyticsService {
 
     if (!response.ok) {
       throw new Error(`Analytics API error: ${response.status}`);
-    }
-  }
-
-  private storeLocally(events: RecommendationEventData[]): void {
-    if (typeof window === 'undefined') return;
-
-    try {
-      const existingEvents = localStorage.getItem('recommendation_analytics') || '[]';
-      const parsedEvents = JSON.parse(existingEvents);
-      const updatedEvents = [...parsedEvents, ...events].slice(-1000); // Keep last 1000 events
-      
-      localStorage.setItem('recommendation_analytics', JSON.stringify(updatedEvents));
-    } catch (error) {
-      console.warn('Failed to store analytics locally:', error);
     }
   }
 

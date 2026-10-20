@@ -9,6 +9,8 @@
  * No other file may hardcode a limit number — import from here.
  */
 
+import { makeT, type MessageKey, type Translate } from '@/lib/i18n/messages'
+
 export type PlanId = 'free' | 'pro' | 'fleet'
 
 export interface PlanLimits {
@@ -42,14 +44,15 @@ export interface PlanPresentation {
   id: PlanId
   name: string
   priceMonthly: number
-  tagline: string
+  /** Message key; render with t(). */
+  tagline: MessageKey
   featured?: boolean
 }
 
 export const PLAN_PRICING: Record<PlanId, PlanPresentation> = {
-  free: { id: 'free', name: 'Free', priceMonthly: 0, tagline: 'Compose, check and export — forever free.' },
-  pro: { id: 'pro', name: 'Pro', priceMonthly: 9, tagline: 'Deploy your stack with the VPN kill-switch verified — live logs.', featured: true },
-  fleet: { id: 'fleet', name: 'Fleet', priceMonthly: 24, tagline: 'For freelancers managing many client hosts.' },
+  free: { id: 'free', name: 'Free', priceMonthly: 0, tagline: 'billing.taglineFree' },
+  pro: { id: 'pro', name: 'Pro', priceMonthly: 9, tagline: 'billing.taglinePro', featured: true },
+  fleet: { id: 'fleet', name: 'Fleet', priceMonthly: 24, tagline: 'billing.taglineFleet' },
 }
 
 /**
@@ -72,22 +75,26 @@ export function yearlyPrice(monthly: number): number {
 export const SUPPORTER_PRICE_YEARLY = 99
 
 /** Feature bullets for a plan, derived from its real limits (never fictional). */
-export function planFeatureBullets(plan: PlanId): string[] {
+export function planFeatureBullets(plan: PlanId, t: Translate = makeT('en')): string[] {
   const l = PLAN_LIMITS[plan]
   const bullets: string[] = [
-    'Curated catalog & guided builder',
-    'Compatibility & resource checks',
-    'Export + handoff guides (Coolify/Portainer/Dokploy/Openship)',
-    'Community marketplace',
+    t('billing.bulletCatalog'),
+    t('billing.bulletChecks'),
+    t('billing.bulletExport'),
+    t('billing.bulletCommunity'),
   ]
-  bullets.push(l.stacks === null ? 'Unlimited saved stacks' : `${l.stacks} saved stacks`)
+  bullets.push(l.stacks === null ? t('billing.bulletStacksUnlimited') : t('billing.bulletStacks', { count: l.stacks }))
   if (l.deploy) {
     // Lead the paid value with the verified correctness (the thesis), not the
     // host count — the deployment-target limit is a fair-use guardrail, not the pitch.
-    bullets.push('Deploys with the VPN kill-switch verified (routing + gluetun firewall)', 'Live logs & container terminal')
+    bullets.push(t('billing.bulletVerifiedDeploys'), t('billing.bulletLiveLogs'))
   }
   if (l.remoteTargets > 0) {
-    bullets.push(`Deploy to ${l.remoteTargets} of your own host${l.remoteTargets === 1 ? '' : 's'}`)
+    bullets.push(
+      l.remoteTargets === 1
+        ? t('billing.bulletRemoteTargetsOne')
+        : t('billing.bulletRemoteTargets', { count: l.remoteTargets }),
+    )
   }
   return bullets
 }

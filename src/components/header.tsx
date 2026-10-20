@@ -114,7 +114,7 @@ export default function Header() {
               whileTap={reducedMotion ? {} : { scale: 0.98 }}
             >
               <div className="flex h-8 w-8 items-center justify-center rounded-md bg-foreground md:h-9 md:w-9">
-                <span className="text-base font-bold text-background md:text-lg">B</span>
+                <span className="text-base font-bold text-background md:text-lg">S</span>
               </div>
               <span className="text-lg font-semibold tracking-tight text-foreground md:text-xl">
                 Stapelwerk

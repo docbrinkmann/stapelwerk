@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Datenschutzerklärung — Stapelwerk</title>
 <meta name="robots" content="noindex, follow">
+<script>/* The app links here with ?lang=en for English readers. */if(new URLSearchParams(location.search).get('lang')==='en')location.replace('/privacy/')</script>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='4' y='20' width='24' height='6' rx='1.5' fill='%23e8b64c'/%3E%3Crect x='7' y='12' width='18' height='6' rx='1.5' fill='%23d0d4dc'/%3E%3Crect x='10' y='4' width='12' height='6' rx='1.5' fill='%23848b98'/%3E%3C/svg%3E">
 <style>
   :root{--bg:#0b0c0e;--card:#15181d;--line:#242832;--text:#e8eaf0;--mut:#9aa1af;--dim:#6b7280;--acc:#e8b64c;
@@ -15,6 +16,7 @@
   nav{position:sticky;top:0;background:rgba(11,12,14,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
   .nav-in{max-width:760px;margin:0 auto;padding:0 24px;display:flex;align-items:center;height:60px}
   .logo{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;text-decoration:none;color:var(--text)}
+  .lang{margin-left:auto;color:var(--mut);font-size:14px;text-decoration:none}
   main{max-width:760px;margin:0 auto;padding:56px 24px 80px}
   h1{font-size:clamp(26px,4vw,36px);letter-spacing:-.02em;margin-bottom:10px}
   .stand{color:var(--dim);font-size:14px;margin-bottom:30px}
@@ -34,6 +36,7 @@
 <body>
 <nav><div class="nav-in">
   <a class="logo" href="/"><svg width="22" height="22" viewBox="0 0 32 32" aria-hidden="true"><rect x="4" y="20" width="24" height="6" rx="1.5" fill="#e8b64c"/><rect x="7" y="12" width="18" height="6" rx="1.5" fill="#d0d4dc"/><rect x="10" y="4" width="12" height="6" rx="1.5" fill="#848b98"/></svg>Stapelwerk</a>
+  <a class="lang" href="/privacy/" hreflang="en" lang="en">English</a>
 </div></nav>
 <main>
   <h1>Datenschutzerklärung</h1>
@@ -63,13 +66,18 @@
 
   <h2>7. Web-App (app.stapelwerk.dev)</h2>
   <h3>7.1 Konto und Anmeldung</h3>
-  <p>Zur Nutzung der Web-App ist ein Benutzerkonto erforderlich. Bei der Registrierung gibst du nur deine E-Mail-Adresse (und optional einen Namen) an; über einen Bestätigungslink per E-Mail legst du danach dein Passwort fest, erst dann ist das Konto aktiv. Verarbeitet werden E-Mail-Adresse, Name (optional), ein Passwort-Hash, der Zeitpunkt der Bestätigung sowie die von dir angelegten Inhalte (z. B. Stacks, Konfigurationen, Deployments). Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung bzw. Nutzungsverhältnis). Für die Anmeldung setzt die App technisch notwendige Session-Cookies ein, für deine Sprachwahl das Cookie <code>bms_locale</code> (beides § 25 Abs. 2 Nr. 2 TDDDG); Tracking-Cookies werden nicht verwendet. Kontodaten werden gelöscht, wenn das Konto gelöscht wird, soweit keine gesetzlichen Aufbewahrungspflichten entgegenstehen.</p>
+  <p>Zusammenstellen, Prüfen und Exportieren gehen in der Web-App auch ohne Konto; zum Speichern von Stacks und für die übrigen Konto-Funktionen ist ein Benutzerkonto erforderlich. Bei der Registrierung gibst du nur deine E-Mail-Adresse (und optional einen Namen) an; über einen Bestätigungslink per E-Mail legst du danach dein Passwort fest, erst dann ist das Konto aktiv. Verarbeitet werden E-Mail-Adresse, Name (optional), ein Passwort-Hash, der Zeitpunkt der Bestätigung sowie die von dir angelegten Inhalte (z. B. Stacks, Konfigurationen, Deployments). Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO (Vertragserfüllung bzw. Nutzungsverhältnis). Für die Anmeldung setzt die App technisch notwendige Session-Cookies ein, für deine Sprachwahl das Cookie <code>bms_locale</code> (beides § 25 Abs. 2 Nr. 2 TDDDG); Tracking-Cookies werden nicht verwendet. Kontodaten werden gelöscht, wenn das Konto gelöscht wird, soweit keine gesetzlichen Aufbewahrungspflichten entgegenstehen.</p>
   <h3>7.2 E-Mails zu deinem Konto</h3>
   <p>Bestätigungs- und Passwort-zurücksetzen-Mails versenden wir über unseren eigenen Mailserver in Deutschland, ohne Tracking (keine Zählpixel, keine Link-Weiterleitungen). Die Links sind einmal verwendbar und laufen nach 24 Stunden (Bestätigung) bzw. 1 Stunde (Passwort) ab; gespeichert wird nur ein kryptografischer Hash des Links. Unbestätigte Registrierungen enthalten nur die E-Mail-Adresse und werden automatisch gelöscht, sobald sie älter als sieben Tage sind (spätestens bei der nächsten Registrierung über die App). Rechtsgrundlage ist Art. 6 Abs. 1 lit. b DSGVO.</p>
   <h3>7.3 Zahlungsabwicklung über Polar</h3>
   <p>Kostenpflichtige Leistungen (z. B. der einmalige „Verified Deploy“-Report) werden über Polar Software, Inc. als <b>Merchant of Record</b> abgewickelt. Der Kaufvertrag über die Zahlung kommt mit Polar zustande; Polar verarbeitet die von dir im Checkout angegebenen Daten (u. a. E-Mail-Adresse, Rechnungs- und Zahlungsdaten) in eigener Verantwortung. Wir selbst erhalten <b>keine Zahlungsdaten</b>, sondern lediglich Bestell-Metadaten (u. a. Bestellnummer, Produkt, deine Konto-ID), um die gekaufte Leistung bereitzustellen (Art. 6 Abs. 1 lit. b DSGVO). Polar ist ein Unternehmen mit Sitz in den USA; die Verarbeitung im Checkout erfolgt in eigener datenschutzrechtlicher Verantwortung von Polar, einschließlich einer möglichen Übermittlung in die USA. Details: <a href="https://polar.sh/legal/privacy">Polar Privacy Policy</a>.</p>
   <h3>7.4 Deploys auf eigene Server</h3>
   <p>Die gehostete Web-App deployt nicht auf deine Server: Das exportierte <code>deploy.sh</code> läuft auf deinem Rechner und verbindet sich mit deinem eigenen SSH-Schlüssel. Wir erheben oder speichern keine SSH-Schlüssel und keine Zugangsdaten zu deinen Servern.</p>
+
+  <h3>7.5 Speicherung im Browser</h3>
+  <p>Die Web-App legt in deinem Browser nur ab, was ihre Funktionen brauchen: deinen aktuellen Stack-Entwurf und lokale Kopien deiner Stacks, Darstellungseinstellungen (Farbschema, Akzentfarbe, Schriftgröße), das zuletzt gewählte Deploy-Ziel je Stack, Ansichtseinstellungen des Service-Katalogs, zuletzt genutzte Befehle sowie im Cookie <code>sidebar_state</code>, ob die Seitenleiste eingeklappt ist (7 Tage). Diese Angaben bleiben auf deinem Gerät, solange du einen Stack nicht in deinem Konto speicherst (7.1), und sind für die von dir genutzten Funktionen erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Du kannst sie jederzeit über die Website-Daten-Einstellungen deines Browsers löschen.</p>
+  <h3>7.6 Empfehlungen</h3>
+  <p>Bist du angemeldet, zählt die App, wie oft Empfehlungen und Vorlagen angezeigt, angeklickt oder übernommen werden — nur als Summe je Empfehlung bzw. Vorlage, ohne Bezug zu deiner Person. Bewertest oder verwirfst du eine Empfehlung, speichern wir diese Rückmeldung mit deiner Konto-ID, um die Empfehlungen zu verbessern (Art. 6 Abs. 1 lit. f DSGVO), und löschen sie mit deinem Konto. Ohne Anmeldung speichern wir dazu nichts.</p>
 
   <h2>8. Kontaktaufnahme</h2>
   <p>Bei Kontakt per E-Mail verarbeiten wir deine Angaben (E-Mail-Adresse, Inhalt) zur Bearbeitung der Anfrage (Art. 6 Abs. 1 lit. b bzw. f DSGVO). Die Daten werden gelöscht, sobald sie für die Bearbeitung nicht mehr erforderlich sind.</p>

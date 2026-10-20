@@ -25,7 +25,7 @@ export function SidebarHeader() {
         <SidebarMenuItem>
           <SidebarMenuButton size="lg" className="pointer-events-none">
             <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-foreground text-background">
-              <span className="font-bold text-sm">B</span>
+              <span className="font-bold text-sm">S</span>
             </div>
             <div className="grid flex-1 text-left text-sm leading-tight">
               <span className="truncate font-semibold">Stapelwerk</span>

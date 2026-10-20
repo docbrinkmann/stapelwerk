@@ -3,12 +3,24 @@
 import Link from 'next/link'
 import { APP_CONFIG } from '@/lib/constants'
 import { formatVersion } from '@/utils/helpers'
-import { useT } from '@/lib/i18n/client'
+import { useLocale, useT } from '@/lib/i18n/client'
+import type { Locale } from '@/lib/i18n/messages'
 
 // Operator-specific legal pages (Impressum § 5 DDG, Datenschutz Art. 13 DSGVO). Build-time
 // env, so a self-hosted instance never links to the hosted operator's imprint.
 export const IMPRINT_URL = process.env.NEXT_PUBLIC_IMPRINT_URL
 export const PRIVACY_URL = process.env.NEXT_PUBLIC_PRIVACY_URL
+
+/** Legal links carry the reader's language (stapelwerk.dev answers ?lang=en with its English pages). */
+export function legalHref(url: string, locale: Locale): string {
+  try {
+    const u = new URL(url)
+    u.searchParams.set('lang', locale)
+    return u.toString()
+  } catch {
+    return url // relative or malformed: leave it as configured
+  }
+}
 
 /**
  * Footer Component
@@ -17,6 +29,7 @@ export const PRIVACY_URL = process.env.NEXT_PUBLIC_PRIVACY_URL
  */
 export default function Footer() {
   const t = useT()
+  const locale = useLocale()
 
   return (
     <footer className="border-t border-border/60 bg-background">
@@ -33,12 +46,12 @@ export default function Footer() {
             {t('landing.signIn')}
           </Link>
           {IMPRINT_URL && (
-            <a href={IMPRINT_URL} className="transition-colors hover:text-foreground">
+            <a href={legalHref(IMPRINT_URL, locale)} className="transition-colors hover:text-foreground">
               {t('landing.footerImprint')}
             </a>
           )}
           {PRIVACY_URL && (
-            <a href={PRIVACY_URL} className="transition-colors hover:text-foreground">
+            <a href={legalHref(PRIVACY_URL, locale)} className="transition-colors hover:text-foreground">
               {t('landing.footerPrivacy')}
             </a>
           )}

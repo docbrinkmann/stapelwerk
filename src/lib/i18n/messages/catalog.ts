@@ -386,6 +386,18 @@ export const catalogEn = {
   'catalog.cleanUp': 'Clean Up',
   'catalog.clearAllData': 'Clear All Data',
   'catalog.clearAllDataDesc': 'Remove all locally stored stacks',
+
+  // Page metadata: community marketplace + shared stack
+  'catalog.communityMetaTitle': 'Community Stack Marketplace — Stapelwerk',
+  'catalog.communityMetaDescription':
+    'Discover, share, and import community-created infrastructure stacks. Find the perfect stack configuration for your project.',
+  'catalog.communityOgTitle': 'Community Stack Marketplace',
+  'catalog.communityOgDescription': 'Discover and share infrastructure stacks with the community',
+  'catalog.sharedMetaTitle': '{name} | Shared Stack',
+  'catalog.sharedMetaDescription': 'Explore the {name} stack configuration',
+  'catalog.sharedOgDescription': 'A shared stack configuration with {count} services',
+  'catalog.sharedImageAlt': '{name} stack preview',
+  'catalog.sharedNotFoundDescription': 'The requested shared stack could not be found.',
 } as const
 
 export const catalogDe: Record<keyof typeof catalogEn, string> = {
@@ -775,4 +787,15 @@ export const catalogDe: Record<keyof typeof catalogEn, string> = {
   'catalog.cleanUp': 'Aufräumen',
   'catalog.clearAllData': 'Alle Daten löschen',
   'catalog.clearAllDataDesc': 'Alle lokal gespeicherten Stacks entfernen',
+
+  'catalog.communityMetaTitle': 'Community-Stack-Marktplatz — Stapelwerk',
+  'catalog.communityMetaDescription':
+    'Entdecke, teile und importiere Stacks aus der Community und finde die passende Stack-Konfiguration für dein Projekt.',
+  'catalog.communityOgTitle': 'Community-Stack-Marktplatz',
+  'catalog.communityOgDescription': 'Entdecke und teile Stacks mit der Community',
+  'catalog.sharedMetaTitle': '{name} | Geteilter Stack',
+  'catalog.sharedMetaDescription': 'Sieh dir die Stack-Konfiguration {name} an',
+  'catalog.sharedOgDescription': 'Eine geteilte Stack-Konfiguration mit {count} Services',
+  'catalog.sharedImageAlt': 'Vorschau des Stacks {name}',
+  'catalog.sharedNotFoundDescription': 'Der angeforderte geteilte Stack wurde nicht gefunden.',
 }
