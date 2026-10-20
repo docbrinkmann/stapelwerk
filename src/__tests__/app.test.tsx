@@ -8,7 +8,7 @@ describe('Next.js Application Initialization', () => {
     const { default: HomePage } = await import('../app/page')
     render(<HomePage />)
 
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/actually runs/i)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/wired right the first time/i)
     expect(screen.getAllByText(/docker-compose\.yml/i).length).toBeGreaterThan(0)
   })
 
@@ -17,7 +17,7 @@ describe('Next.js Application Initialization', () => {
     render(<HomePage />)
 
     const h1 = screen.getByRole('heading', { level: 1 })
-    expect(h1).toHaveTextContent(/Docker stack/i)
+    expect(h1).toHaveTextContent(/media server/i)
   })
 
   it('renders the shared footer without operator legal links by default (self-host)', async () => {
@@ -50,7 +50,7 @@ describe('Next.js Application Initialization', () => {
     const { container } = render(<HomePage />)
 
     expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument()
-    expect(container.querySelector('h1')).toHaveTextContent(/actually runs/i)
+    expect(container.querySelector('h1')).toHaveTextContent(/wired right the first time/i)
   })
 
   it('should handle basic routing structure', () => {

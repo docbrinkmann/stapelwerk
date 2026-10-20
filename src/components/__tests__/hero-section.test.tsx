@@ -11,7 +11,7 @@ beforeEach(() => h.push.mockClear())
 describe('HeroSection', () => {
   it('shows real product value and a real compose preview', () => {
     render(<HeroSection />)
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/actually runs/i)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/wired right the first time/i)
     expect(screen.getAllByText(/docker-compose\.yml/i).length).toBeGreaterThan(0)
     expect(screen.getAllByText(/jellyfin/i).length).toBeGreaterThan(0)
   })

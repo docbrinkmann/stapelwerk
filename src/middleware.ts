@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { csrfProtection, securityHeaders, getClientIp } from '@/lib/security'
 import { checkRateLimit, getClientIdentifier } from '@/lib/rate-limiter'
+import { LOCALE_COOKIE } from '@/lib/i18n/messages'
 
 /**
  * Production-Ready Middleware with Redis Rate Limiting
@@ -20,6 +21,17 @@ import { checkRateLimit, getClientIdentifier } from '@/lib/rate-limiter'
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
   const startTime = Date.now()
+
+  // Links from the landing carry the reader's language (?lang=de): keep it as
+  // the app's language (same cookie as the toggle) and drop the parameter.
+  const lang = request.nextUrl.searchParams.get('lang')
+  if ((lang === 'en' || lang === 'de') && !pathname.startsWith('/api/')) {
+    const url = request.nextUrl.clone()
+    url.searchParams.delete('lang')
+    const response = NextResponse.redirect(url)
+    response.cookies.set(LOCALE_COOKIE, lang, { path: '/', maxAge: 31536000, sameSite: 'lax' })
+    return response
+  }
 
   // Add request ID for tracing
   const requestId = crypto.randomUUID()

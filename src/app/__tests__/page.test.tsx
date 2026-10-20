@@ -9,7 +9,7 @@ import Footer from '@/components/footer'
 describe('HomePage', () => {
   it('renders the hero with a real value proposition', () => {
     render(<HomePage params={{}} searchParams={{}} />)
-    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/actually runs/i)
+    expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(/wired right the first time/i)
     expect(screen.getByRole('button', { name: /start building/i })).toBeInTheDocument()
   })
 

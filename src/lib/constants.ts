@@ -3,7 +3,8 @@ import { AppConfig } from '@/types/globals'
 export const APP_CONFIG: AppConfig = {
   name: 'Stapelwerk',
   version: '0.1.2',
-  description: 'A guided Docker stack builder for home users, freelancers, and SMEs',
+  description:
+    'Guided Docker stack composer for self-hosters. Compose a Jellyfin + *arr media server, verify the VPN kill-switch by construction, export a compose file that runs anywhere. AGPL-3.0, free forever.',
 }
 
 export const ROUTES = {

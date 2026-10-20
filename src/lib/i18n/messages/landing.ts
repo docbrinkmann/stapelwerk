@@ -10,10 +10,10 @@ export const landingEn = {
   // Hero
   'landing.heroAria': 'Introduction',
   'landing.heroBadge': 'Open source · runs on your own hardware',
-  'landing.heroTitle': 'Build a Docker stack that actually runs.',
+  'landing.heroTitle': 'Your Jellyfin + *arr media server, wired right the first time.',
   'landing.heroSubtitlePre':
-    'Pick from a curated catalog, get compatibility and resource checks as you go, and export a clean',
-  'landing.heroSubtitlePost': '— or hand it straight to Coolify, Portainer or Dokploy.',
+    'Stapelwerk is a guided Docker stack composer that checks your stack before it ever boots — the VPN kill-switch verified by construction, no port collisions, no default secrets — and hands you a clean',
+  'landing.heroSubtitlePost': 'you can run anywhere.',
   'landing.heroCtaStart': 'Start building',
   'landing.heroCtaCatalog': 'Browse the catalog',
   'landing.featureCatalogTitle': 'A curated catalog',
@@ -134,10 +134,10 @@ export const landingDe: Record<keyof typeof landingEn, string> = {
   // Hero
   'landing.heroAria': 'Einführung',
   'landing.heroBadge': 'Open Source · läuft auf deiner eigenen Hardware',
-  'landing.heroTitle': 'Bau einen Docker-Stack, der wirklich läuft.',
+  'landing.heroTitle': 'Dein Jellyfin + *arr Media-Server, beim ersten Mal richtig verkabelt.',
   'landing.heroSubtitlePre':
-    'Wähle aus einem kuratierten Katalog, erhalte Kompatibilitäts- und Ressourcen-Checks beim Bauen und exportiere eine saubere',
-  'landing.heroSubtitlePost': '— oder übergib sie direkt an Coolify, Portainer oder Dokploy.',
+    'Stapelwerk ist ein geführter Docker-Stack-Composer, der deinen Stack prüft, bevor er je bootet — VPN-Kill-Switch by construction verifiziert, keine Port-Kollisionen, keine Default-Secrets — und dir eine saubere',
+  'landing.heroSubtitlePost': 'gibt, die überall läuft.',
   'landing.heroCtaStart': 'Jetzt bauen',
   'landing.heroCtaCatalog': 'Katalog durchstöbern',
   'landing.featureCatalogTitle': 'Ein kuratierter Katalog',
