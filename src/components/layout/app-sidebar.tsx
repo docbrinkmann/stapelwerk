@@ -54,6 +54,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     name: session?.user?.name ?? t("shell.userFallback"),
     email: session?.user?.email ?? "",
   }
+  // Auth sets `session.user.role`; the admin pages redirect everyone else to
+  // /403, so only admins get the entry.
+  const isAdmin = (session?.user as { role?: string } | undefined)?.role === "admin"
 
   // Navigation items for main menu
   const mainNavItems = [
@@ -88,11 +91,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       url: "/settings",
       icon: Settings,
     },
-    {
-      title: t("shell.navAdmin"),
-      url: "/admin/templates",
-      icon: ShieldCheck,
-    },
+    ...(isAdmin
+      ? [
+          {
+            title: t("shell.navAdmin"),
+            url: "/admin/templates",
+            icon: ShieldCheck,
+          },
+        ]
+      : []),
   ]
 
   // Quick links to the user's most recent stacks
