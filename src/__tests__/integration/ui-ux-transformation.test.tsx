@@ -79,7 +79,7 @@ describe('UI/UX Transformation - Integration Tests', () => {
       )
       
       // Verify Hero Section elements are present
-      expect(screen.getByText(/actually runs/i)).toBeInTheDocument()
+      expect(screen.getByText(/wired right the first time/i)).toBeInTheDocument()
       expect(screen.getAllByText(/Docker Stack/i)[0]).toBeInTheDocument()
       
       // Verify CTA buttons exist
@@ -135,7 +135,7 @@ describe('UI/UX Transformation - Integration Tests', () => {
       render(<HeroSection />)
       
       // Verify main heading
-      expect(screen.getAllByText(/actually runs/i)[0]).toBeInTheDocument()
+      expect(screen.getAllByText(/wired right the first time/i)[0]).toBeInTheDocument()
       expect(screen.getAllByText(/Docker Stack/i)[0]).toBeInTheDocument()
       
       // Verify CTA buttons
@@ -171,7 +171,7 @@ describe('UI/UX Transformation - Integration Tests', () => {
       )
       
       // Step 1: User sees hero section
-      expect(screen.getAllByText(/actually runs/i)[0]).toBeInTheDocument()
+      expect(screen.getAllByText(/wired right the first time/i)[0]).toBeInTheDocument()
       
       // Step 2: User can interact with CTA buttons
       const buttons = screen.getAllByRole('button')
